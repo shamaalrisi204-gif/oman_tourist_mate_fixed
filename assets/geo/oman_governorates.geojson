@@ -1,0 +1,97 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+   {
+     "type": "Feature",
+     "properties": { "name_ar": "مسقط", "name_en": "Muscat" },
+     "geometry": {
+       "type": "Polygon",
+       "coordinates": [
+         [
+           [58.05, 23.70],
+           [58.20, 23.90],
+           [58.50, 23.95],
+           [58.70, 23.85],
+           [58.75, 23.65],
+           [58.55, 23.55],
+           [58.20, 23.60],
+           [58.05, 23.70]
+         ]
+       ]
+     }
+   },
+   {
+     "type": "Feature",
+     "properties": { "name_ar": "ظفار", "name_en": "Dhofar" },
+     "geometry": {
+       "type": "Polygon",
+       "coordinates": [
+         [
+           [53.40, 16.70],
+           [53.80, 17.25],
+           [54.40, 17.45],
+           [55.05, 17.35],
+           [55.45, 16.95],
+           [54.85, 16.60],
+           [54.00, 16.55],
+           [53.40, 16.70]
+         ]
+       ]
+     }
+   },
+   {
+     "type": "Feature",
+     "properties": { "name_ar": "الشرقية", "name_en": "Ash Sharqiyah" },
+     "geometry": {
+       "type": "Polygon",
+       "coordinates": [
+         [
+           [58.60, 22.50],
+           [59.35, 22.95],
+           [60.00, 22.70],
+           [59.85, 22.05],
+           [59.15, 21.80],
+           [58.70, 22.05],
+           [58.60, 22.50]
+         ]
+       ]
+     }
+   },
+   {
+     "type": "Feature",
+     "properties": { "name_ar": "الداخلية", "name_en": "Ad Dakhiliyah" },
+     "geometry": {
+       "type": "Polygon",
+       "coordinates": [
+         [
+           [57.00, 23.05],
+           [57.05, 23.50],
+           [57.45, 23.85],
+           [57.95, 23.90],
+           [58.10, 23.45],
+           [57.70, 23.05],
+           [57.00, 23.05]
+         ]
+       ]
+     }
+   },
+   {
+     "type": "Feature",
+     "properties": { "name_ar": "شمال الباطنة", "name_en": "Al Batinah North" },
+     "geometry": {
+       "type": "Polygon",
+       "coordinates": [
+         [
+           [57.45, 23.95],
+           [56.80, 24.50],
+           [56.30, 24.75],
+           [57.00, 24.80],
+           [57.75, 24.35],
+           [58.05, 23.95],
+           [57.45, 23.95]
+         ]
+       ]
+     }
+   }
+ ]
+}

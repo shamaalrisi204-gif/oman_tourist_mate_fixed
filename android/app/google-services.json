@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "715918481021",
+    "project_id": "the-oman-tourist-mate-27766",
+    "storage_bucket": "the-oman-tourist-mate-27766.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:715918481021:android:b2314f93e3f9f7a9084314",
+        "android_client_info": {
+          "package_name": "com.example.oman_tourist_mate_fixed"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQAmiDhRsywzXYpNxaCSbJygDHjLkjk1M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:715918481021:android:6edc570066297b3b084314",
+        "android_client_info": {
+          "package_name": "com.oman.oman_tourist_mate_fixed"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQAmiDhRsywzXYpNxaCSbJygDHjLkjk1M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
