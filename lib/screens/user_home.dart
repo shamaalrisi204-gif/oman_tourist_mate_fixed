@@ -57,6 +57,7 @@ class _UserHomeState extends State<UserHome> {
         ? 'مرحبًا بك في ${_userData!['city']}'
         : 'Welcome to ${_userData!['city']}';
     final mapBtn = _isArabic ? 'خريطة عمان' : 'Oman Map';
+    final govMapBtn = _isArabic ? 'خريطة المحافظات' : 'Governorates Map';
     final planBtn =
         _isArabic ? 'رحلة ممتعة تبدأ من هنا ✨' : 'Your journey starts here ✨';
     final favBtn = _isArabic ? 'المفضلة' : 'Favorites';
@@ -90,10 +91,12 @@ class _UserHomeState extends State<UserHome> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text(welcome,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  )),
+          Text(
+            welcome,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
           const SizedBox(height: 16),
           _cardItem(
             icon: Icons.map,
@@ -102,6 +105,15 @@ class _UserHomeState extends State<UserHome> {
                 ? 'استكشف المواقع والمعالم السياحية في عمان'
                 : 'Explore Oman’s famous landmarks',
             onTap: () => Navigator.pushNamed(context, '/map'),
+          ),
+          // ✅ زر جديد: خريطة المحافظات
+          _cardItem(
+            icon: Icons.public,
+            title: govMapBtn,
+            subtitle: _isArabic
+                ? 'تعرّف على محافظات سلطنة عمان والمواقع السياحية بكل محافظة'
+                : 'Explore Oman’s governorates and attractions',
+            onTap: () => Navigator.pushNamed(context, '/gov_map'),
           ),
           _cardItem(
             icon: Icons.tour,
@@ -118,6 +130,17 @@ class _UserHomeState extends State<UserHome> {
                 _isArabic ? 'الأماكن التي قمت بحفظها' : 'Your saved places',
             onTap: () => Navigator.pushNamed(context, '/favorites'),
           ),
+          _cardItem(
+            icon: Icons.map_outlined,
+            title: _isArabic
+                ? 'خريطة المحافظات (تفاعلية)'
+                : 'Governorates Map (Leaflet)',
+            subtitle: _isArabic
+                ? 'إضغط على المحافظة لعرض الأماكن السياحية'
+                : 'Tap a governorate to see places',
+            onTap: () => Navigator.pushNamed(context, '/gov_map'),
+          ),
+
           const SizedBox(height: 16),
           Text(
             _isArabic ? 'موقعك المحفوظ:' : 'Your saved location:',

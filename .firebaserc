@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "the-oman-tourist-mate-27766"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }

@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "C:/Users/USER/oman_tourist_mate_fixed/linux/runner"
+    "cmake.sourceDirectory": "C:/Users/USER/oman_tourist_mate_fixed/linux/runner",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

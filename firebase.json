@@ -1,33 +1,14 @@
 {
- "flutter": {
-   "platforms": {
-     "android": {
-       "default": {
-         "projectId": "the-oman-tourist-mate-27766",
-         "appId": "1:715918481021:android:6edc570066297b3b084314",
-         "fileOutput": "android/app/google-services.json"
-       }
-     },
-     "dart": {
-       "lib/firebase_options.dart": {
-         "projectId": "the-oman-tourist-mate-27766",
-         "configurations": {
-           "android": "1:715918481021:android:6edc570066297b3b084314",
-           "ios": "1:715918481021:ios:bf12bdd749c256dc084314",
-           "macos": "1:715918481021:ios:bf12bdd749c256dc084314",
-           "web": "1:715918481021:web:1a70559654686c64084314",
-           "windows": "1:715918481021:web:bef6418b4943d31d084314"
-         }
-       }
-     }
-   }
- },
  "functions": [
    {
-     "source": "functions_fixed",
-     "codebase": "default",
+     "source": "functions",
      "runtime": "nodejs20",
+     "codebase": "default",
      "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log", "*.local"]
    }
- ]
+ ],
+ "emulators": {
+   "functions": { "port": 5002 },
+   "ui": { "enabled": true, "port": 4600 }
+ }
 }

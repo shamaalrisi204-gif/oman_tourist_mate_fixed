@@ -2,79 +2,79 @@ name: oman_tourist_mate_fixed
 description: "Oman Tourist Mate - Tourism App"
 publish_to: "none"
 version: 1.0.0+1
-
 environment:
-  sdk: ">=3.3.0 <4.0.0"
-
+ sdk: ">=3.3.0 <4.0.0"
 dependencies:
-  flutter:
-    sdk: flutter
-  cupertino_icons: ^1.0.8
-  # Firebase
-  firebase_core: ^3.5.0
-  firebase_auth: ^5.3.0
-  cloud_firestore: ^5.4.0
-  # خرائط جوجل
-  google_maps_flutter: ^2.9.0
-  # الموقع والـ reverse geocoding
-  geolocator: ^13.0.1
-  geocoding: ^3.0.0
-  # المفضلة / تخزين محلي
-  shared_preferences: ^2.2.3
-  # Gemini
-  google_generative_ai: ^0.4.6
-  # HTTP
-  http: ^1.2.2
-  # تعدد اللغات
-  flutter_localizations:
-    sdk: flutter
-  intl: ^0.20.2
-
+ flutter:
+   sdk: flutter
+ cupertino_icons: ^1.0.8
+ # Firebase
+ firebase_core: ^3.6.0
+ firebase_auth: ^5.3.0
+ cloud_firestore: ^5.4.0
+ cloud_functions: ^5.0.4
+ webview_flutter: ^4.13.0
+ # خرائط جوجل
+ google_maps_flutter: ^2.9.0
+ # الموقع والـ reverse geocoding
+ geolocator: ^13.0.1
+ geocoding: ^3.0.0
+ # المفضلة / تخزين محلي
+ shared_preferences: ^2.2.3
+ # Gemini
+ google_generative_ai: ^0.4.6
+ # HTTP
+ http: ^1.2.1
+ # تعدد اللغات
+ flutter_localizations:
+   sdk: flutter
+ intl: ^0.20.2
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^4.0.0
-
+ flutter_test:
+   sdk: flutter
+ flutter_lints: ^4.0.0
 flutter:
-  uses-material-design: true
-  assets:
-    - assets/images/oman_background.jpg
-    # نترك الخريطة بدون ستايل حتى تبقى أسماء المدن ظاهرة
-    - assets/map_styles/clean_oman.json
-
-    # أيقونات
-    - assets/icons/marker_city.png
-    - assets/icons/sea.png
-    - assets/icons/desert.png
-    - assets/icons/historic.png
-
-    # Sohar
-    - assets/places/sohar/beach_1.jpg
-    - assets/places/sohar/beach_2.jpg
-    - assets/places/sohar/fort_1.jpg
-    - assets/places/sohar/fort_2.jpg
-    - assets/places/sohar/souq_1.jpg
-    - assets/places/sohar/souq_2.jpg
-    # Muscat
-    - assets/places/muscat/qurum_1.jpg
-    - assets/places/muscat/qurum_2.jpg
-    - assets/places/muscat/muttrah_1.jpg
-    - assets/places/muscat/muttrah_2.jpg
-    # Nizwa / Bahla
-    - assets/places/nizwa/fort_1.jpg
-    - assets/places/bahla/fort_1.jpg
-    # Salalah
-    - assets/places/salalah/beach_1.jpg
-    - assets/places/salalah/beach_2.jpg
-    # Desert generic
-    - assets/places/desert/wahiba_1.jpg
-    - assets/places/desert/wahiba_2.jpg
-    - assets/places/desert/empty_1.jpg
-    - assets/places/desert/empty_2.jpg
-
-  fonts:
-    - family: Tajawal
-      fonts:
-        - asset: assets/fonts/Tajawal-Bold.ttf
-        - asset: assets/fonts/Tajawal-Regular.ttf
-        - asset: assets/fonts/Tajawal-Light.ttf
+ uses-material-design: true
+ assets:
+   - assets/images/oman_background.jpg
+   # نترك الخريطة بدون ستايل حتى تبقى أسماء المدن ظاهرة (للاستخدام لاحقًا)
+   - assets/map_styles/clean_oman.json
+   - assets/map_styles/visit_oman_like.json
+   # أيقونات
+   - assets/icons/marker_city.png
+   - assets/icons/sea.png
+   - assets/icons/desert.png
+   - assets/icons/historic.png
+   - assets/geo/oman_outline.geojson
+   - assets/geo/oman_governorates.geojson
+   - assets/web/oman_map.html
+   - assets/web/leaflet_map.html
+   # Sohar
+   - assets/places/sohar/beach_1.jpg
+   - assets/places/sohar/beach_2.jpg
+   - assets/places/sohar/fort_1.jpg
+   - assets/places/sohar/fort_2.jpg
+   - assets/places/sohar/souq_1.jpg
+   - assets/places/sohar/souq_2.jpg
+   # Muscat
+   - assets/places/muscat/qurum_1.jpg
+   - assets/places/muscat/qurum_2.jpg
+   - assets/places/muscat/muttrah_1.jpg
+   - assets/places/muscat/muttrah_2.jpg
+   # Nizwa / Bahla
+   - assets/places/nizwa/fort_1.jpg
+   - assets/places/bahla/fort_1.jpg
+   # Salalah
+   - assets/places/salalah/beach_1.jpg
+   - assets/places/salalah/beach_2.jpg
+   # Desert generic
+   - assets/places/desert/wahiba_1.jpg
+   - assets/places/desert/wahiba_2.jpg
+   - assets/places/desert/empty_1.jpg
+   - assets/places/desert/empty_2.jpg
+ fonts:
+   - family: Tajawal
+     fonts:
+       - asset: assets/fonts/Tajawal-Bold.ttf
+       - asset: assets/fonts/Tajawal-Regular.ttf
+       - asset: assets/fonts/Tajawal-Light.ttf

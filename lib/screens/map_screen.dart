@@ -2,11 +2,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'dart:ui' as ui; // <-- ضروري لتصغير الأيقونة
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 
 import '../core/secrets.dart';
@@ -19,14 +20,14 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-/// مكان بسيط
+/// نموذج مكان بسيط يستعمله تدفّق الأسئلة
 class Place {
   final String id,
       nameAr,
       nameEn,
       cityAr,
       cityEn,
-      category; // sea|desert|historic
+      category; // sea|historic|desert
   final LatLng pos;
   const Place({
     required this.id,
@@ -41,7 +42,7 @@ class Place {
   String city(bool ar) => ar ? cityAr : cityEn;
 }
 
-/// أماكن أمثلة تُستخدم في تدفّق الأسئلة
+// أمثلة قليلة لتدفّق الأسئلة
 const _places = <Place>[
   Place(
     id: 'sohar-beach',
@@ -76,25 +77,27 @@ class _MapScreenState extends State<MapScreen> {
   GoogleMapController? _map;
   bool _isArabic = true;
 
+  // حدود الكاميرا لعُمان (للزوم والـ pan)
   static final LatLngBounds _omanBounds = LatLngBounds(
     southwest: const LatLng(16.4, 52.0),
     northeast: const LatLng(26.6, 60.5),
   );
-  static final CameraPosition _initial = CameraPosition(
-    target: const LatLng(23.6, 58.4),
+
+  static const CameraPosition _initial = CameraPosition(
+    target: LatLng(23.6, 58.4),
     zoom: 6.3,
   );
 
   final Set<Marker> _markers = {};
   final Set<Polyline> _polylines = {};
-  Marker? _myMarker;
+  final Set<Polygon> _polygons = {}; // لو حبيتي لاحقًا تلوّنين المحافظات
+
   LatLng? _userLatLng;
   StreamSubscription<Position>? _locSub;
 
-  // أيقونة المدن (مصغّرة)
   BitmapDescriptor? _cityIcon;
 
-  /// مدن رئيسية
+  // مراكز مدن رئيسية (للعلامات)
   final Map<String, (LatLng center, String cityAr, String cityEn)>
       _cityCenters = {
     'Muscat': (const LatLng(23.5880, 58.3829), 'مسقط', 'Muscat'),
@@ -107,61 +110,40 @@ class _MapScreenState extends State<MapScreen> {
     'Rustaq': (const LatLng(23.3900, 57.4244), 'الرستاق', 'Rustaq'),
   };
 
-  /// صور المدينة حسب الفئة
-  final Map<String, Map<String, List<String>>> _gallery = {
+  /// معرض (مدينة -> فئة -> عناصر بعناوين وصور)
+  /// مفعّل لصحار لأن صورها موجودة عندك حالياً.
+  final Map<String, Map<String, List<Map<String, dynamic>>>> _gallery = {
     'Sohar': {
       'sea': [
-        'assets/places/sohar/beach_1.jpg',
-        'assets/places/sohar/beach_2.jpg',
+        {
+          'titleAr': 'شاطئ صحار',
+          'titleEn': 'Sohar Beach',
+          'photos': [
+            'assets/places/sohar/beach_1.jpg',
+            'assets/places/sohar/beach_2.jpg',
+          ],
+        },
       ],
       'historic': [
-        'assets/places/sohar/fort_1.jpg',
-        'assets/places/sohar/fort_2.jpg',
+        {
+          'titleAr': 'قلعة صحار',
+          'titleEn': 'Sohar Fort',
+          'photos': [
+            'assets/places/sohar/fort_1.jpg',
+            'assets/places/sohar/fort_2.jpg',
+          ],
+        },
       ],
-      'desert': [
-        'assets/places/sohar/souq_1.jpg',
-        'assets/places/sohar/souq_2.jpg',
-      ],
+      'desert': const [],
     },
-    'Muscat': {
-      'sea': [
-        'assets/places/muscat/qurum_1.jpg',
-        'assets/places/muscat/qurum_2.jpg',
-      ],
-      'historic': [
-        'assets/places/muscat/muttrah_1.jpg',
-        'assets/places/muscat/muttrah_2.jpg',
-      ],
-      'desert': [],
-    },
-    'Nizwa': {
-      'historic': ['assets/places/nizwa/fort_1.jpg'],
-      'sea': [],
-      'desert': []
-    },
-    'Bahla': {
-      'historic': ['assets/places/bahla/fort_1.jpg'],
-      'sea': [],
-      'desert': []
-    },
-    'Salalah': {
-      'sea': [
-        'assets/places/salalah/beach_1.jpg',
-        'assets/places/salalah/beach_2.jpg'
-      ],
-      'historic': [],
-      'desert': []
-    },
-    'Sur': {
-      'sea': [],
-      'historic': [],
-      'desert': [
-        'assets/places/desert/wahiba_1.jpg',
-        'assets/places/desert/wahiba_2.jpg'
-      ],
-    },
-    'Khasab': {'sea': [], 'historic': [], 'desert': []},
-    'Rustaq': {'sea': [], 'historic': [], 'desert': []},
+    // مدن أخرى بدون صور حالياً — لا مشكلة
+    'Muscat': {'sea': const [], 'historic': const [], 'desert': const []},
+    'Nizwa': {'sea': const [], 'historic': const [], 'desert': const []},
+    'Bahla': {'sea': const [], 'historic': const [], 'desert': const []},
+    'Salalah': {'sea': const [], 'historic': const [], 'desert': const []},
+    'Sur': {'sea': const [], 'historic': const [], 'desert': const []},
+    'Khasab': {'sea': const [], 'historic': const [], 'desert': const []},
+    'Rustaq': {'sea': const [], 'historic': const [], 'desert': const []},
   };
 
   @override
@@ -177,7 +159,7 @@ class _MapScreenState extends State<MapScreen> {
     super.dispose();
   }
 
-  // تصغير صورة PNG إلى 36px لعمل ماركر صغير وأنيق
+  // ===== أصول وصور =====
   Future<BitmapDescriptor> _bitmapFromAsset(String path,
       {int width = 36}) async {
     final data = await rootBundle.load(path);
@@ -193,16 +175,67 @@ class _MapScreenState extends State<MapScreen> {
 
   Future<void> _loadMarkerIcon() async {
     try {
-      // ضع ملفك في assets/icons/marker_city.png
       _cityIcon =
           await _bitmapFromAsset('assets/icons/marker_city.png', width: 36);
     } catch (_) {
-      // رجوع للماركر الافتراضي لو ما وُجدت الصورة
       _cityIcon =
           BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRose);
     }
   }
 
+  // ===== GeoJSON: حدود عُمان =====
+  Future<void> _loadOmanOutline() async {
+    try {
+      final txt =
+          await rootBundle.loadString('assets/geo/oman_outline.geojson');
+      final data = jsonDecode(txt) as Map<String, dynamic>;
+      final feats = (data['features'] as List?) ?? [];
+
+      // امسحي أي سابق
+      _polylines.removeWhere((p) => p.polylineId.value == 'oman-outline');
+
+      List<LatLng> outline = [];
+
+      for (final f in feats) {
+        final g = (f as Map)['geometry'] as Map<String, dynamic>;
+        final type = (g['type'] as String).toLowerCase();
+        final coords = g['coordinates'];
+
+        if (type == 'polygon') {
+          final ring = (coords as List).first as List;
+          for (final e in ring) {
+            final lng = (e[0] as num).toDouble();
+            final lat = (e[1] as num).toDouble();
+            outline.add(LatLng(lat, lng));
+          }
+        } else if (type == 'multipolygon') {
+          for (final poly in (coords as List)) {
+            final ring = (poly as List).first as List;
+            for (final e in ring) {
+              final lng = (e[0] as num).toDouble();
+              final lat = (e[1] as num).toDouble();
+              outline.add(LatLng(lat, lng));
+            }
+          }
+        }
+      }
+
+      if (outline.isNotEmpty) {
+        _polylines.add(Polyline(
+          polylineId: const PolylineId('oman-outline'),
+          points: outline,
+          width: 4,
+          color: Colors.black54,
+          geodesic: true,
+        ));
+        setState(() {});
+      }
+    } catch (_) {
+      // لو فشل التحميل، نتجاهل بدون رسم مستطيل
+    }
+  }
+
+  // ===== علامات المدن =====
   void _buildCityMarkers() {
     _markers.removeWhere((m) => m.markerId.value.startsWith('city-'));
     _cityCenters.forEach((key, value) {
@@ -218,7 +251,10 @@ class _MapScreenState extends State<MapScreen> {
     setState(() {});
   }
 
-  // === شيت المدينة (فئات + صور) ===
+  // ===== BottomSheets المدن/الفئات/الصور =====
+  Widget _chip(String text, IconData icon, VoidCallback onTap) =>
+      ActionChip(avatar: Icon(icon), label: Text(text), onPressed: onTap);
+
   void _openCitySheet(String cityKey) {
     final label =
         _isArabic ? _cityCenters[cityKey]!.$2 : _cityCenters[cityKey]!.$3;
@@ -237,21 +273,19 @@ class _MapScreenState extends State<MapScreen> {
                 spacing: 8,
                 children: [
                   _chip(_isArabic ? 'بحر' : 'Sea', Icons.water_outlined,
-                      () => _showCityGallery(cityKey, 'sea')),
+                      () => _showCityCategoryList(cityKey, 'sea')),
                   _chip(
                       _isArabic ? 'تاريخي' : 'Historic',
                       Icons.museum_outlined,
-                      () => _showCityGallery(cityKey, 'historic')),
+                      () => _showCityCategoryList(cityKey, 'historic')),
                   _chip(
                       _isArabic ? 'صحاري' : 'Desert',
                       Icons.landscape_outlined,
-                      () => _showCityGallery(cityKey, 'desert')),
+                      () => _showCityCategoryList(cityKey, 'desert')),
                 ],
               ),
               const SizedBox(height: 8),
-              Text(_isArabic
-                  ? 'اختر الفئة لعرض الصور'
-                  : 'Choose a category to view photos'),
+              Text(_isArabic ? 'اختر الفئة لعرض الصور' : 'Choose a category'),
             ],
           ),
         ),
@@ -259,37 +293,78 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Widget _chip(String text, IconData icon, VoidCallback onTap) =>
-      ActionChip(avatar: Icon(icon), label: Text(text), onPressed: onTap);
-
-  void _showCityGallery(String cityKey, String category) {
-    final assets = _gallery[cityKey]?[category] ?? const <String>[];
+  void _showCityCategoryList(String cityKey, String category) {
+    final list =
+        _gallery[cityKey]?[category] as List<Map<String, dynamic>>? ?? [];
     showModalBottomSheet(
       context: context,
       builder: (_) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: assets.isEmpty
-              ? Center(child: Text(_isArabic ? 'لا توجد صور' : 'No photos'))
-              : GridView.builder(
+          child: list.isEmpty
+              ? Center(child: Text(_isArabic ? 'لا توجد عناصر' : 'No items'))
+              : ListView.separated(
                   shrinkWrap: true,
-                  itemCount: assets.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                  ),
-                  itemBuilder: (_, i) => ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(assets[i], fit: BoxFit.cover),
-                  ),
+                  itemCount: list.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (_, i) {
+                    final item = list[i];
+                    final title = _isArabic
+                        ? (item['titleAr'] as String? ?? '')
+                        : (item['titleEn'] as String? ?? '');
+                    return ListTile(
+                      leading: const Icon(Icons.photo_library_outlined),
+                      title: Text(title),
+                      trailing: const Icon(Icons.chevron_left),
+                      onTap: () => _showGalleryItem(item),
+                    );
+                  },
                 ),
         ),
       ),
     );
   }
 
-  // ===== أذونات وموقع =====
+  void _showGalleryItem(Map<String, dynamic> item) {
+    final photos =
+        (item['photos'] as List?)?.cast<String>() ?? const <String>[];
+    final title = _isArabic
+        ? (item['titleAr'] as String? ?? '')
+        : (item['titleEn'] as String? ?? '');
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              if (photos.isEmpty)
+                Center(child: Text(_isArabic ? 'لا توجد صور' : 'No photos'))
+              else
+                GridView.builder(
+                  shrinkWrap: true,
+                  itemCount: photos.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8),
+                  itemBuilder: (_, i) => ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(photos[i], fit: BoxFit.cover),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ===== الموقع والأذونات =====
   Future<bool> _ensureLocationPermission() async {
     if (!await Geolocator.isLocationServiceEnabled()) return false;
     var perm = await Geolocator.checkPermission();
@@ -320,17 +395,18 @@ class _MapScreenState extends State<MapScreen> {
 
   void _setUserPosition(Position p) {
     _userLatLng = LatLng(p.latitude, p.longitude);
-    _markers.removeWhere((m) => m.markerId.value == 'me');
-    _markers.add(Marker(
-      markerId: const MarkerId('me'),
-      position: _userLatLng!,
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-      infoWindow: InfoWindow(title: _isArabic ? 'موقعي' : 'My Location'),
-    ));
+    _markers
+      ..removeWhere((m) => m.markerId.value == 'me')
+      ..add(Marker(
+        markerId: const MarkerId('me'),
+        position: _userLatLng!,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+        infoWindow: InfoWindow(title: _isArabic ? 'موقعي' : 'My Location'),
+      ));
     setState(() {});
   }
 
-  // ===== واجهة =====
+  // ===== واجهة الخريطة =====
   @override
   Widget build(BuildContext context) {
     final t = _t;
@@ -340,16 +416,15 @@ class _MapScreenState extends State<MapScreen> {
         actions: [
           IconButton(
             tooltip: _isArabic ? 'إظهار كل عُمان' : 'Show Oman',
-            onPressed: () => _map?.animateCamera(
-              CameraUpdate.newLatLngBounds(_omanBounds, 28),
-            ),
+            onPressed: () => _map
+                ?.animateCamera(CameraUpdate.newLatLngBounds(_omanBounds, 28)),
             icon: const Icon(Icons.public),
           ),
           TextButton(
             onPressed: () {
               setState(() {
                 _isArabic = !_isArabic;
-                _buildCityMarkers(); // لتحديث أسماء الـ infoWindow
+                _buildCityMarkers();
               });
             },
             child: Text(_isArabic ? 'English' : 'العربية'),
@@ -386,21 +461,23 @@ class _MapScreenState extends State<MapScreen> {
         minMaxZoomPreference: const MinMaxZoomPreference(5.6, 17),
         markers: _markers,
         polylines: _polylines,
+        polygons: _polygons,
         myLocationEnabled: true,
         myLocationButtonEnabled: false,
         zoomControlsEnabled: false,
         mapToolbarEnabled: false,
         onMapCreated: (c) async {
           _map = c;
-          // نخلي الستايل الافتراضي حتى تبقى أسماء المدن ظاهرة
           _map?.animateCamera(CameraUpdate.newLatLngBounds(_omanBounds, 28));
           _initLocation();
+          _buildCityMarkers();
+          await _loadOmanOutline(); // ⬅️ حمّلي حدود عُمان من GeoJSON
         },
       ),
     );
   }
 
-  // ===== تدفّق “الأسئلة” =====
+  // ===== تدفّق “الأسئلة” (كما هو) =====
   Future<void> _startWizardFlow() async {
     final t = _t;
     final category = await _askCategory();
@@ -422,7 +499,7 @@ class _MapScreenState extends State<MapScreen> {
     } else {
       _snack(_isArabic
           ? 'موقعك غير جاهز. اضغط زر تحديد موقعي.'
-          : 'Location not ready. Tap locate.');
+          : 'Location not ready.');
     }
 
     final bookHere =
@@ -469,12 +546,13 @@ class _MapScreenState extends State<MapScreen> {
           _isArabic ? 'مطعم مقترح قريب' : 'Suggested restaurant nearby',
     );
     if (!mounted) return;
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => TripPlanScreen(plan: plan, isArabic: _isArabic),
-    ));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+          builder: (_) => TripPlanScreen(plan: plan, isArabic: _isArabic)),
+    );
   }
 
-  // ===== الحوارات =====
+  // ===== حوارات =====
   Future<String?> _askCategory() async {
     final t = _t;
     final items = [

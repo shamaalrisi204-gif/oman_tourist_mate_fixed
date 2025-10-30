@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>خريطة عُمان</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+ html,body,#map{height:100%;margin:0}
+ .leaflet-container{font-family: system-ui, sans-serif;}
+ .panel {
+   position:absolute; top:12px; right:12px; z-index:9999;
+   background:#ffffffd8; padding:10px 12px; border-radius:10px; box-shadow:0 4px 14px rgba(0,0,0,.15);
+ }
+ .panel h3{margin:0 0 6px; font-size:16px}
+ .poi{cursor:pointer; margin:4px 0}
+ .poi::before{content:"• "; color:#08c}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="panel">
+<h3 id="title">اختر محافظة</h3>
+<div id="pois"></div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// حدود عُمان الكبرى (للاحتواء)
+const bounds = [ [16.4,52.0],[26.6,60.5] ];
+// عيّنة GeoJSON مبسطة جداً لمحافظة (استبدليها بملفك الكامل لاحقاً)
+const omanGovernorates = {
+"type":"FeatureCollection",
+"features":[
+ {
+  "type":"Feature",
+  "properties":{"id":"muscat","nameAr":"محافظة مسقط","nameEn":"Muscat"},
+  "geometry":{"type":"Polygon","coordinates":[[
+    [58.20,23.55],[58.80,23.55],[58.90,23.35],[58.75,23.05],[58.40,23.10],[58.20,23.40],[58.20,23.55]
+  ]]}
+ },
+ {
+  "type":"Feature",
+  "properties":{"id":"dhofar","nameAr":"محافظة ظفار","nameEn":"Dhofar"},
+  "geometry":{"type":"Polygon","coordinates":[[
+    [53.60,19.30],[55.40,19.30],[55.50,17.80],[54.20,17.40],[53.80,17.60],[53.60,18.50],[53.60,19.30]
+  ]]}
+ }
+]
+};
+// أماكن سياحية لكل محافظة (مثال)
+const poisByGov = {
+ muscat: [
+   {nameAr:"جامع السلطان قابوس الأكبر", lat:23.588, lng:58.385},
+   {nameAr:"المتحف الوطني", lat:23.613, lng:58.594}
+ ],
+ dhofar: [
+   {nameAr:"شاطئ المغسيل", lat:16.866, lng:53.778},
+   {nameAr:"عين جرزيز", lat:17.095, lng:53.997}
+ ]
+};
+const map = L.map('map',{ zoomControl:true }).fitBounds(bounds);
+// بلاطات خريطة (OSM). يمكن تغييرها لـ Mapbox/MapTiler مع مفتاحك.
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+ maxZoom: 18, attribution: '&copy; OpenStreetMap'
+}).addTo(map);
+// طبقة المحافظات
+let selectedLayer = null;
+const defaultStyle = { color:'#ffffff', weight:1.5, fillColor:'#1a73e8', fillOpacity:0.15 };
+const hoverStyle   = { fillOpacity:0.30 };
+const selectedStyle= { fillColor:'#1a73e8', fillOpacity:0.45, weight:2.5, color:'#fff' };
+const govLayer = L.geoJSON(omanGovernorates, {
+ style: defaultStyle,
+ onEachFeature: (feature, layer) => {
+   layer.on('mouseover', ()=> layer.setStyle(hoverStyle));
+   layer.on('mouseout', ()=>{
+     if (selectedLayer !== layer) layer.setStyle(defaultStyle);
+   });
+   layer.on('click', ()=>{
+     if (selectedLayer) selectedLayer.setStyle(defaultStyle);
+     selectedLayer = layer;
+     layer.setStyle(selectedStyle);
+     const govId = feature.properties.id;
+     const govName = feature.properties.nameAr || govId;
+     map.fitBounds(layer.getBounds(), { padding:[20,20] });
+     showGovPOIs(govId, govName);
+     // أبلغ Flutter:
+     if (window.app && window.app.postMessage) {
+       window.app.postMessage(`selected_gov:${govId}`);
+     }
+   });
+ }
+}).addTo(map);
+// عرض قائمة أماكن المحافظة في اللوحة
+function showGovPOIs(govId, govName){
+ document.getElementById('title').textContent = govName;
+ const box = document.getElementById('pois'); box.innerHTML = '';
+ (poisByGov[govId]||[]).forEach(p=>{
+   const div = document.createElement('div');
+   div.className = 'poi';
+   div.textContent = p.nameAr;
+   div.onclick = ()=>{
+     L.marker([p.lat, p.lng]).addTo(map).bindPopup(p.nameAr).openPopup();
+     map.flyTo([p.lat, p.lng], 11);
+     if (window.app && window.app.postMessage) {
+       window.app.postMessage(`selected_poi:${govId}:${p.nameAr}`);
+     }
+   };
+   box.appendChild(div);
+ });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+[
+ { "featureType": "poi", "stylers": [{"visibility":"off"}] },
+ { "featureType": "transit", "stylers": [{"visibility":"off"}] },
+ { "featureType": "road", "elementType": "labels.icon", "stylers":[{"visibility":"off"}] },
+ { "featureType": "administrative.land_parcel", "stylers":[{"visibility":"off"}] },
+ { "featureType": "administrative.neighborhood", "stylers":[{"visibility":"off"}] },
+ { "featureType": "water", "stylers":[{"color":"#9fd7e0"}] },
+ { "featureType": "landscape", "stylers":[{"color":"#f5f7f7"}] },
+ { "featureType": "road", "stylers":[{"color":"#e7ecee"}] }
+]
