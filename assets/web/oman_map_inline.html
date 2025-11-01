@@ -1,3 +1,98 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>خريطة سلطنة عُمان (SVG)</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<style>
+ :root{
+   --bg:#eef2f3; --base:#f8fafb; --stroke:#c9d3d8; --hover:#e1ecff; --active:#5b8ddf;
+   --label:#1f2937; --label-shadow:#ffffff;
+ }
+ *{box-sizing:border-box}
+ html,body{height:100%}
+ body{margin:0;background:var(--bg);font-family:"Tajawal",system-ui,Arial,sans-serif}
+ /* تخطيط عمودين: يسار للخريطة، يمين للمعلومات */
+ #app {
+   position:relative;
+   min-height:100vh;
+   overflow:hidden;
+ }
+ /* الخلفية (الهيرو) تملأ الصفحة كلها – ما غيرتها */
+ #heroBg{
+   position:absolute; inset:0;
+   background-size:cover; background-position:center; background-repeat:no-repeat;
+   opacity:1; transition:opacity .3s;
+   z-index:0;
+ }
+ /* ماسك خفيف ع اليسار عشان الخريطة تبين فوق الصورة */
+ #heroMask{
+   position:absolute; inset:0;
+   background:linear-gradient(to left, rgba(255,255,255,0) 35%, rgba(255,255,255,.7) 55%, rgba(255,255,255,.95) 65%, #fff 70%);
+   pointer-events:none; z-index:1;
+ }
+ /* عمود الخريطة يسار */
+ #mapCol{
+   position:absolute; top:80px; bottom:40px; inset-inline-start:24px;
+   width:min(44vw, 520px);      /* عرض ثابت نسبي */
+   z-index:2;                   /* فوق الخلفية */
+ }
+ #chart{width:100%; height:100%}
+ .gov{fill:var(--base);stroke:var(--stroke);stroke-width:1.2;cursor:pointer;transition:fill .15s}
+ .gov:hover{fill:var(--hover)} .gov.active{fill:var(--active)}
+ .label{font-weight:700;fill:var(--label);paint-order:stroke;stroke:var(--label-shadow);stroke-width:3px;text-anchor:middle;pointer-events:none}
+ /* عمود المعلومات يمين */
+ #infoCol{
+   position:absolute; top:120px; bottom:60px; inset-inline-end:24px;
+   width:min(34vw, 420px);      /* عمود يمين للعنوان + اللستة */
+   z-index:2;
+   color:#fff;
+ }
+ #govTitle{
+   display:inline-block; margin:0 0 12px;
+   padding:10px 14px; border-radius:10px; font-weight:900; font-size:18px;
+   background:rgba(0,0,0,.55);
+ }
+ #poiList{
+   list-style:none; margin:0; padding:0;
+   display:grid; gap:8px;
+ }
+ .poiItem{
+   display:flex; align-items:center; gap:10px;
+   padding:10px 12px; border-radius:12px;
+   background:rgba(0,0,0,.45); backdrop-filter:blur(4px);
+ }
+ .poiItem img{width:64px;height:48px;object-fit:cover;border-radius:8px}
+ .poiItem .name{font-weight:800}
+ .poiItem .sub{opacity:.8;font-size:12px}
+ /* أدوات أعلى يسار */
+ .toolbar{position:absolute; inset-inline-start:12px; top:12px; display:flex; gap:8px; z-index:3}
+ .btn{border:0;border-radius:10px;padding:8px 12px;cursor:pointer;background:#fff; box-shadow:0 2px 8px rgba(0,0,0,.12);font-weight:600}
+</style>
+</head>
+<body>
+<div id="app">
+<!-- الخلفية تبقى نفسها -->
+<div id="heroBg"></div>
+<div id="heroMask"></div>
+<!-- الخريطة (يسار) -->
+<div id="mapCol">
+<svg id="chart" viewBox="0 0 1200 980" preserveAspectRatio="xMidYMid meet"></svg>
+</div>
+<!-- المعلومات (يمين) -->
+<div id="infoCol">
+<h3 id="govTitle" style="display:none"></h3>
+<ul id="poiList"></ul>
+</div>
+<!-- الأدوات -->
+<div class="toolbar" dir="ltr">
+<button id="resetBtn" class="btn">إعادة الضبط</button>
+<button id="langBtn"  class="btn">English</button>
+</div>
+</div>
+<!-- 1) هنا بالضبط الصقي GeoJSON فقط (بدون أي جافاسكربت) -->
+<script id="OMAN_GEO" type="application/json">
 {
     "type": "FeatureCollection",
     "name": "gadm41_OMN_1",
@@ -18483,3 +18578,516 @@
         }
     ]
 }
+</script>
+<!-- 2) من هنا وتحت: جافاسكربت فقط (لا تضيفي إحداثيات هنا) -->
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>خريطة سلطنة عُمان (SVG)</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<style>
+
+  :root{
+
+    --bg:#eef2f3; --base:#f8fafb; --stroke:#c9d3d8; --hover:#e1ecff; --active:#5b8ddf;
+
+    --label:#1f2937; --label-shadow:#ffffff;
+
+  }
+
+  *{box-sizing:border-box}
+
+  html,body{height:100%}
+
+  body{margin:0;background:var(--bg);font-family:"Tajawal",system-ui,Arial,sans-serif}
+
+  /* تخطيط عمودين: يسار للخريطة، يمين للمعلومات */
+
+  #app {
+
+    position:relative;
+
+    min-height:100vh;
+
+    overflow:hidden;
+
+  }
+
+  /* الخلفية (الهيرو) تملأ الصفحة كلها – ما غيرتها */
+
+  #heroBg{
+
+    position:absolute; inset:0;
+
+    background-size:cover; background-position:center; background-repeat:no-repeat;
+
+    opacity:1; transition:opacity .3s;
+
+    z-index:0;
+
+  }
+
+  /* ماسك خفيف ع اليسار عشان الخريطة تبين فوق الصورة */
+
+  #heroMask{
+
+    position:absolute; inset:0;
+
+    background:linear-gradient(to left, rgba(255,255,255,0) 35%, rgba(255,255,255,.7) 55%, rgba(255,255,255,.95) 65%, #fff 70%);
+
+    pointer-events:none; z-index:1;
+
+  }
+
+  /* عمود الخريطة يسار */
+
+  #mapCol{
+
+    position:absolute; top:80px; bottom:40px; inset-inline-start:24px;
+
+    width:min(44vw, 520px);      /* عرض ثابت نسبي */
+
+    z-index:2;                   /* فوق الخلفية */
+
+  }
+
+  #chart{width:100%; height:100%}
+
+  .gov{fill:var(--base);stroke:var(--stroke);stroke-width:1.2;cursor:pointer;transition:fill .15s}
+
+  .gov:hover{fill:var(--hover)} .gov.active{fill:var(--active)}
+
+  .label{font-weight:700;fill:var(--label);paint-order:stroke;stroke:var(--label-shadow);stroke-width:3px;text-anchor:middle;pointer-events:none}
+
+  /* عمود المعلومات يمين */
+
+  #infoCol{
+
+    position:absolute; top:120px; bottom:60px; inset-inline-end:24px;
+
+    width:min(34vw, 420px);      /* عمود يمين للعنوان + اللستة */
+
+    z-index:2;
+
+    color:#fff;
+
+  }
+
+  #govTitle{
+
+    display:inline-block; margin:0 0 12px;
+
+    padding:10px 14px; border-radius:10px; font-weight:900; font-size:18px;
+
+    background:rgba(0,0,0,.55);
+
+  }
+
+  #poiList{
+
+    list-style:none; margin:0; padding:0;
+
+    display:grid; gap:8px;
+
+  }
+
+  .poiItem{
+
+    display:flex; align-items:center; gap:10px;
+
+    padding:10px 12px; border-radius:12px;
+
+    background:rgba(0,0,0,.45); backdrop-filter:blur(4px);
+
+  }
+
+  .poiItem img{width:64px;height:48px;object-fit:cover;border-radius:8px}
+
+  .poiItem .name{font-weight:800}
+
+  .poiItem .sub{opacity:.8;font-size:12px}
+
+  /* أدوات أعلى يسار */
+
+  .toolbar{position:absolute; inset-inline-start:12px; top:12px; display:flex; gap:8px; z-index:3}
+
+  .btn{border:0;border-radius:10px;padding:8px 12px;cursor:pointer;background:#fff; box-shadow:0 2px 8px rgba(0,0,0,.12);font-weight:600}
+</style>
+</head>
+<body>
+<div id="app">
+<!-- الخلفية تبقى نفسها -->
+<div id="heroBg"></div>
+<div id="heroMask"></div>
+<!-- الخريطة (يسار) -->
+<div id="mapCol">
+<svg id="chart" viewBox="0 0 1200 980" preserveAspectRatio="xMidYMid meet"></svg>
+</div>
+<!-- المعلومات (يمين) -->
+<div id="infoCol">
+<h3 id="govTitle" style="display:none"></h3>
+<ul id="poiList"></ul>
+</div>
+<!-- الأدوات -->
+<div class="toolbar" dir="ltr">
+<button id="resetBtn" class="btn">إعادة الضبط</button>
+<button id="langBtn"  class="btn">English</button>
+</div>
+</div>
+<!-- هنا ضعي الـGeoJSON كما هو لديك -->
+<script id="OMAN_GEO" type="application/json">
+</script>
+<script>
+
+/* ========= بيانات ولغة ========= */
+
+let currentLang='ar', lastGovKey=null;
+
+const arFallbackNames = new Map([
+
+  ['muscat','مسقط'],
+
+  ['alburaimi','البريمي'],['alburaymi','البريمي'],
+
+  ['albatinahnorth','الباطنة الشمالية'],['albatnahnorth','الباطنة الشمالية'],['albattinahnorth','الباطنة الشمالية'],
+
+  ['albatinahsouth','الباطنة الجنوبية'],['albatnahsouth','الباطنة الجنوبية'],['albattinahsouth','الباطنة الجنوبية'],
+
+  ['addakhliyah','الداخلية'],['aldakhiliyah','الداخلية'],['adakhiliyah','الداخلية'],
+
+  ['ashsharqiyahnorth','الشرقية الشمالية'],['asharqiyahnorth','الشرقية الشمالية'],['northeastashsharqiyah','الشرقية الشمالية'],
+
+  ['ashsharqiyahsouth','الشرقية الجنوبية'],['asharqiyahsouth','الشرقية الجنوبية'],['southeastashsharqiyah','الشرقية الجنوبية'],
+
+  ['addhahirah','الظاهرة'],['aldhahira','الظاهرة'],['aldhahirah','الظاهرة'],
+
+  ['alwusta','الوسطى'],['dhofar','ظفار'],['musandam','مسندم'],
+
+]);
+
+const islands=[
+
+  {lon:58.90,lat:20.55,ar:'جزيرة مصيرة',en:'Masirah Island',dx:60,dy:2.5,r:2.6,fs:11},
+
+  {lon:57.90,lat:17.45,ar:'جزر الحلانيات',en:'Al Hallaniyat Islands',dx:-80,dy:3,r:2.6,fs:11},
+
+];
+
+/* ========= محتوى المحافظات (عدّلي الصور/الأماكن بحرّية) ========= */
+
+const GOV_CONTENT={
+
+  muscat:{
+
+    titleAr:'محافظة مسقط', titleEn:'Muscat Governorate',
+
+    hero:'img/muscat_hero.jpg',
+
+    pois:[
+
+      {ar:'جامع السلطان قابوس الأكبر',en:'Sultan Qaboos Grand Mosque',thumb:'img/muscat_mosque.jpg'},
+
+      {ar:'الكورنيش ومطرح',en:'Muttrah & Corniche',thumb:'img/muttrah.jpg'}
+
+    ]
+
+  },
+
+  adakhliyah:{
+
+    titleAr:'محافظة الداخلية', titleEn:'Ad Dakhiliyah Governorate',
+
+    hero:'img/adakhliyah_hero.jpg',
+
+    pois:[
+
+      {ar:'نزوى التاريخية',en:'Historic Nizwa',thumb:'img/nizwa.jpg'},
+
+      {ar:'جبل شمس',en:'Jabal Shams',thumb:'img/jabal_shams.jpg'}
+
+    ]
+
+  },
+
+  dhofar:{
+
+    titleAr:'محافظة ظفار', titleEn:'Dhofar Governorate',
+
+    hero:'img/dhofar_hero.jpg',
+
+    pois:[
+
+      {ar:'وادي دربات',en:'Wadi Darbat',thumb:'img/darbat.jpg'},
+
+      {ar:'شاطئ المغسيل',en:'Mughsail Beach',thumb:'img/mughsail.jpg'}
+
+    ]
+
+  }
+
+};
+
+/* ========= أدوات ========= */
+
+const heroBg  = document.getElementById('heroBg');
+
+const govTitle= document.getElementById('govTitle');
+
+const poiList = document.getElementById('poiList');
+
+function normalizeKey(s){
+
+  return (s||'').toString().toLowerCase().replace(/\s+/g,'').replace(/[-_']/g,'')
+
+    .normalize('NFKD').replace(/[^\x00-\x7F]/g,'');
+
+}
+
+const GOV_KEY_ALIASES=new Map([
+
+  ['muscat','muscat'],['muscAt','muscat'],
+
+  ['dhofar','dhofar'],['zafar','dhofar'],
+
+  ['addakhliyah','adakhliyah'],['aldakhiliyah','adakhliyah'],['ad dakhiliyah','adakhliyah'],['adakhiliyah','adakhliyah'],
+
+  ['alburaimi','alburaimi'],['alburaymi','alburaimi'],
+
+  ['albatinahnorth','albatinahnorth'],['al batinah north','albatinahnorth'],
+
+  ['albatinahsouth','albatinahsouth'],['al batinah south','albatinahsouth'],
+
+  ['ashsharqiyahnorth','ashsharqiyahnorth'],['asharqiyahnorth','ashsharqiyahnorth'],
+
+  ['ashsharqiyahsouth','ashsharqiyahsouth'],['asharqiyahsouth','ashsharqiyahsouth'],
+
+  ['addhahirah','addhahirah'],['aldhahira','addhahirah'],
+
+  ['alwusta','alwusta'],['musandam','musandam']
+
+]);
+
+function getGovKeyFromFeature(f){
+
+  const p=f.properties||{};
+
+  const raw=(p.NAME_1||p.VARNAME_1||p.NAME||'').toString();
+
+  const norm=normalizeKey(raw);
+
+  return GOV_KEY_ALIASES.get(norm)||norm;
+
+}
+
+/* ========= عرض قائمة المعالم يمين وتثبيت الخلفية ========= */
+
+function showGov(govKey){
+
+  lastGovKey=govKey;
+
+  const c=GOV_CONTENT[govKey];
+
+  if(!c){ govTitle.style.display='none'; poiList.innerHTML=''; return; }
+
+  heroBg.style.backgroundImage=`url(${c.hero})`;
+
+  govTitle.textContent=(currentLang==='ar'?c.titleAr:c.titleEn);
+
+  govTitle.style.display='inline-block';
+
+  poiList.innerHTML='';
+
+  (c.pois||[]).forEach(p=>{
+
+    const li=document.createElement('li');
+
+    li.className='poiItem';
+
+    li.innerHTML=`
+<img src="${p.thumb}" alt="">
+<div>
+<div class="name">${currentLang==='ar'?p.ar:p.en}</div>
+<div class="sub">${currentLang==='ar'?'عرض الصور':'View photos'}</div>
+</div>`;
+
+    poiList.appendChild(li);
+
+  });
+
+}
+
+/* ========= رسم الخريطة (يسار) ========= */
+
+const svg = d3.select('#chart'), g = svg.append('g'), gPol=g.append('g'), gLbl=g.append('g'), gIsl=g.append('g');
+
+function labelFor(d){
+
+  const p=d.properties||{};
+
+  const rawEn=(p.NAME_1||p.VARNAME_1||p.NAME||'').toString().trim();
+
+  const arFromFile=p.NAME_1_AR;
+
+  if(currentLang==='en') return rawEn||arFromFile||'';
+
+  return arFromFile||arFallbackNames.get(normalizeKey(rawEn))||rawEn||'';
+
+}
+
+function drawMap(geo){
+
+  const path = d3.geoPath(d3.geoMercator().fitSize([1200,980], geo));
+
+  const bboxAll=path.bounds(geo);
+
+  gPol.selectAll('path.gov')
+
+    .data(geo.features)
+
+    .join('path')
+
+    .attr('class','gov')
+
+    .attr('d', path)
+
+    .on('click', function(e,d){
+
+      const already=d3.select(this).classed('active');
+
+      gPol.selectAll('path.gov').classed('active', false);
+
+      const govKey=getGovKeyFromFeature(d);
+
+      if(!already){
+
+        d3.select(this).classed('active', true);
+
+        showGov(govKey);                 // ← يظهر الخلفية واللستة يمين
+
+        zoomTo(path.bounds(d), 40, 1.9);
+
+      }else{
+
+        gPol.selectAll('path.gov').classed('active', false);
+
+        showGov(null);
+
+        zoomTo(bboxAll, 0, 1.25);
+
+      }
+
+    });
+
+  const labels=gLbl.selectAll('text.label')
+
+    .data(geo.features)
+
+    .join('text')
+
+    .attr('class','label')
+
+    .attr('x', d => path.centroid(d)[0])
+
+    .attr('y', d => path.centroid(d)[1])
+
+    .style('font-size', d=>{
+
+      const a=Math.max(1, path.area(d));
+
+      return (10 + Math.min(6, Math.log(a)/2.2)) + 'px';
+
+    })
+
+    .text(labelFor);
+
+  gIsl.selectAll('*').remove();
+
+  islands.forEach(is=>{
+
+    const proj=d3.geoMercator().fitSize([1200,980], geo);
+
+    const p=proj([is.lon,is.lat]); if(!p) return;
+
+    const [x,y]=p;
+
+    gIsl.append('circle').attr('cx',x).attr('cy',y).attr('r',is.r||2.5).attr('fill','#0f1e22');
+
+    gIsl.append('text')
+
+      .attr('x',x+(is.dx||8)).attr('y',y+(is.dy||2))
+
+      .style('font-weight','700').style('font-size',(is.fs||10)+'px')
+
+      .attr('paint-order','stroke').attr('stroke','#fff').attr('stroke-width','2px')
+
+      .text(currentLang==='ar'?is.ar:is.en);
+
+  });
+
+  // أزرار
+
+  document.getElementById('resetBtn').onclick=()=>{
+
+    gPol.selectAll('path.gov').classed('active', false);
+
+    showGov(null);
+
+    zoomTo(bboxAll, 0, 1.25);
+
+  };
+
+  document.getElementById('langBtn').onclick=()=>{
+
+    currentLang=(currentLang==='ar')?'en':'ar';
+
+    document.getElementById('langBtn').textContent=(currentLang==='ar')?'English':'العربية';
+
+    labels.text(labelFor);
+
+    if(lastGovKey) showGov(lastGovKey); // حدّث عناوين القائمة
+
+  };
+
+  // زوم مبدئي
+
+  zoomTo(bboxAll, 0, 1.25);
+
+  function zoomTo(bounds, pad=28, factor=1.15){
+
+    const [[x0,y0],[x1,y1]]=bounds;
+
+    const width=1200, height=980;
+
+    const dx=x1-x0+pad, dy=y1-y0+pad, cx=(x0+x1)/2, cy=(y0+y1)/2;
+
+    const scale=Math.max(1, Math.min(8, (0.92/Math.max(dx/width, dy/height))*factor));
+
+    const tx=width/2 - scale*cx, ty=height/2 - scale*cy;
+
+    g.transition().duration(450).attr('transform',`translate(${tx},${ty}) scale(${scale})`);
+
+  }
+
+}
+
+/* ========= بدء التشغيل من الـGeoJSON ========= */
+
+(function(){
+
+  try{
+
+    const txt=document.getElementById('OMAN_GEO').textContent.trim();
+
+    const geo=JSON.parse(txt);
+
+    drawMap(geo);
+  }catch(e){
+    alert('❌ GeoJSON غير صالح داخل الصفحة'); console.error(e);
+  }
+})();
+</script>
+</body>
+</html>
+ 

@@ -13,7 +13,7 @@ dependencies:
  firebase_auth: ^5.3.0
  cloud_firestore: ^5.4.0
  cloud_functions: ^5.0.4
- webview_flutter: ^4.13.0
+ webview_flutter: ^4.7.0
  # خرائط جوجل
  google_maps_flutter: ^2.9.0
  # الموقع والـ reverse geocoding
@@ -49,6 +49,25 @@ flutter:
    - assets/geo/oman_governorates.geojson
    - assets/web/oman_map.html
    - assets/web/leaflet_map.html
+   - assets/web/oman_svg_map.html
+   - assets/web/custom.geo.json
+   - assets/web/geo/oman_governorates.geojson
+   - assets/web/oman_map_inline.html
+   - assets/web/img/darbat.jpg
+   - assets/web/img/darbat_1.jpg
+   - assets/web/img/dhofar_hero.jpg
+   - assets/web/img/mughsail.jpg
+   - assets/web/img/mughsail_1.jpg
+   - assets/web/img/muscat_hero.jpg
+   - assets/web/img/muscat_mosque.jpg
+   - assets/web/img/muscat_mosque_1.jpg
+   - assets/web/img/muscat_mosque_2.jpg
+   - assets/web/img/muttrah.jpg
+   - assets/web/img/muttrah_1.jpg
+   - assets/web/img/muttrah_2.jpg
+   - assets/web/img/nizwa.jpg
+   - assets/web/img/nizwa_1.jpg
+   - assets/web/img/adakhliyah_hero.jpg
    # Sohar
    - assets/places/sohar/beach_1.jpg
    - assets/places/sohar/beach_2.jpg

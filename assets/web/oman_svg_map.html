@@ -3,181 +3,162 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>خريطة محافظات عُمان</title>
+<title>خريطة سلطنة عُمان (SVG)</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <style>
- html,body{height:100%;margin:0;font-family:Tahoma,Arial,sans-serif;background:#e9f1f1}
- .page{display:flex;height:100%}
- #side{width:320px;max-width:38vw;background:#0f1417;color:#e9f1f1;box-sizing:border-box;padding:16px}
- #map-wrap{position:relative;flex:1}
- #map{width:100%;height:100%}
- .btns{position:absolute;top:12px;left:12px;display:flex;gap:8px;z-index:2}
- .btn{padding:7px 10px;border:0;border-radius:8px;background:#eef3f7;color:#222;cursor:pointer}
- .btn.alt{background:#1e2b30;color:#cfe8ee}
- .outline{fill:#157171;stroke:#fff;stroke-width:1.2}
- .gov{fill:#157171;stroke:#fff;stroke-width:1}
- .gov:hover{fill:#198184}
- .lab{pointer-events:none;paint-order:stroke;stroke:#0b3d3f;stroke-width:2;fill:#fff;font-weight:700;letter-spacing:.2px}
- .lab.ar{font-family:"Dubai","Cairo","Tahoma",Arial,sans-serif}
- .lab.en{font-family:Arial,Helvetica,sans-serif}
- .credit{position:absolute;right:10px;bottom:8px;color:#333;opacity:.7;font-size:12px}
+   :root{ --bg:#eef2f3; --base:#f8fafb; --stroke:#c9d3d8; --hover:#e1ecff; --active:#5b8ddf;
+          --label:#1f2937; --label-shadow:#ffffff; }
+   html,body{height:100%} body{margin:0;background:var(--bg);
+     font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Naskh Arabic UI","Noto Kufi Arabic","Tajawal",Arial,sans-serif}
+   .toolbar{position:fixed; inset-inline-start:12px; top:12px; display:flex; gap:8px; z-index:10}
+   .btn{border:0;border-radius:10px;padding:8px 12px;cursor:pointer;background:#fff;
+        box-shadow:0 2px 8px rgba(0,0,0,.12);font-weight:600}
+   svg{width:100%;height:100%}
+   .gov{fill:var(--base);stroke:var(--stroke);stroke-width:1.2;cursor:pointer;transition:fill .15s}
+   .gov:hover{fill:var(--hover)} .gov.active{fill:var(--active)}
+   .label{font-weight:700;fill:var(--label);paint-order:stroke;stroke:var(--label-shadow);
+          stroke-width:3px;text-anchor:middle;pointer-events:none}
+   .island-dot{fill:#0f1e22}
+   .island-label{font-weight:700;fill:#111827;paint-order:stroke;stroke:#fff;stroke-width:2px;pointer-events:none}
 </style>
 </head>
 <body>
-<div class="page">
-<div id="map-wrap">
-<div class="btns">
-<button id="btnReset" class="btn">إعادة الضبط</button>
-<button id="btnAR" class="btn alt">العربية</button>
-<button id="btnEN" class="btn">English</button>
+<div class="toolbar" dir="ltr">
+<button id="resetBtn" class="btn">إعادة الضبط</button>
+<button id="langBtn"  class="btn">English</button>
 </div>
-<svg id="map"></svg>
-<div class="credit">المصدر: GeoJSON محلي — D3.js</div>
-</div>
-<aside id="side">
-<h2 style="margin:0 0 6px">خريطة محافظات عُمان</h2>
-<p style="margin:0 0 10px;opacity:.85">مرّر على المحافظة للتكبير، وانقري للاختيار.<br>المصدر: <b>GeoJSON</b> محلي.</p>
-</aside>
-</div>
-<!-- D3 -->
-<script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+<svg id="chart" viewBox="0 0 1200 980" preserveAspectRatio="xMidYMid meet"></svg>
 <script>
-(async function(){
- // عناصر أساسية
- const svg = d3.select('#map');
- const gRoot = svg.append('g');
- const gOutline = gRoot.append('g');
- const gGovs = gRoot.append('g');
- const gLabs = gRoot.append('g');
- // قياسات SVG
- function sizeSvg(){
-   const w = document.getElementById('map-wrap').clientWidth;
-   const h = document.getElementById('map-wrap').clientHeight;
-   svg.attr('viewBox',`0 0 ${w} ${h}`).attr('preserveAspectRatio','xMidYMid meet');
-   return {w,h};
- }
- let {w,h} = sizeSvg();
- window.addEventListener('resize',()=>{ ({w,h}=sizeSvg()); fitAndDraw(); });
- // إسقاط ورسم
- const projection = d3.geoMercator();
- const path = d3.geoPath(projection);
- // زوم/سحب
- const layer = gRoot;
- const zoom = d3.zoom().scaleExtent([1,10]).on('zoom',ev=>layer.attr('transform',ev.transform));
- svg.call(zoom);
- // تحميل البيانات
- // 1) حدود السلطنة = اتحاد جميع المحافظات (نستخرجه من نفس الملف)
- // 2) المحافظات
- const govURL = 'geo/oman_governorates.geojson';
- let govFC;
- try{
-   const raw = await (await fetch(govURL)).json();
-   govFC = raw.type==='FeatureCollection' ? raw : {type:'FeatureCollection',features:[raw]};
- }catch(e){
-   alert('تعذّر التحميل: governorates'); throw e;
- }
- // نبني شكل خارجي Union بسيط بجمع الميزات (عرض فقط)
- // هنا نستخدم أول حدّ لتقدير الملاءمة، ثم نرسم كل المحافظات كحدود داخلية.
- let outlineFeature = { type:'Feature',
-   geometry: { type:'MultiPolygon', coordinates: [] }
- };
- for(const f of govFC.features){
-   const g = f.geometry;
-   if(g.type==='Polygon') outlineFeature.geometry.coordinates.push(g.coordinates);
-   else if(g.type==='MultiPolygon') outlineFeature.geometry.coordinates.push(...g.coordinates);
- }
- // ==== ترجمة عربية مضمونة ====
- // قاموس عربي موسّع مع تطبيع للأسماء الإنجليزية المتنوعة
- const NAME_AR_RAW = {
-   // الظاهرة
-   "adhahira":"الظاهرة","adhahirah":"الظاهرة","aldhahirah":"الظاهرة","aldhahira":"الظاهرة",
-   "aldhahirahnorth":"الظاهرة", "adh dhahirah":"الظاهرة","a'dhahirah":"الظاهرة",
-   // الداخلية
-   "addakhiliyah":"الداخلية","addakhliyah":"الداخلية","ad dakhiliyah":"الداخلية",
-   "aldakhiliyah":"الداخلية","aldakhliyah":"الداخلية","adakhiliyah":"الداخلية",
-   // الوسطى
-   "alwusta":"الوسطى","al wusta":"الوسطى","wusta":"الوسطى",
-   // الباطنة
-   "albatinahnorth":"الباطنة الشمالية","al batinah north":"الباطنة الشمالية",
-   "albatinahsouth":"الباطنة الجنوبية","al batinah south":"الباطنة الجنوبية",
-   // الشرقية
-   "ashsharqiyahnorth":"الشرقية الشمالية","ash sharqiyah north":"الشرقية الشمالية",
-   "ashsharqiyahsouth":"الشرقية الجنوبية","ash sharqiyah south":"الشرقية الجنوبية",
-   // بقية المحافظات
-   "muscat":"مسقط","musandam":"مسندم","musandem":"مسندم",
-   "alburaymi":"البريمي","alburaimi":"البريمي",
-   "dhofar":"ظفار","zhofar":"ظفار"
- };
- // تطبيع النص للبحث بالقاموس
- function norm(s){
-   return String(s||'').toLowerCase()
-     .replace(/[\s_'’`-]+/g,'')   // مسافات/أبوستروف/شرطات
-     .replace(/[āā]/g,'a').replace(/[īī]/g,'i').replace(/[ʿ’]/g,'');
- }
- // التقاط الاسم الإنجليزي من خصائص متعددة محتملة
- function nameEN(d){
-   const p=d.properties||{};
-   return p.NAME_EN || p.NAME_1 || p.NAME || p.Name || p.GOV_NAME || '';
- }
- // إيجاد العربية (من الحقل أو القاموس) وإلا نرجع الإنجليزي
- function nameAR(d){
-   const p=d.properties||{};
-   if(p.NAME_AR && String(p.NAME_AR).trim()) return p.NAME_AR;
-   const kMain = norm(nameEN(d));
-   if(NAME_AR_RAW[kMain]) return NAME_AR_RAW[kMain];
-   const altKeys = [p.NAME, p.Name, p.GOV_NAME, p.NAME_1, p.NAME_EN].filter(Boolean).map(norm);
-   for(const k of altKeys){ if(NAME_AR_RAW[k]) return NAME_AR_RAW[k]; }
-   return nameEN(d); // fallback
- }
- // حالة اللغة الحالية
- let currentLang = 'ar'; // ابدئي بالعربية كما طلبتِ
- document.getElementById('btnAR').onclick=()=>{ currentLang='ar'; drawLabels(); };
- document.getElementById('btnEN').onclick=()=>{ currentLang='en'; drawLabels(); };
- document.getElementById('btnReset').onclick=()=> svg.transition().duration(400).call(zoom.transform,d3.zoomIdentity);
- // حجم خط ديناميكي على حسب مساحة المحافظة (في الإحداثيات المسقطة)
- function fontSizeFor(f){
-   const a = path.area(f); // px^2
-   // قياسي بسيط: حول المساحة إلى 11..15 للعربية، و 10..14 للإنجليزي
-   const min = (currentLang==='ar') ? 10 : 9;
-   const max = (currentLang==='ar') ? 15 : 14;
-   // اضبطي الحدود
-   const t = Math.max(0, Math.min(1, (Math.log(a+1)-8)/4)); // 0..1
-   return min + t*(max-min);
- }
- // محاذاة نقاط النص داخل الشكل (centroid) مع إزاحة طفيفة إن احتجنا
- function labelPoint(f){
-   return path.centroid(f);
- }
- function fitAndDraw(){
-   // ملاءمة على outline
-   projection.fitExtent([[12,12],[w-12,h-12]], outlineFeature);
-   // الرسم
-   gOutline.selectAll('*').remove();
-   gGovs.selectAll('*').remove();
-   gLabs.selectAll('*').remove();
-   gOutline.append('path').datum(outlineFeature).attr('class','outline').attr('d',path);
-   gGovs.selectAll('path.gov')
-     .data(govFC.features)
-     .join('path')
-     .attr('class','gov')
-     .attr('d',path)
-     .on('mouseenter',function(){ d3.select(this).attr('fill','#198184'); })
-     .on('mouseleave',function(){ d3.select(this).attr('fill','#157171'); });
-   drawLabels();
- }
- function drawLabels(){
-   gLabs.selectAll('*').remove();
-   gLabs.selectAll('text.lab')
-     .data(govFC.features)
-     .join('text')
-     .attr('class', d => 'lab ' + (currentLang==='ar' ? 'ar' : 'en'))
-     .attr('x', d => labelPoint(d)[0])
-     .attr('y', d => labelPoint(d)[1])
-     .attr('text-anchor','middle')
-     .style('font-size', d => fontSizeFor(d) + 'px')
-     .text(d => currentLang==='ar' ? nameAR(d) : nameEN(d));
- }
- fitAndDraw();
-})();
+   // -------- حالة عامّة --------
+   let isArabic = true;
+   let activeId = null;
+   const svg = d3.select('#chart');
+   const g   = svg.append('g');
+   const gPol= g.append('g');
+   const gLbl= g.append('g');
+   const gIsl= g.append('g');
+   // أزرار
+   document.getElementById('langBtn').addEventListener('click', ()=>{
+     isArabic = !isArabic;
+     document.getElementById('langBtn').textContent = isArabic ? 'English':'العربية';
+     if (window.__GEO__) { drawProvinceLabels(window.__GEO__); drawIslands(); }
+   });
+   document.getElementById('resetBtn').addEventListener('click', ()=>{
+     activeId=null; gPol.selectAll('path.gov').classed('active',false);
+     if (window.__bbox__) zoomTo(window.__bbox__, 0, 1.15);
+   });
+   // أسماء عربية
+   const arNames = new Map([
+     ['muscat','مسقط'],
+     ['alburaimi','البريمي'],['alburaymi','البريمي'],
+     ['albatinahnorth','الباطنة الشمالية'],['albatnahnorth','الباطنة الشمالية'],['albattinahnorth','الباطنة الشمالية'],
+     ['albatinahsouth','الباطنة الجنوبية'],['albatnahsouth','الباطنة الجنوبية'],['albattinahsouth','الباطنة الجنوبية'],
+     ['addakhliyah','الداخلية'],['aldakhiliyah','الداخلية'],['adakhiliyah','الداخلية'],
+     ['ashsharqiyahnorth','الشرقية الشمالية'],['asharqiyahnorth','الشرقية الشمالية'],['northeastashsharqiyah','الشرقية الشمالية'],
+     ['ashsharqiyahsouth','الشرقية الجنوبية'],['asharqiyahsouth','الشرقية الجنوبية'],['southeastashsharqiyah','الشرقية الجنوبية'],
+     ['addhahirah','الظاهرة'],['aldhahira','الظاهرة'],['aldhahirah','الظاهرة'],
+     ['alwusta','الوسطى'],['dhofar','ظفار'],['musandam','مسندم'],
+   ]);
+   const islands = [
+     { lon:58.90, lat:20.55, ar:'جزيرة مصيرة',   en:'Masirah Island',         dx:80,  dy:3, r:2.6, fs:11 },
+     { lon:57.90, lat:17.45, ar:'جزر الحلانيات', en:'Al Hallaniyat Islands',  dx:-80, dy:3, r:2.6, fs:11 },
+   ];
+   function normalizeKey(s){
+     if(!s) return ''; return s.toString().toLowerCase().replace(/\s+/g,'')
+       .replace(/[-_']/g,'').normalize('NFKD').replace(/[^\x00-\x7F]/g,'');
+   }
+   function labelFor(d){
+     const p=d.properties||{}; const raw=(p.NAME_1||p.VARNAME_1||p.NAME||'').toString().trim();
+     const ar = arNames.get(normalizeKey(raw)); return isArabic ? (ar||raw) : (raw||'');
+   }
+   function fontSizeFor(path, f){
+     const a=Math.max(1, path.area(f));
+     return Math.round(10 + Math.min(6, Math.log(a)/2.2)); // 10–16px
+   }
+   // رسم الخريطة
+   function drawMap(geo){
+     window.__GEO__ = geo;
+     const projection = d3.geoMercator().fitSize([1200,980], geo);
+     const path = d3.geoPath(projection);
+     const bboxAll = path.bounds(geo);
+     window.__bbox__ = bboxAll;
+     gPol.selectAll('path.gov')
+       .data(geo.features)
+       .join('path')
+       .attr('class','gov')
+       .attr('d', path)
+       .attr('id',(_,i)=>'gov-'+i)
+       .on('click', function(e,d){
+         const already = d3.select(this).classed('active');
+         gPol.selectAll('path.gov').classed('active',false);
+         if(!already){ d3.select(this).classed('active',true); activeId=this.id; zoomTo(path.bounds(d),40,1.8); }
+         else { activeId=null; zoomTo(bboxAll,0,1.15); }
+       })
+       .on('mouseenter', (e,d)=> !activeId && zoomTo(path.bounds(d),24,1.4))
+       .on('mouseleave', ()=> !activeId && zoomTo(bboxAll,0,1.15));
+     drawProvinceLabels(geo, path);
+     drawIslands(projection);
+     zoomTo(bboxAll, 0, 1.15); // قريب افتراضيًا
+   }
+   function drawProvinceLabels(geo, pathOpt){
+     const path = pathOpt || d3.geoPath(d3.geoMercator().fitSize([1200,980], geo));
+     const sel = gLbl.selectAll('text.label').data(geo.features,(_,i)=>'lbl-'+i);
+     sel.join(
+       enter => enter.append('text')
+         .attr('class','label')
+         .attr('x',d=>path.centroid(d)[0])
+         .attr('y',d=>path.centroid(d)[1])
+         .style('font-size',d=>fontSizeFor(path,d)+'px')
+         .text(labelFor),
+       update => update
+         .attr('x',d=>path.centroid(d)[0])
+         .attr('y',d=>path.centroid(d)[1])
+         .style('font-size',d=>fontSizeFor(path,d)+'px')
+         .text(labelFor)
+     );
+   }
+   function drawIslands(projection){
+     if(!projection && window.__GEO__){
+       projection = d3.geoMercator().fitSize([1200,980], window.__GEO__);
+     }
+     gIsl.selectAll('*').remove();
+     islands.forEach(is=>{
+       const p = projection([is.lon,is.lat]); if(!p) return;
+       const [x,y]=p;
+       gIsl.append('circle').attr('class','island-dot').attr('cx',x).attr('cy',y).attr('r',is.r||2.5);
+       gIsl.append('text').attr('class','island-label').attr('x',x+(is.dx||8)).attr('y',y+(is.dy||2))
+         .style('font-size',(is.fs||10)+'px').text(isArabic?is.ar:is.en);
+     });
+   }
+   function zoomTo(bounds, pad=28, factor=1.15){
+     const [[x0,y0],[x1,y1]]=bounds;
+     const width=1200, height=980;
+     const dx=x1-x0+pad, dy=y1-y0+pad;
+     const cx=(x0+x1)/2, cy=(y0+y1)/2;
+     const scale=Math.max(1, Math.min(8, (0.92/Math.max(dx/width, dy/height))*factor));
+     const tx=width/2  - scale*cx;
+     const ty=height/2 - scale*cy;
+     g.transition().duration(450).attr('transform',`translate(${tx},${ty}) scale(${scale})`);
+   }
+   // ====== 1) مسار Flutter: يستدعى من Dart ======
+   window.loadMapFromFlutter = function(json){
+     try{ const obj=(typeof json==='string')?JSON.parse(json):json; drawMap(obj); }
+     catch(e){ alert('❌ GeoJSON غير صالح من Flutter'); console.error(e); }
+   };
+   // ====== 2) مسار المتصفح: Fallback محلي ======
+   (async function(){
+     try{
+       // ملاحظة: "./" مهمّة لأن الـ baseUrl في Flutter يكون 'assets/web/'
+       const resp = await fetch('./geo/oman_governorates.geojson');
+       if (resp.ok){
+         const geo = await resp.json();
+         drawMap(geo);
+       }
+     }catch(e){
+       // في Flutter قد يفشل fetch بسبب scheme file:// — لا مشكلة، Flutter سيرسل البيانات
+       console.log('Browser fallback failed (OK on Flutter):', e);
+     }
+   })();
 </script>
 </body>
 </html>

@@ -23,9 +23,7 @@ import 'screens/guest_home.dart';
 import 'screens/about_us_screen.dart';
 import 'screens/contact_us_screen.dart';
 import 'screens/main_menu_screen.dart';
-import 'screens/verify_otp_screen.dart';
-import 'screens/governorates_map_screen.dart'; // ✅ جديد (خريطة المحافظات)
-import 'screens/governates_map_webview.dart';
+import 'screens/verify_otp_screen.dart'; // ✅ جديد (خريطة المحافظات)
 
 // أثناء التطوير: ابدأ من شاشة الترحيب دائماً
 const bool kForceWelcomeOnStart = true;
@@ -120,7 +118,6 @@ class OmanTouristMateApp extends StatelessWidget {
                 '/signup': (_) => const SignUpScreen(),
                 '/user': (_) => const UserHome(),
                 '/map': (_) => const MapScreen(),
-                '/gov_map': (_) => const GovernoratesMapScreen(), // ✅ جديد
                 '/favorites': (_) => const FavoritesScreen(),
                 '/ai_chat': (_) => const AiChatScreen(),
                 '/preferences': (_) => const PreferencesScreen(),
@@ -129,7 +126,6 @@ class OmanTouristMateApp extends StatelessWidget {
                 '/contact': (_) => const ContactUsScreen(),
                 '/main': (_) => const MainMenuScreen(),
                 '/user_home': (_) => const UserHome(),
-                '/gov_map': (_) => const GovernoratesMapWebView(),
               },
               // ✅ الراوتات الديناميكية (مع بارامترات)
               onGenerateRoute: (settings) {

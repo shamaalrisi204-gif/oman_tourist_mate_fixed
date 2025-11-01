@@ -106,15 +106,6 @@ class _UserHomeState extends State<UserHome> {
                 : 'Explore Oman’s famous landmarks',
             onTap: () => Navigator.pushNamed(context, '/map'),
           ),
-          // ✅ زر جديد: خريطة المحافظات
-          _cardItem(
-            icon: Icons.public,
-            title: govMapBtn,
-            subtitle: _isArabic
-                ? 'تعرّف على محافظات سلطنة عمان والمواقع السياحية بكل محافظة'
-                : 'Explore Oman’s governorates and attractions',
-            onTap: () => Navigator.pushNamed(context, '/gov_map'),
-          ),
           _cardItem(
             icon: Icons.tour,
             title: planBtn,
@@ -130,17 +121,6 @@ class _UserHomeState extends State<UserHome> {
                 _isArabic ? 'الأماكن التي قمت بحفظها' : 'Your saved places',
             onTap: () => Navigator.pushNamed(context, '/favorites'),
           ),
-          _cardItem(
-            icon: Icons.map_outlined,
-            title: _isArabic
-                ? 'خريطة المحافظات (تفاعلية)'
-                : 'Governorates Map (Leaflet)',
-            subtitle: _isArabic
-                ? 'إضغط على المحافظة لعرض الأماكن السياحية'
-                : 'Tap a governorate to see places',
-            onTap: () => Navigator.pushNamed(context, '/gov_map'),
-          ),
-
           const SizedBox(height: 16),
           Text(
             _isArabic ? 'موقعك المحفوظ:' : 'Your saved location:',
