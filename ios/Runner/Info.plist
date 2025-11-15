@@ -45,13 +45,32 @@
 <true/>
 <key>UIApplicationSupportsIndirectInputEvents</key>
 <true/>
-<!-- ✅ أذونات الموقع (مطالبة iOS) -->
+<!-- ✅ أذونات الموقع (مطلوب ظهور نافذة السماح) -->
 <key>NSLocationWhenInUseUsageDescription</key>
 <string>We use your location to show nearby places and plan your trip.</string>
 <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 <string>We use your location to show nearby places and plan your trip.</string>
-<!-- 🔑 مفتاح خرائط جوجل على iOS (مدعوم من google_maps_flutter) -->
+<!-- 🔑 مفتاح خرائط جوجل على iOS -->
 <key>GMSApiKey</key>
 <string>AIzaSyAWM3epyo-2c26vpnv3ybIANQ4UjWCA9fE</string>
+<!-- ⚙️ App Transport Security: السماح بـ http://localhost للـ WebView -->
+<key>NSAppTransportSecurity</key>
+<dict>
+<!-- تسمح بتحميل محتوى HTTP داخل الـ WebView فقط (آمن لباقي الشبكة) -->
+<key>NSAllowsArbitraryLoadsInWebContent</key>
+<true/>
+<!-- استثناء صريح لـ localhost (ليس ضروريًا دومًا لكنه أفضل وضوحًا) -->
+<key>NSExceptionDomains</key>
+<dict>
+<key>localhost</key>
+<dict>
+<key>NSIncludesSubdomains</key>
+<true/>
+<key>NSExceptionAllowsInsecureHTTPLoads</key>
+<true/>
+</dict>
+</dict>
+</dict>
 </dict>
 </plist>
+ 

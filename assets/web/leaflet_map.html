@@ -1,200 +1,193 @@
-<!doctype html>
-<html lang="en" dir="ltr">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>Oman Highlights – Leaflet + Clusters</title>
-<!-- Leaflet CSS -->
-<link
-   rel="stylesheet"
-   href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-   crossorigin=""
- />
-<!-- MarkerCluster CSS -->
-<link
-   rel="stylesheet"
-   href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
- />
-<link
-   rel="stylesheet"
-   href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
- />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>خريطة سلطنة عُمان — أسماء المحافظات</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <style>
-   html, body, #map { height: 100%; margin: 0; }
-   .popup-card {
-     width: 260px;
-     font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Tajawal', sans-serif;
-   }
-   .popup-card img {
-     width: 100%;
-     height: 140px;
-     object-fit: cover;
-     border-radius: 10px;
-     display: block;
-     margin-bottom: 8px;
-   }
-   .popup-card h3 {
-     margin: 0 0 6px;
-     font-size: 16px;
-     line-height: 1.2;
-   }
-   .popup-card p {
-     margin: 0 0 8px;
-     font-size: 13px;
-     color: #333;
-   }
-   .popup-actions {
-     display: flex;
-     gap: 8px;
-   }
-   .popup-actions a {
-     flex: 1;
-     text-align: center;
-     text-decoration: none;
-     background: #2f7ae5;
-     color: #fff;
-     border-radius: 8px;
-     padding: 6px 8px;
-     font-size: 12px;
-   }
-   .popup-actions a.secondary {
-     background: #00a885;
-   }
-   /* Subtle map controls tweaks */
-   .leaflet-control-zoom a {
-     border-radius: 10px;
-   }
+
+  html, body { margin:0; height:100%; font-family: "Segoe UI", Tahoma, sans-serif; background:#fff; }
+
+  #map { width:100%; height:100%; background:#fff; }
+
+  /* اسم المحافظة: خط صغير وهالة خفيفة */
+
+  .gov-label {
+
+    font-weight: 600;
+
+    font-size: 12px;           /* ← كبر/صغر هنا لو تبين */
+
+    color: #2b3a42;
+
+    text-shadow: 0 0 2px #fff, 1px 1px 0 #fff, -1px -1px 0 #fff;
+
+    white-space: nowrap;
+
+    pointer-events: none;
+
+  }
 </style>
 </head>
 <body>
 <div id="map"></div>
-<!-- Leaflet JS -->
-<script
-   src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-   crossorigin=""
-></script>
-<!-- MarkerCluster JS -->
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
 <script>
-   // 1) Map base (OpenStreetMap tiles)
-   const map = L.map('map', { zoomControl: true }).setView([21.0, 57.0], 6);
-   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-     maxZoom: 19,
-     attribution:
-       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-   }).addTo(map);
-   // 2) Data: 10 attractive touristic points (Oman)
-   // Tip: replace images with your own CDN/Cloud Storage later.
-   const places = [
-     {
-       name: "Sultan Qaboos Grand Mosque",
-       lat: 23.5859, lng: 58.4059,
-       img: "https://images.unsplash.com/photo-1603114653125-9cbd01dc0bf2?q=80&w=1200&auto=format&fit=crop",
-       desc: "A breathtaking modern mosque in Muscat known for its grand dome and exquisite chandelier.",
-       url: "https://goo.gl/maps/7Cz6oR6h1hJ2"
-     },
-     {
-       name: "Royal Opera House Muscat",
-       lat: 23.6147, lng: 58.4584,
-       img: "https://images.unsplash.com/photo-1597305877052-3c7b44b7f9d1?q=80&w=1200&auto=format&fit=crop",
-       desc: "World-class performances in a stunning, marble-clad venue.",
-       url: "https://goo.gl/maps/8K7Xx9bZcAn"
-     },
-     {
-       name: "Mutrah Souq",
-       lat: 23.6160, lng: 58.5931,
-       img: "https://images.unsplash.com/photo-1587929651402-35a473b27f17?q=80&w=1200&auto=format&fit=crop",
-       desc: "Historic bazaar with incense, silver, and handicrafts—perfect for a sunset stroll.",
-       url: "https://goo.gl/maps/2G3XN4o2Y3t"
-     },
-     {
-       name: "Nizwa Fort",
-       lat: 22.9333, lng: 57.5333,
-       img: "https://images.unsplash.com/photo-1583623025817-d180a2221d0a?q=80&w=1200&auto=format&fit=crop",
-       desc: "Iconic 17th-century fort with a massive round tower and great town views.",
-       url: "https://goo.gl/maps/t1fH4s2gC7G2"
-     },
-     {
-       name: "Bahla Fort",
-       lat: 22.9730, lng: 57.3040,
-       img: "https://images.unsplash.com/photo-1600508775778-9f2a2aa945a0?q=80&w=1200&auto=format&fit=crop",
-       desc: "UNESCO-listed adobe fort—one of Oman’s most important historical sites.",
-       url: "https://goo.gl/maps/JwH7Wkqk6f62"
-     },
-     {
-       name: "Jebel Shams (Grand Canyon of Arabia)",
-       lat: 23.2439, lng: 57.0670,
-       img: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=1200&auto=format&fit=crop",
-       desc: "Dramatic cliffs, cool temperatures, and unforgettable rim hikes.",
-       url: "https://goo.gl/maps/1p6Q6M6y2nJ2"
-     },
-     {
-       name: "Wahiba Sands",
-       lat: 21.3778, lng: 58.7498,
-       img: "https://images.unsplash.com/photo-1544989164-31dc3c645987?q=80&w=1200&auto=format&fit=crop",
-       desc: "Golden dunes perfect for desert camps, camel rides, and starry nights.",
-       url: "https://goo.gl/maps/sjJm8kC4A2z"
-     },
-     {
-       name: "Ras al Jinz (Turtle Reserve)",
-       lat: 22.4353, lng: 59.7924,
-       img: "https://images.unsplash.com/photo-1503919005314-30d93d07d823?q=80&w=1200&auto=format&fit=crop",
-       desc: "Watch green turtles nest along Oman’s eastern shores (seasonal).",
-       url: "https://goo.gl/maps/3mK8Gm6sVfN2"
-     },
-     {
-       name: "Mughsail Beach (Salalah)",
-       lat: 16.8859, lng: 53.7389,
-       img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200&auto=format&fit=crop",
-       desc: "Blowholes, white sand, and turquoise waters—one of Dhofar’s gems.",
-       url: "https://goo.gl/maps/esx7q6D5yS12"
-     },
-     {
-       name: "Khasab Fjords (Musandam)",
-       lat: 26.1886, lng: 56.2477,
-       img: "https://images.unsplash.com/photo-1600718376820-9e4b745e0361?q=80&w=1200&auto=format&fit=crop",
-       desc: "Dramatic fjords best explored by dhow cruise—look for playful dolphins.",
-       url: "https://goo.gl/maps/4S2hX9zNq4A2"
-     }
-   ];
-   // 3) Cluster layer
-   const cluster = L.markerClusterGroup({
-     showCoverageOnHover: false,
-     spiderfyOnMaxZoom: true,
-     maxClusterRadius: 60
-   });
-   // 4) Build markers with rich popups
-   const markers = places.map(p => {
-     const marker = L.marker([p.lat, p.lng], {
-       title: p.name
-     });
-     const popupHTML = `
-<div class="popup-card">
-<img src="${p.img}" alt="${p.name}" />
-<h3>${p.name}</h3>
-<p>${p.desc}</p>
-<div class="popup-actions">
-<a class="secondary" href="${p.url}" target="_blank" rel="noopener">Open in Maps</a>
-<a href="https://www.google.com/search?q=${encodeURIComponent(p.name + ' Oman')}"
-              target="_blank" rel="noopener">More Info</a>
-</div>
-</div>
-     `;
-     marker.bindPopup(popupHTML, { maxWidth: 280 });
-     return marker;
-   });
-   cluster.addLayers(markers).addTo(map);
-   // 5) Fit to all markers
-   const group = L.featureGroup(markers);
-   map.fitBounds(group.getBounds(), { padding: [20, 20] });
-   // 6) (Optional) Locate the user
-   // map.locate({ setView: false, maxZoom: 12 });
-   // map.on('locationfound', e => L.circleMarker(e.latlng, {radius:6,color:'#00a885'}).addTo(map).bindTooltip('You are here'));
-   // Notes:
-   // • For heavy traffic, consider hosting your own tiles or using a paid provider.
-   // • Replace Unsplash images with your own assets for long-term reliability.
+
+  // خريطة بدون طبقة بلاطات (خلفية بيضاء)
+
+  const map = L.map('map', {
+
+    center: [21.5, 57.5],
+
+    zoom: 6,
+
+    minZoom: 5,
+
+    maxZoom: 12,
+
+    attributionControl: false,
+
+    zoomControl: true,
+
+    preferCanvas: true
+
+  });
+
+  // 🗂️ عدّلي المسار حسب مكان الملف عندك
+
+  const GOV_GEOJSON_URL = 'oman_governorates.geo.json';
+
+  // حدود وتعبئة المحافظات
+
+  const COLOR_LINE = '#637286';
+
+  const COLOR_FILL = '#cfe0ff';
+
+  const COLOR_FILL_HOVER = '#aecdff';
+
+  let govLayer, labelMarkers = [];
+
+  // إزاحات محسّنة لتثبيت الأسماء في أماكن مناسبة
+
+  // (قيمي dx/dy نسبية؛ زيدي/قلّلي لو تبين تحريك بسيط لكل محافظة)
+
+  const labelOffsets = {
+
+    'muscat':            { dx:  0.22, dy: -0.08 },
+
+    'musandam':          { dx:  0.02, dy: -0.10 },
+
+    'alburaimi':         { dx:  0.00, dy: -0.05 },
+
+    'addhahirah':        { dx: -0.08, dy:  0.02 },
+
+    'adakhliyah':        { dx:  0.02, dy:  0.03 },
+
+    'albatinahnorth':    { dx:  0.14, dy: -0.05 },
+
+    'albatinahsouth':    { dx:  0.14, dy:  0.08 },
+
+    'ashsharqiyahnorth': { dx:  0.18, dy: -0.05 },
+
+    'ashsharqiyahsouth': { dx:  0.22, dy:  0.10 },
+
+    'alwusta':           { dx:  0.08, dy:  0.14 },
+
+    'dhofar':            { dx:  0.18, dy:  0.06 }
+
+  };
+
+  function normKey(s){ return (s||'').toString().toLowerCase().replace(/\s+/g,'').replace(/[-_']/g,''); }
+
+  function renderLabels(geo){
+
+    // امسح القديم
+
+    labelMarkers.forEach(m => map.removeLayer(m));
+
+    labelMarkers = [];
+
+    geo.features.forEach(f=>{
+
+      const nameAr = f.properties.NAME_1_AR || f.properties.NAME_1 || '';
+
+      const c = turf.centroid(f);
+
+      let [lng, lat] = c.geometry.coordinates;
+
+      const key = normKey(f.properties.NAME_1);
+
+      const off = labelOffsets[key];
+
+      if (off){
+
+        // مضروب في 0.5 للتدرّج اللطيف؛ زيدي لو تبين إزاحة أقوى
+
+        lng += off.dx * 0.5;
+
+        lat += off.dy * 0.5;
+
+      }
+
+      const icon = L.divIcon({ className: 'gov-label', html: nameAr, iconSize: null });
+
+      const m = L.marker([lat, lng], { icon, interactive:false }).addTo(map);
+
+      labelMarkers.push(m);
+
+    });
+
+  }
+
+  // حمّل المحافظات وارسم
+
+  fetch(GOV_GEOJSON_URL)
+
+    .then(r => r.json())
+
+    .then(geo => {
+
+      govLayer = L.geoJSON(geo, {
+
+        style: () => ({ color: COLOR_LINE, weight: 1, fillColor: COLOR_FILL, fillOpacity: 0.35 }),
+
+        onEachFeature: (f, layer) => {
+
+          layer.on({
+
+            mouseover: e => e.target.setStyle({ fillColor: COLOR_FILL_HOVER }),
+
+            mouseout:  e => e.target.setStyle({ fillColor: COLOR_FILL })
+
+          });
+
+        }
+
+      }).addTo(map);
+
+      const b = govLayer.getBounds();
+
+      map.fitBounds(b, { padding:[20,20] });
+
+      map.setMaxBounds(b.pad(0.10));
+
+      map.options.maxBoundsViscosity = 1.0;
+
+      renderLabels(geo);
+
+    })
+
+    .catch(err => {
+
+      console.error('GeoJSON load error:', err);
+
+      alert('تعذّر تحميل ملف المحافظات. تأكدي من المسار والاسم.');
+
+    });
 </script>
 </body>
 </html>
+ 

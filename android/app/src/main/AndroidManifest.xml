@@ -1,47 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-   package="com.oman.oman_tourist_mate_fixed">
-<!-- إنترنت للخرائط وطلبات الشبكة -->
+
+package="com.oman.oman_tourist_mate_fixed">
+<!-- 🔹 الصلاحيات -->
 <uses-permission android:name="android.permission.INTERNET" />
-<!-- الموقع (Foreground) -->
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-<!-- اختياري: حالة الشبكة -->
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-<!-- اختياري: وجود GPS غير إلزامي -->
-<uses-feature
-       android:name="android.hardware.location.gps"
-       android:required="false" />
+<!-- 🔹 السماح بالاتصال HTTP (مطلوب لـ localhost) -->
 <application
-       android:name="${applicationName}"
-       android:label="oman_tourist_mate_fixed"
-       android:icon="@mipmap/ic_launcher">
-<!-- 🔑 مفتاح خرائط جوجل (Android) -->
+
+android:usesCleartextTraffic="true"
+
+android:name="${applicationName}"
+
+android:label="Oman Tourist Mate Fixed"
+
+android:icon="@mipmap/ic_launcher">
+<!-- 🔑 مفتاح خرائط جوجل -->
 <meta-data
-           android:name="com.google.android.geo.API_KEY"
-           android:value="AIzaSyAWM3epyo-2c26vpnv3ybIANQ4UjWCA9fE" />
+
+android:name="com.google.android.geo.API_KEY"
+
+android:value="AIzaSyAWM3epyo-2c26vpnv3ybIANQ4UjWCA9fE" />
 <activity
-           android:name=".MainActivity"
-           android:exported="true"
-           android:launchMode="singleTop"
-           android:theme="@style/LaunchTheme"
-           android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
-           android:hardwareAccelerated="true"
-           android:windowSoftInputMode="adjustResize">
-<!-- الثيم المؤقت قبل ما يشتغل Flutter -->
+
+android:name=".MainActivity"
+
+android:exported="true"
+
+android:launchMode="singleTop"
+
+android:theme="@style/LaunchTheme"
+
+android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+
+android:hardwareAccelerated="true"
+
+android:windowSoftInputMode="adjustResize">
+<!-- الثيم المؤقت -->
 <meta-data
-               android:name="io.flutter.embedding.android.NormalTheme"
-               android:resource="@style/NormalTheme" />
+
+android:name="io.flutter.embedding.android.NormalTheme"
+
+android:resource="@style/NormalTheme" />
 <intent-filter>
 <action android:name="android.intent.action.MAIN" />
 <category android:name="android.intent.category.LAUNCHER" />
 </intent-filter>
 </activity>
-<!-- لا تحذفي هذا: يضمن استخدام v2 embedding -->
+<!-- ⚙️ مطلوب من Flutter -->
 <meta-data
-           android:name="flutterEmbedding"
-           android:value="2" />
+
+android:name="flutterEmbedding"
+
+android:value="2" />
 </application>
-<!-- يسمح بمحرك Flutter استخدام PROCESS_TEXT (افتراضي) -->
+<!-- يسمح باستخدام PROCESS_TEXT -->
 <queries>
 <intent>
 <action android:name="android.intent.action.PROCESS_TEXT" />

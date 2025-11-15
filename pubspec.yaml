@@ -14,11 +14,15 @@ dependencies:
  cloud_firestore: ^5.4.0
  cloud_functions: ^5.0.4
  webview_flutter: ^4.7.0
+ flutter_inappwebview: ^6.0.0
+ permission_handler: ^11.3.1
+ webview_flutter_android: ^3.14.0
  # خرائط جوجل
  google_maps_flutter: ^2.9.0
  # الموقع والـ reverse geocoding
  geolocator: ^13.0.1
  geocoding: ^3.0.0
+ url_launcher: ^6.3.0
  # المفضلة / تخزين محلي
  shared_preferences: ^2.2.3
  # Gemini
@@ -37,6 +41,7 @@ flutter:
  uses-material-design: true
  assets:
    - assets/images/oman_background.jpg
+   - assets/images/omansplash.jpg
    # نترك الخريطة بدون ستايل حتى تبقى أسماء المدن ظاهرة (للاستخدام لاحقًا)
    - assets/map_styles/clean_oman.json
    - assets/map_styles/visit_oman_like.json
@@ -44,6 +49,7 @@ flutter:
    - assets/icons/marker_city.png
    - assets/icons/sea.png
    - assets/icons/desert.png
+   - assets/icons/pin.png
    - assets/icons/historic.png
    - assets/geo/oman_outline.geojson
    - assets/geo/oman_governorates.geojson
@@ -91,9 +97,33 @@ flutter:
    - assets/places/desert/wahiba_2.jpg
    - assets/places/desert/empty_1.jpg
    - assets/places/desert/empty_2.jpg
- fonts:
-   - family: Tajawal
-     fonts:
-       - asset: assets/fonts/Tajawal-Bold.ttf
-       - asset: assets/fonts/Tajawal-Regular.ttf
-       - asset: assets/fonts/Tajawal-Light.ttf
+fonts:
+
+  - family: ElMessiri
+
+    fonts:
+
+      - asset: assets/fonts/ElMessiri-Regular.ttf
+
+        weight: 400
+
+      - asset: assets/fonts/ElMessiri-Bold.ttf
+
+        weight: 700
+
+  - family: Montserrat
+
+    fonts:
+
+      - asset: assets/fonts/Montserrat-Regular.ttf
+
+      - asset: assets/fonts/Montserrat-Bold.ttf
+
+  - family: Tajawal
+
+    fonts:
+
+      - asset: assets/fonts/Tajawal-Regular.ttf
+
+      - asset: assets/fonts/Tajawal-Bold.ttf
+ 
