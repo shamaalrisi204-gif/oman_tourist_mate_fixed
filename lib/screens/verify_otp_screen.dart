@@ -1,58 +1,126 @@
 // lib/screens/verify_otp_screen.dart
+
 import 'package:flutter/material.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'package:firebase_auth/firebase_auth.dart';
+
 import '../core/prefs.dart';
+
 import '../services/otp_service.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
   const VerifyOtpScreen({
     super.key,
     required this.email,
+    required this.username,
     required this.firstName,
     required this.lastName,
     required this.phone,
     required this.password,
   });
+
   final String email;
+
+  final String username;
+
   final String firstName;
+
   final String lastName;
+
   final String phone;
+
   final String password;
+
   @override
   State<VerifyOtpScreen> createState() => _VerifyOtpScreenState();
 }
 
 class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
   final _code = TextEditingController();
+
   bool _busy = false;
+
   @override
   void dispose() {
     _code.dispose();
+
     super.dispose();
   }
 
   void _snack(String msg) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+
   Future<void> _verify() async {
     final code = _code.text.trim();
+
     if (code.length < 4) {
       _snack('أدخلي كود التحقق');
+
       return;
     }
+
     setState(() => _busy = true);
+
     try {
-      // ✅ نتحقق بواسطة OtpService (لا يحتاج الإيميل هنا)
+      // ✅ نتحقق من الكود
+
       final ok = await OtpService.I.verifyCode(widget.email, code);
+
       if (!mounted) return;
-      if (ok) {
-        _snack('تم التحقق بنجاح ✅');
-        // (اختياري) تخزين حالة الدخول ثم الذهاب للصفحة الرئيسية
-        await Prefs.setLoggedIn(true);
-        Navigator.pushReplacementNamed(context, '/user_home');
-      } else {
+
+      if (!ok) {
         _snack('الكود غير صحيح');
+
+        setState(() => _busy = false);
+
+        return;
       }
+
+      // ✅ 1) إنشاء حساب في FirebaseAuth
+
+      UserCredential cred =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: widget.email,
+        password: widget.password,
+      );
+
+      final uid = cred.user!.uid;
+
+      // ✅ 2) تخزين بيانات المستخدم في Firestore (collection users)
+
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'email': widget.email,
+        'username': widget.username,
+        'usernameLower': widget.username.trim().toLowerCase(),
+        'firstName': widget.firstName,
+        'lastName': widget.lastName,
+        'phone': widget.phone,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // ✅ 3) حفظ حالة تسجيل الدخول
+
+      await Prefs.setLoggedIn(true);
+
+      await Prefs.setOnboardingDone(true);
+
+      _snack('تم التحقق وإنشاء الحساب بنجاح ✅');
+
+      // ✅ 4) الذهاب لصفحة المستخدم / التفضيلات
+
+      Navigator.pushReplacementNamed(context, '/preferences');
+    } on FirebaseAuthException catch (e) {
+      String msg = 'حدث خطأ أثناء إنشاء الحساب';
+
+      if (e.code == 'email-already-in-use') {
+        msg = 'هذا البريد مسجَّل من قبل، حاولي تسجيل الدخول بدلاً من ذلك';
+      }
+
+      _snack(msg);
     } catch (e) {
-      if (mounted) _snack(e.toString());
+      _snack(e.toString());
     } finally {
       if (mounted) setState(() => _busy = false);
     }
