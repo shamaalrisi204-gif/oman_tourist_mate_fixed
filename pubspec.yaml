@@ -97,6 +97,7 @@ flutter:
    - assets/places/desert/wahiba_2.jpg
    - assets/places/desert/empty_1.jpg
    - assets/places/desert/empty_2.jpg
+   - assets/places/generic/placeholder.jpg
 fonts:
 
   - family: ElMessiri

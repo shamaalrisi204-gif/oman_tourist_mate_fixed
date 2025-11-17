@@ -169,13 +169,18 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
 
   // حدود عُمان (حبس الكاميرا)
   static final LatLngBounds _omanBounds = LatLngBounds(
-    southwest: const LatLng(16.8, 51.5),
-    northeast: const LatLng(26.5, 60.0),
+    southwest: LatLng(16.8, 51.5),
+    northeast: LatLng(26.5, 60.0),
   );
 
   double _currentZoom = 7.0;
 
   bool _welcomeShown = false;
+
+  /// وضع الاستخدام:
+  /// false = وضع التخطيط (الأسئلة والخطة)
+  /// true  = وضع الاستكشاف الحر (ما نفتح شيت الخطة بعد اختيار المكان)
+  bool _freeExploreMode = false;
 
   /// خطط زيارات محفوظة (في الذاكرة فقط)
   final List<TripPlan> _savedPlans = [];
@@ -267,7 +272,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
       govKey: 'albatinahnorth',
       nameAr: 'شاطئ صحار',
       nameEn: 'Suhar Beach',
-      imageAsset: 'assets/places/suhar/beach_1.jpg',
+      imageAsset: 'assets/places/sohar/beach_1.jpg',
       position: LatLng(24.3539, 56.7075),
       type: PlaceType.beach,
     ),
@@ -420,7 +425,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
               SnackBar(
                 content: Text(
                   'يجب السماح بالوصول إلى الموقع / You need to allow location access',
-                  style: const TextStyle(fontFamily: 'Tajawal'),
+                  style: TextStyle(fontFamily: 'Tajawal'),
                 ),
               ),
             );
@@ -460,7 +465,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
           SnackBar(
             content: Text(
               'تعذّر تحديد موقعك حالياً / Could not detect your location now',
-              style: const TextStyle(fontFamily: 'Tajawal'),
+              style: TextStyle(fontFamily: 'Tajawal'),
             ),
           ),
         );
@@ -561,7 +566,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
     }
   }
 
-  /// شاشة السؤال الأولى: السماح بالموقع
+  /// شاشة السؤال الأولى: السماح بالموقع (تُستدعى في وضع التخطيط)
   Future<void> _askLocationPermissionSheet() async {
     await showModalBottomSheet(
       context: context,
@@ -585,9 +590,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              Text(
+              const Text(
                 'تسمح لنا نحدد موقعك بالضبط؟ / Allow us to detect your location precisely?',
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
@@ -595,9 +600,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
-              Text(
+              const Text(
                 'نستخدم موقعك لاقتراح أقرب الأماكن لك ولحساب المسافة والوقت.\nWe use your location to suggest nearby places and estimate distance & time.',
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 13,
                   color: Colors.black87,
@@ -622,9 +627,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: Text(
+                  child: const Text(
                     'نعم، اسمح بتحديد موقعي / Yes, allow my location',
-                    style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14),
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -635,9 +640,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                   Navigator.of(ctx).pop();
                   _openPlacesSheet();
                 },
-                child: Text(
+                child: const Text(
                   'لاحقاً، أكمل بدون تحديد / Later, continue without location',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Tajawal',
                     fontSize: 13,
                     color: Colors.black87,
@@ -652,11 +657,11 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
     );
   }
 
-  /// شاشة اختيار نوع المكان + الوجهات
+  /// شاشة اختيار نوع المكان + الوجهات (مع معالجة الـ overflow + زر رجوع)
   Future<void> _openPlacesSheet() async {
     if (!mounted) return;
 
-    // نحاول تحديد موقعي بهدوء (لو كان رافض قبل ما نزعجه)
+    // نحاول نحدد موقعي بهدوء
     await _ensureMyLocation(quietOnError: true);
 
     await showModalBottomSheet(
@@ -665,44 +670,59 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) {
         return DraggableScrollableSheet(
-          initialChildSize: 0.52,
-          minChildSize: 0.32,
-          maxChildSize: 0.9,
+          initialChildSize: 0.6,
+          minChildSize: 0.35,
+          maxChildSize: 0.95,
           builder: (context, scrollCtrl) {
-            return StatefulBuilder(
-              builder: (context, setSheetState) {
-                final filtered = _filteredPlaces();
+            final filtered = _filteredPlaces();
 
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(24)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.18),
-                        blurRadius: 16,
-                        offset: const Offset(0, -4),
-                      ),
-                    ],
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.18),
+                    blurRadius: 16,
+                    offset: const Offset(0, -4),
                   ),
+                ],
+              ),
+              child: SafeArea(
+                top: false,
+                child: SingleChildScrollView(
+                  controller: scrollCtrl,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Handle
-                      Center(
-                        child: Container(
-                          width: 40,
-                          height: 4,
-                          margin: const EdgeInsets.only(bottom: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade400,
-                            borderRadius: BorderRadius.circular(2),
+                      // شريط السحب + زر الرجوع
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.arrow_back_ios_new,
+                              size: 18,
+                            ),
+                            onPressed: () => Navigator.of(ctx).pop(),
                           ),
-                        ),
+                          const Spacer(),
+                          Container(
+                            width: 40,
+                            height: 4,
+                            margin: const EdgeInsets.only(bottom: 8, right: 40),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade400,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 4),
                       Text(
                         'خريطة عُمان السياحية / Oman Tourist Map',
                         style: const TextStyle(
@@ -741,6 +761,8 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
+
+                      /// Chips أنواع الأماكن
                       Wrap(
                         spacing: 8,
                         runSpacing: 4,
@@ -766,7 +788,6 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                               setState(() {
                                 _selectedType = null;
                               });
-                              setSheetState(() {});
                             },
                           ),
                           for (final t in PlaceType.values)
@@ -788,14 +809,15 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                                 setState(() {
                                   _selectedType = t;
                                 });
-                                setSheetState(() {});
                               },
                             ),
                         ],
                       ),
                       const SizedBox(height: 12),
+
                       if (filtered.isEmpty)
-                        Expanded(
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 32),
                           child: Center(
                             child: Text(
                               'لا توجد أماكن من هذا النوع في هذه المحافظة حالياً.\nNo places of this type in this governorate yet.',
@@ -817,75 +839,77 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Expanded(
-                          child: ListView.builder(
-                            controller: scrollCtrl,
-                            itemCount: filtered.length,
-                            itemBuilder: (context, index) {
-                              final p = filtered[index];
-                              return InkWell(
-                                onTap: () async {
-                                  Navigator.of(context).pop();
-                                  await _handlePlaceSelection(p);
-                                },
-                                child: Container(
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 6),
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade100,
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Image.asset(
-                                          p.imageAsset,
-                                          width: 70,
-                                          height: 70,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              '${p.nameAr} / ${p.nameEn}',
-                                              style: const TextStyle(
-                                                fontFamily: 'Tajawal',
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              _distanceText(p.position),
-                                              style: TextStyle(
-                                                fontFamily: 'Tajawal',
-                                                fontSize: 11,
-                                                color: Colors.grey.shade700,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const Icon(Icons.chevron_right),
-                                    ],
-                                  ),
+
+                        /// لستة الأماكن – نخليها داخل SingleChildScrollView
+                        ListView.builder(
+                          itemCount: filtered.length,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemBuilder: (context, index) {
+                            final p = filtered[index];
+                            return InkWell(
+                              onTap: () async {
+                                Navigator.of(context).pop();
+                                await _handlePlaceSelection(p);
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(vertical: 6),
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
-                              );
-                            },
-                          ),
+                                child: Row(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Image.asset(
+                                        p.imageAsset,
+                                        width: 70,
+                                        height: 70,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${p.nameAr} / ${p.nameEn}',
+                                            style: const TextStyle(
+                                              fontFamily: 'Tajawal',
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            _distanceText(p.position),
+                                            style: TextStyle(
+                                              fontFamily: 'Tajawal',
+                                              fontSize: 11,
+                                              color: Colors.grey.shade700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const Icon(Icons.chevron_right),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ],
+
+                      const SizedBox(height: 12),
                     ],
                   ),
-                );
-              },
+                ),
+              ),
             );
           },
         );
@@ -942,7 +966,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
 
     // لو ما في اقتراح أو مافي فرق كبير، نكمل عادي
     await _goToPlace(finalPlace);
-    await _openPlanSheet(finalPlace);
+    if (!_freeExploreMode) {
+      await _openPlanSheet(finalPlace);
+    }
   }
 
   /// شيت اقتراح مكان أقرب
@@ -987,9 +1013,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-              Text(
+              const Text(
                 'وجدنا لك مكان من نفس النوع أقرب لموقعك:\nWe found a place of the same type that is closer to you:',
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 13,
                 ),
@@ -1042,7 +1068,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                   onPressed: () async {
                     Navigator.of(ctx).pop();
                     await _goToPlace(nearest);
-                    await _openPlanSheet(nearest);
+                    if (!_freeExploreMode) {
+                      await _openPlanSheet(nearest);
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF5E2BFF),
@@ -1051,9 +1079,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: Text(
+                  child: const Text(
                     'اختر الأقرب لموقعي / Choose the closer place',
-                    style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14),
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -1063,11 +1091,13 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                 onPressed: () async {
                   Navigator.of(ctx).pop();
                   await _goToPlace(chosen);
-                  await _openPlanSheet(chosen);
+                  if (!_freeExploreMode) {
+                    await _openPlanSheet(chosen);
+                  }
                 },
-                child: Text(
+                child: const Text(
                   'أستمر مع المكان الذي اخترته / Continue with my chosen place',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Tajawal',
                     fontSize: 13,
                     color: Colors.black87,
@@ -1132,11 +1162,11 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 10),
-                    Align(
+                    const Align(
                       alignment: AlignmentDirectional.centerStart,
                       child: Text(
                         'السؤال ٣: كم تنوي تجلس في هذا المكان؟\nQ3: How long do you plan to stay there?',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -1198,11 +1228,11 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Align(
+                    const Align(
                       alignment: AlignmentDirectional.centerStart,
                       child: Text(
                         'السؤال ٤: تحب نقترح لك:\nQ4: Would you like us to suggest:',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -1318,149 +1348,244 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
     );
   }
 
-  /// ملخص الخطة + عرض الزمن والمسافة + زر المسار
+  /// فتح بحث "أماكن قريبة" في خرائط Google (فنادق / مطاعم / جلسات)
+  Future<void> _openNearbyInGoogleMaps(Place p, String query) async {
+    final q = Uri.encodeComponent(query);
+    final url =
+        'https://www.google.com/maps/search/$q/@${p.position.latitude},${p.position.longitude},14z';
+
+    final uri = Uri.parse(url);
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'تعذّر فتح خرائط Google / Could not open Google Maps.',
+            style: TextStyle(fontFamily: 'Tajawal'),
+          ),
+        ),
+      );
+    }
+  }
+
+  /// ملخص الخطة + عرض الزمن والمسافة + زر المسار + أزرار المطاعم/الفنادق/الجلسات
   Future<void> _showPlanSummary(TripPlan plan) async {
     final place = plan.place;
     final distanceInfo = _distanceText(place.position);
 
     await showModalBottomSheet(
       context: context,
-      isScrollControlled: false,
+      isScrollControlled: true, // مهم عشان يسمح بالارتفاع الكامل + السكرول
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade400,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+        return SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            // يخلي الـ BottomSheet يسكّر نفسه بالسكرول وما يطلع overflow
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                MediaQuery.of(ctx).viewInsets.bottom + 24,
               ),
-              Text(
-                'خطة زيارتك / Your plan',
-                style: const TextStyle(
-                  fontFamily: 'Tajawal',
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${place.nameAr} / ${place.nameEn}',
-                      style: const TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade400,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const Text(
+                    'خطة زيارتك / Your plan',
+                    style: TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${place.nameAr} / ${place.nameEn}',
+                          style: const TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'المدة: ${plan.durationText}\n'
+                          'Duration: ${plan.durationText}',
+                          style: const TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'المسافة والوقت التقريبي: / Approx distance & time:',
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          distanceInfo,
+                          style: const TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'الخيارات التي اخترتها / Your preferences:',
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '- فنادق قريبة: ${plan.wantHotels ? 'نعم / Yes' : 'لا / No'}\n'
+                          '- مطاعم قريبة: ${plan.wantRestaurants ? 'نعم / Yes' : 'لا / No'}\n'
+                          '- أماكن جلسات قريبة: ${plan.wantSittings ? 'نعم / Yes' : 'لا / No'}',
+                          style: const TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'إذا حاب تعرف مسار الطريق اضغط الزر بالأسفل.\n'
+                          'If you want to see the route, tap the button below.',
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontSize: 11,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        _openInGoogleMaps(place);
+                      },
+                      icon: const Icon(Icons.directions),
+                      label: const Text(
+                        'إظهار المسار في خرائط Google / Show route in Google Maps',
+                        style: TextStyle(fontFamily: 'Tajawal', fontSize: 13),
+                        textAlign: TextAlign.center,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF5E2BFF),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (plan.wantHotels ||
+                      plan.wantRestaurants ||
+                      plan.wantSittings) ...[
+                    const Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(
+                        'أماكن قريبة من الوجهة / Nearby around destination:',
+                        style: TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text(
-                      'المدة: ${plan.durationText}\nDuration: ${plan.durationText}',
-                      style: const TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'المسافة والوقت التقريبي: / Approx distance & time:',
-                      style: const TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      distanceInfo,
-                      style: const TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'الخيارات التي اخترتها / Your preferences:',
-                      style: const TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '- فنادق قريبة: ${plan.wantHotels ? 'نعم / Yes' : 'لا / No'}\n'
-                      '- مطاعم قريبة: ${plan.wantRestaurants ? 'نعم / Yes' : 'لا / No'}\n'
-                      '- أماكن جلسات قريبة: ${plan.wantSittings ? 'نعم / Yes' : 'لا / No'}',
-                      style: const TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontSize: 12,
-                      ),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        if (plan.wantHotels)
+                          OutlinedButton.icon(
+                            onPressed: () =>
+                                _openNearbyInGoogleMaps(place, 'hotels'),
+                            icon: const Icon(Icons.hotel, size: 18),
+                            label: const Text(
+                              'فنادق قريبة / Hotels nearby',
+                              style: TextStyle(
+                                  fontFamily: 'Tajawal', fontSize: 12),
+                            ),
+                          ),
+                        if (plan.wantRestaurants)
+                          OutlinedButton.icon(
+                            onPressed: () =>
+                                _openNearbyInGoogleMaps(place, 'restaurants'),
+                            icon: const Icon(Icons.restaurant, size: 18),
+                            label: const Text(
+                              'مطاعم قريبة / Restaurants nearby',
+                              style: TextStyle(
+                                  fontFamily: 'Tajawal', fontSize: 12),
+                            ),
+                          ),
+                        if (plan.wantSittings)
+                          OutlinedButton.icon(
+                            onPressed: () =>
+                                _openNearbyInGoogleMaps(place, 'cafes'),
+                            icon: const Icon(Icons.local_cafe, size: 18),
+                            label: const Text(
+                              'أماكن جلسات / Sitting areas',
+                              style: TextStyle(
+                                  fontFamily: 'Tajawal', fontSize: 12),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      'إذا حاب تعرف مسار الطريق اضغط الزر بالأسفل.\nIf you want to see the route, tap the button below.',
-                      style: const TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontSize: 11,
-                        color: Colors.grey,
-                      ),
-                    ),
                   ],
-                ),
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.of(ctx).pop();
-                    _openInGoogleMaps(place);
-                  },
-                  icon: const Icon(Icons.directions),
-                  label: const Text(
-                    'إظهار المسار في خرائط Google / Show route in Google Maps',
-                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 13),
-                    textAlign: TextAlign.center,
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5E2BFF),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: const Text(
+                      'إغلاق / Close',
+                      style: TextStyle(fontFamily: 'Tajawal'),
                     ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text(
-                  'إغلاق / Close',
-                  style: TextStyle(fontFamily: 'Tajawal'),
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },
@@ -1548,10 +1673,10 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
             'تعذّر فتح خرائط Google / Could not open Google Maps.',
-            style: const TextStyle(fontFamily: 'Tajawal'),
+            style: TextStyle(fontFamily: 'Tajawal'),
           ),
         ),
       );
@@ -1562,17 +1687,123 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
   String _govDisplayName(String key) {
     final g = _governorates.firstWhere(
       (g) => g.key == key,
-      orElse: () =>
-          const GovInfo(key: 'muscat', nameAr: 'مسقط', nameEn: 'Muscat'),
+      orElse: () => GovInfo(
+        key: key,
+        // مؤقتاً خليه يعرض الـ key نفسه عشان نعرفه
+        nameAr: key,
+        nameEn: key,
+      ),
     );
 
     return '${g.nameAr} / ${g.nameEn}';
   }
 
+  /// شاشة اختيار نمط الاستخدام عند أول دخول
+  Future<void> _showModeChoiceSheet() async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: false,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade400,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const Text(
+                'كيف حاب تستخدم الخريطة؟\nHow would you like to use the map?',
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'تقدرين تختارين بين وضع “خطة زيارة” بأسئلة بسيطة تقترح لك أماكن، أو “استكشاف حر” بدون أسئلة.\nYou can choose between a guided visit plan or free exploration.',
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 13,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _freeExploreMode = false;
+                    });
+                    Navigator.of(ctx).pop();
+                    _askLocationPermissionSheet();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF5E2BFF),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'أبغي أسوي خطة زيارة / I want a visit plan',
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 14),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () {
+                    setState(() {
+                      _freeExploreMode = true;
+                    });
+                    Navigator.of(ctx).pop();
+                    // استكشاف حر: ما نفتح أسئلة الآن، تستخدمي الخريطة مباشرة
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.black87,
+                    side: BorderSide(color: Colors.grey.shade400),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'أستكشف الخريطة بنفسي / I want to explore freely',
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 14),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _showWelcomeOnce() {
     if (_welcomeShown) return;
     _welcomeShown = true;
-    _askLocationPermissionSheet();
+    _showModeChoiceSheet();
   }
 
   @override
