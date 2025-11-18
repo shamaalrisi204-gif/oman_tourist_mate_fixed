@@ -42,13 +42,21 @@ class _UserHomeState extends State<UserHome> {
   Timer? _autoTimer;
   VideoPlayerController? _videoController;
 
-  // ---------- ألوان ثابتة للثيم ----------
-  static const Color _primary = Color(0xFF5E2BFF); // لو احتجناه لاحقاً
-  static const Color _background = Color(0xFFF3EED9); // خلفية الصفحة
-  static const Color _cardBeige = Color(0xFFE5D7B8); // كروت الأزرار
-  static const Color _buttonBeige = Color(0xFFD6C39A); // زر تعديل التفضيلات
+  // ألوان ثابتة للثيم
+  static const Color _primary = Color(0xFF5E2BFF); // بنفسجي
+  static const Color _background = Color(0xFFF3EED9);
 
-  // ---------- تعريف السلايدات ----------
+  /// نفس الـ IDs اللي في شاشة التفضيلات
+  static const List<String> _interestIds = [
+    'shopping',
+    'heritage',
+    'nature',
+    'beach',
+    'adventure',
+    'food',
+  ];
+
+  // تعريف السلايدات (غيّري النص بما يناسب صورك وفيديوك)
   late final List<_HeroSlide> _slides = [
     _HeroSlide(
       asset: 'assets/hero/whales.jpg',
@@ -102,7 +110,7 @@ class _UserHomeState extends State<UserHome> {
   }
 
   Future<void> _initVideoController() async {
-    // نبحث عن أول سلايد من نوع فيديو
+    // نبحث عن أول سلايد فيديو (لو عندك أكثر من واحد تقدرين تطوريها لاحقاً)
     final videoSlide =
         _slides.firstWhere((s) => s.isVideo, orElse: () => _slides[0]);
 
@@ -113,7 +121,6 @@ class _UserHomeState extends State<UserHome> {
     _videoController!
       ..setLooping(true)
       ..setVolume(0.0);
-
     if (mounted) setState(() {});
   }
 
@@ -138,7 +145,8 @@ class _UserHomeState extends State<UserHome> {
         'city': sp.getString('user_city') ?? 'مسقط',
         'lat': sp.getDouble('user_lat') ?? 23.5880,
         'lng': sp.getDouble('user_lng') ?? 58.3829,
-        'interests': sp.getStringList('user_interests') ?? [],
+        // نخزن IDs فقط
+        'interests': sp.getStringList('user_interests') ?? <String>[],
       };
     });
   }
@@ -157,6 +165,46 @@ class _UserHomeState extends State<UserHome> {
     setState(() => _isArabic = !_isArabic);
   }
 
+  // ترجمة ID إلى اسم بالعربي
+  String _interestNameAr(String id) {
+    switch (id) {
+      case 'shopping':
+        return 'تسوّق';
+      case 'heritage':
+        return 'أماكن تراثية وتاريخية';
+      case 'nature':
+        return 'مواقع طبيعية';
+      case 'beach':
+        return 'شواطئ';
+      case 'adventure':
+        return 'مغامرات';
+      case 'food':
+        return 'مقاهي ومطاعم';
+      default:
+        return 'غير معرّف';
+    }
+  }
+
+  // ترجمة ID إلى إنجليزي
+  String _interestNameEn(String id) {
+    switch (id) {
+      case 'shopping':
+        return 'Shopping';
+      case 'heritage':
+        return 'Heritage & history';
+      case 'nature':
+        return 'Nature spots';
+      case 'beach':
+        return 'Beaches';
+      case 'adventure':
+        return 'Adventures';
+      case 'food':
+        return 'Cafés & restaurants';
+      default:
+        return 'Unknown';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_userData == null) {
@@ -165,7 +213,21 @@ class _UserHomeState extends State<UserHome> {
       );
     }
 
-    final interests = (_userData!['interests'] as List).join(', ');
+    final List<String> interestIds =
+        List<String>.from(_userData!['interests'] as List);
+
+    // نص الاهتمامات المعروضة تحت "اهتماماتك المفضلة"
+    late final String interestsText;
+    if (interestIds.isEmpty) {
+      interestsText = _isArabic
+          ? 'لم تختاري اهتمامات بعد.'
+          : 'You have not selected any interests yet.';
+    } else {
+      final labels = interestIds.map((id) {
+        return _isArabic ? _interestNameAr(id) : _interestNameEn(id);
+      }).toList();
+      interestsText = labels.join(_isArabic ? '، ' : ', ');
+    }
 
     final title = _isArabic ? 'الصفحة الرئيسية' : 'Home Page';
     final welcome = _isArabic
@@ -243,7 +305,6 @@ class _UserHomeState extends State<UserHome> {
             },
           ),
 
-          // زر رحلة ممتعة
           _cardItem(
             icon: Icons.tour,
             title: planBtn,
@@ -252,8 +313,6 @@ class _UserHomeState extends State<UserHome> {
                 : 'Your AI trip planner',
             onTap: () => Navigator.pushNamed(context, '/ai_chat'),
           ),
-
-          // زر المفضلة
           _cardItem(
             icon: Icons.favorite,
             title: favBtn,
@@ -275,22 +334,21 @@ class _UserHomeState extends State<UserHome> {
           ),
           const SizedBox(height: 8),
           Text(
-            _isArabic ? 'اهتماماتك:' : 'Your interests:',
+            _isArabic ? 'اهتماماتك المفضلة:' : 'Your favorite interests:',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontFamily: 'Tajawal',
                 ),
           ),
           Text(
-            interests.isEmpty ? '—' : interests,
+            interestsText,
             style: const TextStyle(fontFamily: 'Tajawal'),
           ),
-
           const SizedBox(height: 20),
           SizedBox(
             height: 48,
             child: FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: _buttonBeige, // بيج أغمق من الكروت
+                backgroundColor: const Color(0xFFE0C99D), // بيج أغمق
                 foregroundColor: Colors.black87,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
@@ -326,12 +384,10 @@ class _UserHomeState extends State<UserHome> {
               itemCount: _slides.length,
               onPageChanged: (index) {
                 setState(() => _currentPage = index);
-                _startAutoSlide();
-
+                _startAutoSlide(); // نرجّع التايمر
+                // تشغيل/إيقاف الفيديو حسب السلايد
                 final slide = _slides[index];
-                if (slide.isVideo &&
-                    _videoController != null &&
-                    _videoController!.value.isInitialized) {
+                if (slide.isVideo && _videoController != null) {
                   _videoController!.play();
                 } else {
                   _videoController?.pause();
@@ -343,9 +399,7 @@ class _UserHomeState extends State<UserHome> {
                   fit: StackFit.expand,
                   children: [
                     // صورة / فيديو
-                    if (slide.isVideo &&
-                        _videoController != null &&
-                        _videoController!.value.isInitialized)
+                    if (slide.isVideo && _videoController != null)
                       FittedBox(
                         fit: BoxFit.cover,
                         child: SizedBox(
@@ -487,7 +541,7 @@ class _UserHomeState extends State<UserHome> {
     required VoidCallback onTap,
   }) {
     return Card(
-      color: _cardBeige,
+      color: const Color(0xFFE5D7B8), // بيج أغمق للأزرار الثلاثة
       elevation: 0,
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(

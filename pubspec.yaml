@@ -47,6 +47,12 @@ flutter:
    - assets/hero/mountains.mp4
    - assets/hero/girl.jpg
    - assets/hero/tower.jpg
+   - assets/interests/shopping.jpg
+   - assets/interests/heritage.jpg
+   - assets/interests/nature.jpg
+   - assets/interests/beach.jpg
+   - assets/interests/adventure.jpg
+   - assets/interests/food.jpg
    # نترك الخريطة بدون ستايل حتى تبقى أسماء المدن ظاهرة (للاستخدام لاحقًا)
    - assets/map_styles/clean_oman.json
    - assets/map_styles/visit_oman_like.json
