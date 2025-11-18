@@ -8,6 +8,7 @@ dependencies:
  flutter:
    sdk: flutter
  cupertino_icons: ^1.0.8
+ video_player: ^2.8.1
  # Firebase
  firebase_core: ^3.6.0
  firebase_auth: ^5.3.0
@@ -42,6 +43,10 @@ flutter:
  assets:
    - assets/images/oman_background.jpg
    - assets/images/omansplash.jpg
+   - assets/hero/whales.jpg
+   - assets/hero/mountains.mp4
+   - assets/hero/girl.jpg
+   - assets/hero/tower.jpg
    # نترك الخريطة بدون ستايل حتى تبقى أسماء المدن ظاهرة (للاستخدام لاحقًا)
    - assets/map_styles/clean_oman.json
    - assets/map_styles/visit_oman_like.json

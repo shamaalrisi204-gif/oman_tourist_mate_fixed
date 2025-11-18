@@ -132,7 +132,13 @@ class _GovPolygonData {
 /// =====================
 
 class OmanGMapsScreen extends StatefulWidget {
-  const OmanGMapsScreen({super.key});
+  // 👈 بارامتر يحدد هل نسمح بالتخطيط أو لا
+  final bool enablePlanning;
+
+  const OmanGMapsScreen({
+    super.key,
+    this.enablePlanning = true, // الافتراضي: مسموح التخطيط (لليوزر)
+  });
 
   @override
   State<OmanGMapsScreen> createState() => _OmanGMapsScreenState();
@@ -179,11 +185,14 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
 
   /// وضع الاستخدام:
   /// false = وضع التخطيط (الأسئلة والخطة)
-  /// true  = وضع الاستكشاف الحر (ما نفتح شيت الخطة بعد اختيار المكان)
+  /// true  = وضع الاستكشاف الحر
   bool _freeExploreMode = false;
 
   /// خطط زيارات محفوظة (في الذاكرة فقط)
   final List<TripPlan> _savedPlans = [];
+
+  /// هذا يقرأ قيمة البارامتر من الـ Widget
+  bool get _planningEnabled => widget.enablePlanning;
 
   /// قائمة المحافظات للخيارات اللي تحت
   static const List<GovInfo> _governorates = [
@@ -257,7 +266,6 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
       position: LatLng(17.0150, 54.0924),
       type: PlaceType.beach,
     ),
-    // أمثلة لأماكن أخرى:
     Place(
       id: 'nizwa-fort',
       govKey: 'addakhliyah',
@@ -281,7 +289,25 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
   @override
   void initState() {
     super.initState();
+
+    // نحمّل الـ GeoJSON
     _loadGeoJson();
+
+    // منطق الضيف / اليوزر
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_planningEnabled) {
+        // ضيف: استكشاف حر فقط
+        setState(() {
+          _freeExploreMode = true;
+        });
+        return;
+      }
+
+      if (!_welcomeShown) {
+        _welcomeShown = true;
+        _showModeChoiceSheet(); // يفتح شيت كيف تستخدم الخريطة
+      }
+    });
   }
 
   /// رجع نص عربي/إنجليزي في سطر واحد
@@ -422,7 +448,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
             perm == LocationPermission.deniedForever) {
           if (!quietOnError && mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              const SnackBar(
                 content: Text(
                   'يجب السماح بالوصول إلى الموقع / You need to allow location access',
                   style: TextStyle(fontFamily: 'Tajawal'),
@@ -462,7 +488,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
 
       if (!quietOnError && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text(
               'تعذّر تحديد موقعك حالياً / Could not detect your location now',
               style: TextStyle(fontFamily: 'Tajawal'),
@@ -538,8 +564,12 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
       );
     }
 
-    // لما يختار محافظة، نفتح قائمة الأسئلة + الأماكن لنفس المحافظة
-    _openPlacesSheet();
+    // ⭐ هنا الفرق:
+    // User (enablePlanning = true) → افتح شيت الأسئلة+الأماكن
+    // Guest (enablePlanning = false) → بس يحرك الخريطة وما يفتح شي
+    if (_planningEnabled) {
+      _openPlacesSheet();
+    }
   }
 
   /// نص المسافة والوقت (بالدقائق لو قريب، وبالساعات لو بعيد) – بالعربي والإنجليزي
@@ -566,8 +596,11 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
     }
   }
 
-  /// شاشة السؤال الأولى: السماح بالموقع (تُستدعى في وضع التخطيط)
+  /// شاشة السؤال الأولى: السماح بالموقع (تُستدعى فقط في وضع التخطيط)
   Future<void> _askLocationPermissionSheet() async {
+    // ⭐ لو التخطيط مقفول (زائر)، لا تفتحي أي شيء
+    if (!_planningEnabled) return;
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: false,
@@ -617,8 +650,10 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                   onPressed: () async {
                     await _ensureMyLocation();
                     if (mounted) Navigator.of(ctx).pop();
-                    // بعد الموقع نفتح نوع المكان + الوجهات
-                    _openPlacesSheet();
+                    // بعد الموقع نفتح نوع المكان + الوجهات (فقط لو التخطيط شغّال)
+                    if (_planningEnabled) {
+                      _openPlacesSheet();
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF5E2BFF),
@@ -638,7 +673,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
               TextButton(
                 onPressed: () {
                   Navigator.of(ctx).pop();
-                  _openPlacesSheet();
+                  if (_planningEnabled) {
+                    _openPlacesSheet();
+                  }
                 },
                 child: const Text(
                   'لاحقاً، أكمل بدون تحديد / Later, continue without location',
@@ -660,6 +697,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
   /// شاشة اختيار نوع المكان + الوجهات (مع معالجة الـ overflow + زر رجوع)
   Future<void> _openPlacesSheet() async {
     if (!mounted) return;
+
+    // ⭐ لو التخطيط مقفول (زائر) لا تفتحي الشيت نهائياً
+    if (!_planningEnabled) return;
 
     // نحاول نحدد موقعي بهدوء
     await _ensureMyLocation(quietOnError: true);
@@ -723,9 +763,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text(
+                      const Text(
                         'خريطة عُمان السياحية / Oman Tourist Map',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -752,9 +792,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Text(
+                      const Text(
                         'السؤال ١: ما نوع الأماكن التي تحب تزورها الآن؟\nQ1: Which type of places would you like to visit?',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -819,9 +859,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 32),
                           child: Center(
-                            child: Text(
+                            child: const Text(
                               'لا توجد أماكن من هذا النوع في هذه المحافظة حالياً.\nNo places of this type in this governorate yet.',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontFamily: 'Tajawal',
                                 fontSize: 13,
                               ),
@@ -830,9 +870,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                           ),
                         )
                       else ...[
-                        Text(
+                        const Text(
                           'السؤال ٢: اختر المكان الذي يناسبك:\nQ2: Choose the destination you prefer:',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'Tajawal',
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -918,7 +958,14 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
   }
 
   /// التعامل مع اختيار المكان: نقترح الأقرب لو في فرق واضح
+  /// التعامل مع اختيار المكان: نقترح الأقرب لو في فرق واضح
   Future<void> _handlePlaceSelection(Place selected) async {
+    // لو التخطيط مقفول (ضيف) 👉 بس نروح للمكان بدون أي شيت أو اقتراح
+    if (!_planningEnabled) {
+      await _goToPlace(selected);
+      return;
+    }
+
     // نحاول تحديد موقعي (لو مو محدد)
     final myLoc = _myLocation ?? await _ensureMyLocation(quietOnError: true);
 
@@ -959,14 +1006,19 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
           nearestMeters != null &&
           selectedMeters - nearestMeters > 10000) {
         await _askCloserSuggestion(
-            selected, nearest, selectedMeters, nearestMeters);
+          selected,
+          nearest,
+          selectedMeters,
+          nearestMeters,
+        );
         return;
       }
     }
 
     // لو ما في اقتراح أو مافي فرق كبير، نكمل عادي
     await _goToPlace(finalPlace);
-    if (!_freeExploreMode) {
+    // ✅ فقط لو التخطيط مسموح (User)
+    if (_planningEnabled) {
       await _openPlanSheet(finalPlace);
     }
   }
@@ -978,6 +1030,12 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
     double chosenMeters,
     double nearestMeters,
   ) async {
+    // لو التخطيط مقفول أساساً (ضيف) ما نعرض شيت الاقتراح
+    if (!_planningEnabled) {
+      await _goToPlace(chosen);
+      return;
+    }
+
     final chosenKm = (chosenMeters / 1000.0).toStringAsFixed(1);
     final nearestKm = (nearestMeters / 1000.0).toStringAsFixed(1);
 
@@ -1068,7 +1126,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                   onPressed: () async {
                     Navigator.of(ctx).pop();
                     await _goToPlace(nearest);
-                    if (!_freeExploreMode) {
+                    if (_planningEnabled) {
                       await _openPlanSheet(nearest);
                     }
                   },
@@ -1091,7 +1149,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                 onPressed: () async {
                   Navigator.of(ctx).pop();
                   await _goToPlace(chosen);
-                  if (!_freeExploreMode) {
+                  if (_planningEnabled) {
                     await _openPlanSheet(chosen);
                   }
                 },
@@ -1700,6 +1758,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
 
   /// شاشة اختيار نمط الاستخدام عند أول دخول
   Future<void> _showModeChoiceSheet() async {
+    // 🔒 لو الضيف داخل (enablePlanning = false) لا تفتح الشيت أبداً
+    if (!_planningEnabled) return;
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: false,
@@ -1777,7 +1838,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                       _freeExploreMode = true;
                     });
                     Navigator.of(ctx).pop();
-                    // استكشاف حر: ما نفتح أسئلة الآن، تستخدمي الخريطة مباشرة
+                    // استكشاف حر: ما نفتح أسئلة الآن
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.black87,
