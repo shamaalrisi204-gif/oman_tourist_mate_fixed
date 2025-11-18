@@ -43,18 +43,38 @@ class _UserHomeState extends State<UserHome> {
   VideoPlayerController? _videoController;
 
   // ألوان ثابتة للثيم
-  static const Color _primary = Color(0xFF5E2BFF); // بنفسجي
-  static const Color _background = Color(0xFFF3EED9);
+  static const Color _primary = Color(0xFF5E2BFF); // بنفسجي للهواشي
+  static const Color _background = Color(0xFFF3EED9); // بيج فاتح للخلفية
+  static const Color _cardColor = Color(0xFFE5D7B8); // بيج أغمق للكروت
+  static const Color _prefButtonColor = Color(0xFFE0CDA0); // زر تعديل التفضيلات
 
-  /// نفس الـ IDs اللي في شاشة التفضيلات
-  static const List<String> _interestIds = [
-    'shopping',
-    'heritage',
-    'nature',
-    'beach',
-    'adventure',
-    'food',
-  ];
+  // أسماء الاهتمامات (نفس IDs الموجودة في شاشة التفضيلات)
+  static const Map<String, Map<String, String>> _interestNames = {
+    'shopping': {
+      'ar': 'تسوّق',
+      'en': 'Shopping',
+    },
+    'heritage': {
+      'ar': 'أماكن تراثية وتاريخية',
+      'en': 'Heritage & history',
+    },
+    'nature': {
+      'ar': 'مواقع طبيعية',
+      'en': 'Nature spots',
+    },
+    'beach': {
+      'ar': 'شواطئ',
+      'en': 'Beaches',
+    },
+    'adventure': {
+      'ar': 'مغامرات',
+      'en': 'Adventures',
+    },
+    'food': {
+      'ar': 'مقاهي ومطاعم',
+      'en': 'Cafés & restaurants',
+    },
+  };
 
   // تعريف السلايدات (غيّري النص بما يناسب صورك وفيديوك)
   late final List<_HeroSlide> _slides = [
@@ -63,7 +83,7 @@ class _UserHomeState extends State<UserHome> {
       isVideo: false,
       titleAr: 'لحظات لا تُنسى في سواحل عُمان',
       titleEn: 'Unforgettable moments on Oman’s coast',
-      subtitleAr: 'اكتشف البحر والحياة البحرية في أجواء هادئة.',
+      subtitleAr: 'اكتشفي البحر والحياة البحرية في أجواء هادئة.',
       subtitleEn: 'Discover the sea and marine life in peaceful vibes.',
     ),
     _HeroSlide(
@@ -71,13 +91,13 @@ class _UserHomeState extends State<UserHome> {
       isVideo: true,
       titleAr: 'مغامرات بين الجبال والوديان',
       titleEn: 'Adventures among mountains & valleys',
-      subtitleAr: 'شاهد الطبيعة العمانية من زوايا جديدة.',
+      subtitleAr: 'شاهدي الطبيعة العُمانية من زوايا جديدة.',
       subtitleEn: 'See Oman’s nature from new perspectives.',
     ),
     _HeroSlide(
       asset: 'assets/hero/girl.jpg',
       isVideo: false,
-      titleAr: 'روح الضيافة العمانية',
+      titleAr: 'روح الضيافة العُمانية',
       titleEn: 'The spirit of Omani hospitality',
       subtitleAr: 'ابتسامة واحدة تكفي لتشعري وكأنك في بيتك.',
       subtitleEn: 'One smile is enough to feel at home.',
@@ -110,7 +130,7 @@ class _UserHomeState extends State<UserHome> {
   }
 
   Future<void> _initVideoController() async {
-    // نبحث عن أول سلايد فيديو (لو عندك أكثر من واحد تقدرين تطوريها لاحقاً)
+    // نبحث عن أول سلايد فيديو
     final videoSlide =
         _slides.firstWhere((s) => s.isVideo, orElse: () => _slides[0]);
 
@@ -145,7 +165,6 @@ class _UserHomeState extends State<UserHome> {
         'city': sp.getString('user_city') ?? 'مسقط',
         'lat': sp.getDouble('user_lat') ?? 23.5880,
         'lng': sp.getDouble('user_lng') ?? 58.3829,
-        // نخزن IDs فقط
         'interests': sp.getStringList('user_interests') ?? <String>[],
       };
     });
@@ -165,43 +184,27 @@ class _UserHomeState extends State<UserHome> {
     setState(() => _isArabic = !_isArabic);
   }
 
-  // ترجمة ID إلى اسم بالعربي
-  String _interestNameAr(String id) {
-    switch (id) {
-      case 'shopping':
-        return 'تسوّق';
-      case 'heritage':
-        return 'أماكن تراثية وتاريخية';
-      case 'nature':
-        return 'مواقع طبيعية';
-      case 'beach':
-        return 'شواطئ';
-      case 'adventure':
-        return 'مغامرات';
-      case 'food':
-        return 'مقاهي ومطاعم';
-      default:
-        return 'غير معرّف';
+  // تحويل IDs الاهتمامات إلى نصوص بحسب اللغة
+  String _buildInterestsText() {
+    final ids = List<String>.from(_userData!['interests'] as List);
+    if (ids.isEmpty) {
+      return _isArabic
+          ? 'لم تختاري اهتمامات بعد'
+          : 'No favorite interests selected yet';
     }
-  }
 
-  // ترجمة ID إلى إنجليزي
-  String _interestNameEn(String id) {
-    switch (id) {
-      case 'shopping':
-        return 'Shopping';
-      case 'heritage':
-        return 'Heritage & history';
-      case 'nature':
-        return 'Nature spots';
-      case 'beach':
-        return 'Beaches';
-      case 'adventure':
-        return 'Adventures';
-      case 'food':
-        return 'Cafés & restaurants';
-      default:
-        return 'Unknown';
+    final labels = ids.map((id) {
+      final names = _interestNames[id];
+      if (names == null) {
+        return _isArabic ? 'غير معروف' : 'Unknown';
+      }
+      return _isArabic ? names['ar']! : names['en']!;
+    }).toList();
+
+    if (_isArabic) {
+      return labels.join('، ');
+    } else {
+      return labels.join(', ');
     }
   }
 
@@ -213,22 +216,6 @@ class _UserHomeState extends State<UserHome> {
       );
     }
 
-    final List<String> interestIds =
-        List<String>.from(_userData!['interests'] as List);
-
-    // نص الاهتمامات المعروضة تحت "اهتماماتك المفضلة"
-    late final String interestsText;
-    if (interestIds.isEmpty) {
-      interestsText = _isArabic
-          ? 'لم تختاري اهتمامات بعد.'
-          : 'You have not selected any interests yet.';
-    } else {
-      final labels = interestIds.map((id) {
-        return _isArabic ? _interestNameAr(id) : _interestNameEn(id);
-      }).toList();
-      interestsText = labels.join(_isArabic ? '، ' : ', ');
-    }
-
     final title = _isArabic ? 'الصفحة الرئيسية' : 'Home Page';
     final welcome = _isArabic
         ? 'مرحبًا بك في ${_userData!['city']}'
@@ -237,37 +224,96 @@ class _UserHomeState extends State<UserHome> {
     final planBtn =
         _isArabic ? 'رحلة ممتعة تبدأ من هنا ✨' : 'Your journey starts here ✨';
     final favBtn = _isArabic ? 'المفضلة' : 'Favorites';
-    final aboutBtn = _isArabic ? 'عن التطبيق' : 'About Us';
-    final contactBtn = _isArabic ? 'تواصل معنا' : 'Contact Us';
-    final langBtn = _isArabic ? 'English' : 'العربية';
 
     final coords =
         '📍 ${_userData!['city']} – ${_userData!['lat']}, ${_userData!['lng']}';
+    final interestsTitle =
+        _isArabic ? 'اهتماماتك المفضلة:' : 'Your favorite interests:';
+    final interestsText = _buildInterestsText();
 
     return Scaffold(
       backgroundColor: _background,
       appBar: AppBar(
         backgroundColor: _background,
         elevation: 0,
+        centerTitle: true,
+
+        // زر اللغة
+        leadingWidth: 90,
+        leading: TextButton(
+          onPressed: _toggleLanguage,
+          child: Text(
+            _isArabic ? 'English' : 'العربية',
+            style: const TextStyle(
+              fontFamily: 'Tajawal',
+              color: Colors.black87,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+
         title: Text(
           title,
-          style: const TextStyle(fontFamily: 'Tajawal'),
+          style: const TextStyle(
+            fontFamily: 'Tajawal',
+            fontWeight: FontWeight.w600,
+          ),
         ),
+
+        // معلومات قد تهمك + نبذة عنا + تواصل معنا
         actions: [
           PopupMenuButton<String>(
+            icon: Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.black87, size: 20),
+                SizedBox(width: 4),
+                Text(
+                  _isArabic ? 'معلومات قد تهمك' : 'Useful info',
+                  style: const TextStyle(
+                    fontFamily: 'Tajawal',
+                    color: Colors.black87,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
             onSelected: (value) {
-              if (value == 'about') {
-                Navigator.pushNamed(context, '/about');
-              } else if (value == 'contact') {
-                Navigator.pushNamed(context, '/contact');
-              } else if (value == 'lang') {
-                _toggleLanguage();
+              switch (value) {
+                case 'tips':
+                  Navigator.pushNamed(context, '/tips');
+                  break;
+                case 'about':
+                  Navigator.pushNamed(context, '/about');
+                  break;
+                case 'contact':
+                  Navigator.pushNamed(context, '/contact');
+                  break;
               }
             },
             itemBuilder: (context) => [
-              PopupMenuItem(value: 'about', child: Text(aboutBtn)),
-              PopupMenuItem(value: 'contact', child: Text(contactBtn)),
-              PopupMenuItem(value: 'lang', child: Text(langBtn)),
+              PopupMenuItem(
+                value: 'tips',
+                child: Text(
+                  _isArabic ? 'معلومات قد تهمك' : 'Useful Info',
+                  style: const TextStyle(fontFamily: 'Tajawal'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'about',
+                child: Text(
+                  _isArabic ? 'نبذة عنا' : 'About Us',
+                  style: const TextStyle(fontFamily: 'Tajawal'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'contact',
+                child: Text(
+                  _isArabic ? 'تواصل معنا' : 'Contact Us',
+                  style: const TextStyle(fontFamily: 'Tajawal'),
+                ),
+              ),
             ],
           ),
         ],
@@ -293,7 +339,7 @@ class _UserHomeState extends State<UserHome> {
             icon: Icons.map,
             title: mapBtn,
             subtitle: _isArabic
-                ? 'استكشف المواقع والمعالم السياحية في عمان'
+                ? 'استكشفي المواقع والمعالم السياحية في عمان'
                 : 'Explore Oman’s famous landmarks',
             onTap: () {
               Navigator.push(
@@ -305,6 +351,7 @@ class _UserHomeState extends State<UserHome> {
             },
           ),
 
+          // رحلة ممتعة
           _cardItem(
             icon: Icons.tour,
             title: planBtn,
@@ -313,11 +360,13 @@ class _UserHomeState extends State<UserHome> {
                 : 'Your AI trip planner',
             onTap: () => Navigator.pushNamed(context, '/ai_chat'),
           ),
+
+          // المفضلة
           _cardItem(
             icon: Icons.favorite,
             title: favBtn,
             subtitle:
-                _isArabic ? 'الأماكن التي قمت بحفظها' : 'Your saved places',
+                _isArabic ? 'الأماكن التي قمتِ بحفظها' : 'Your saved places',
             onTap: () => Navigator.pushNamed(context, '/favorites'),
           ),
 
@@ -334,7 +383,7 @@ class _UserHomeState extends State<UserHome> {
           ),
           const SizedBox(height: 8),
           Text(
-            _isArabic ? 'اهتماماتك المفضلة:' : 'Your favorite interests:',
+            interestsTitle,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontFamily: 'Tajawal',
                 ),
@@ -348,7 +397,7 @@ class _UserHomeState extends State<UserHome> {
             height: 48,
             child: FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFE0C99D), // بيج أغمق
+                backgroundColor: _prefButtonColor,
                 foregroundColor: Colors.black87,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
@@ -385,7 +434,6 @@ class _UserHomeState extends State<UserHome> {
               onPageChanged: (index) {
                 setState(() => _currentPage = index);
                 _startAutoSlide(); // نرجّع التايمر
-                // تشغيل/إيقاف الفيديو حسب السلايد
                 final slide = _slides[index];
                 if (slide.isVideo && _videoController != null) {
                   _videoController!.play();
@@ -541,7 +589,7 @@ class _UserHomeState extends State<UserHome> {
     required VoidCallback onTap,
   }) {
     return Card(
-      color: const Color(0xFFE5D7B8), // بيج أغمق للأزرار الثلاثة
+      color: _cardColor,
       elevation: 0,
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(

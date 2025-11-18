@@ -52,6 +52,10 @@ import 'screens/verify_otp_screen.dart';
 
 import 'screens/map_gmaps_screen.dart';
 
+import 'screens/info_screen.dart';
+
+import 'screens/travel_tips_screen.dart';
+
 // الإذونات
 
 import 'package:permission_handler/permission_handler.dart';
@@ -188,6 +192,13 @@ class OmanTouristMateApp extends StatelessWidget {
                 '/main': (_) => const MainMenuScreen(),
 
                 '/user_home': (_) => const UserHome(),
+
+                '/map_guest': (_) =>
+                    const OmanGMapsScreen(enablePlanning: false), // guest
+
+                '/info': (_) => const InfoScreen(),
+
+                '/tips': (context) => const TravelTipsScreen(),
               },
               onGenerateRoute: (settings) {
                 if (settings.name == '/place_details') {

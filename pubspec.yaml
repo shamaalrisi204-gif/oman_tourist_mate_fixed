@@ -53,6 +53,12 @@ flutter:
    - assets/interests/beach.jpg
    - assets/interests/adventure.jpg
    - assets/interests/food.jpg
+   - assets/tips/header.jpg
+   - assets/tips/safety.jpg
+   - assets/tips/currency.jpg
+   - assets/tips/etiquette.jpg
+   - assets/tips/emergency.jpg
+   - assets/tips/tax_refund.jpg
    # نترك الخريطة بدون ستايل حتى تبقى أسماء المدن ظاهرة (للاستخدام لاحقًا)
    - assets/map_styles/clean_oman.json
    - assets/map_styles/visit_oman_like.json
