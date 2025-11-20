@@ -147,13 +147,11 @@ class OmanGMapsScreen extends StatefulWidget {
 class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
   GoogleMapController? _map;
 
-  /// البوليغونات المبنية فعلياً للخريطة
+  // كنترول لحقل البحث
+  final TextEditingController _searchController = TextEditingController();
+
   Set<Polygon> _polygons = {};
-
-  /// بيانات خام للبوليغونات
   final List<_GovPolygonData> _polyData = [];
-
-  /// الماركرز (موقعي + المحافظة المحددة + أماكن سياحية)
   Set<Marker> _markers = {};
 
   LatLng _center = const LatLng(21.5, 56.0);
@@ -335,20 +333,63 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
     }).toList();
   }
 
+  void _onSearchSubmitted(String value) async {
+    final query = value.trim().toLowerCase();
+    if (query.isEmpty) return;
+
+    // 1) نحاول نلقى مكان سياحي بالاسم (عربي أو إنجليزي)
+    Place? foundPlace;
+    for (final p in _allPlaces) {
+      if (p.nameAr.contains(value) || p.nameEn.toLowerCase().contains(query)) {
+        foundPlace = p;
+        break;
+      }
+    }
+
+    if (foundPlace != null) {
+      _selectedGovKey = foundPlace.govKey;
+      _rebuildPolygons();
+      await _handlePlaceSelection(foundPlace);
+      return;
+    }
+
+    // 2) لو ما لقينا مكان، نحاول نلقى محافظة بالاسم
+    GovInfo? foundGov;
+    for (final g in _governorates) {
+      if (g.nameAr.contains(value) || g.nameEn.toLowerCase().contains(query)) {
+        foundGov = g;
+        break;
+      }
+    }
+
+    if (foundGov != null) {
+      _onGovernorateSelected(foundGov.key);
+      return;
+    }
+
+    // 3) ما لقينا شي
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'ما لقينا مكان أو محافظة بهذا الاسم 😅',
+          style: TextStyle(fontFamily: 'Tajawal'),
+        ),
+      ),
+    );
+  }
+
   /// تطبيع اسم المحافظة ليصير key ثابت
   String _norm(String s) {
     return s.toLowerCase().replaceAll(' ', '').replaceAll('_', '');
   }
 
-  /// تحميل ملف المحافظات GeoJSON
   Future<void> _loadGeoJson() async {
     try {
       final geo = await rootBundle
           .loadString('assets/web/geo/oman_governorates.geojson');
-
       final data = jsonDecode(geo) as Map<String, dynamic>;
       final List features = data['features'] as List;
-
       for (final fRaw in features) {
         final f = fRaw as Map<String, dynamic>;
         final geom = f['geometry'] as Map<String, dynamic>;
@@ -356,9 +397,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
         final props = (f['properties'] ?? {}) as Map<String, dynamic>;
         final rawName = (props['NAME_1'] ?? props['NAME'] ?? '') as String;
         final govKey = _norm(rawName);
-
         final List<LatLng> featurePoints = [];
-
         void addRing(List coords) {
           final List<LatLng> pts = [];
           for (var c in coords) {
@@ -382,23 +421,19 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
             }
           }
         }
-
         if (featurePoints.isNotEmpty) {
           double sumLat = 0;
           double sumLon = 0;
-
           for (final p in featurePoints) {
             sumLat += p.latitude;
             sumLon += p.longitude;
           }
-
           _govCenters[govKey] = LatLng(
             sumLat / featurePoints.length,
             sumLon / featurePoints.length,
           );
         }
       }
-
       _rebuildPolygons();
       setState(() => _loading = false);
     } catch (e) {
@@ -407,29 +442,33 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
     }
   }
 
-  /// إعادة بناء الـ Polygons عشان نغيّر لون المحافظة المحددة
+  /// إعادة بناء الـ Polygons بألوان مخصصة
   void _rebuildPolygons() {
     final Set<Polygon> polys = {};
-
+    // ألوان المحافظات العادية (بنفسجي)
+    const normalBorder = Color(0xFF7B30FF); // حدود بنفسجي
+    const normalFill = Color(0xFF7B30FF); // تعبئة بنفسجي
+    // ألوان المحافظة المختارة (لون مميز – تركواز مثلاً)
+    const selectedBorder = Color(0xFF00BFA6);
+    const selectedFill = Color(0xFF00BFA6);
     for (int i = 0; i < _polyData.length; i++) {
       final d = _polyData[i];
       final bool selected = d.govKey == _selectedGovKey;
-
       polys.add(
         Polygon(
           polygonId: PolygonId('polygon-${d.govKey}-$i'),
           points: d.points,
-          strokeWidth: selected ? 3 : 2,
-          strokeColor: selected ? const Color(0xFF5E2BFF) : Colors.black,
+          strokeWidth: selected ? 4 : 2,
+          strokeColor:
+              selected ? selectedBorder : normalBorder.withOpacity(0.9),
           fillColor: selected
-              ? const Color(0xFF5E2BFF).withOpacity(0.18)
-              : Colors.transparent,
+              ? selectedFill.withOpacity(0.25) // المحافظة المختارة
+              : normalFill.withOpacity(0.12), // باقي المحافظات
           consumeTapEvents: true,
           onTap: () => _onGovernorateSelected(d.govKey),
         ),
       );
     }
-
     setState(() {
       _polygons = polys;
     });
@@ -1868,6 +1907,12 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
@@ -1923,28 +1968,69 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
             },
           ),
 
-          // عنوان المحافظة المحددة
+// 🔍 شريط البحث + عنوان المحافظة
           Positioned(
             top: 16,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.75),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Text(
-                  _govDisplayName(_selectedGovKey),
-                  style: const TextStyle(
+            left: 12,
+            right: 12,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // حقل البحث
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
                     color: Colors.white,
-                    fontSize: 14,
-                    fontFamily: 'Tajawal',
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.18),
+                        blurRadius: 12,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    textInputAction: TextInputAction.search,
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 13,
+                    ),
+                    decoration: const InputDecoration(
+                      icon: Icon(Icons.search),
+                      hintText:
+                          'ابحث عن مكان أو ولاية (مثلاً: الصريحه، صحار...)',
+                      hintStyle: TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontSize: 12,
+                      ),
+                      border: InputBorder.none,
+                    ),
+                    onSubmitted: _onSearchSubmitted,
                   ),
                 ),
-              ),
+                const SizedBox(height: 8),
+
+                // عنوان المحافظة المحددة
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.75),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Text(
+                    _govDisplayName(_selectedGovKey),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontFamily: 'Tajawal',
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
