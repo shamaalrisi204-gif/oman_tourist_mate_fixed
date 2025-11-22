@@ -10,7 +10,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   bool isArabic = true;
   @override
   Widget build(BuildContext context) {
-    // النصوص بالعربي والإنجليزي
     final title = isArabic ? 'خطط لرحلتك' : 'Plan Your Trip';
     final subtitle = isArabic
         ? 'أضف الوجهات إلى رحلتك بسهولة وسافر حيثما تريد'
@@ -61,7 +60,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           children: [
             // ✅ الخلفية
             Image.asset(
-              'assets/images/oman_background.jpg', // تأكدي الاسم نفسه بالضبط
+              'assets/images/oman_background.jpg',
               fit: BoxFit.cover,
             ),
             Container(color: Colors.black.withOpacity(0.35)),

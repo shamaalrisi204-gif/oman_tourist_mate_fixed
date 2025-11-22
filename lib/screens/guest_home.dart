@@ -1,5 +1,8 @@
+// lib/screens/guest_home_screen.dart
+
 import 'package:flutter/material.dart';
-import 'map_gmaps_screen.dart'; // صفحة الخريطة
+
+import 'user_home.dart'; // 👈 عشان نفتح الصفحة الرئيسية بمود ضيف
 
 class GuestHomeScreen extends StatefulWidget {
   const GuestHomeScreen({super.key});
@@ -18,21 +21,28 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final title = _isArabic ? 'مرحباً بالضيف 👋' : 'Welcome, Guest 👋';
+
     final introTitle = _isArabic
         ? 'مرحباً بك في Oman Tourist Mate'
         : 'Welcome to Oman Tourist Mate';
+
     final introBody = _isArabic
         ? 'كضيف تقدر تشوف خريطة عُمان وبعض المعلومات العامة.\nإذا حاب تسوي خطة أو حفظ أماكن أو حجز لازم تنشئ حساب أولاً.'
         : 'As a guest you can view Oman map and general info.\nTo make plans or save places, you need an account.';
+
     final exploreTitle = _isArabic ? 'استكشف كضيف' : 'Explore as guest';
+
     final mapBtn = _isArabic
-        ? 'خريطة عُمان السياحية (عرض فقط)'
-        : 'Oman tourist map (view only)';
+        ? 'ادخل كتجربة ضيف (عرض الخريطة والأماكن فقط)'
+        : 'Enter as guest (view map & places only)';
+
     final accountTitle =
         _isArabic ? 'أنشئ حسابك واستفد من كل المزايا' : 'Create your account';
+
     final signupBtn = _isArabic
         ? 'Create account / إنشاء حساب جديد'
         : 'Create account / إنشاء حساب جديد';
+
     final langBtn = _isArabic ? 'English' : 'العربية';
 
     return Scaffold(
@@ -40,12 +50,14 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
         fit: StackFit.expand,
         children: [
           // الخلفية
+
           Image.asset(
             'assets/images/oman_background.jpg',
             fit: BoxFit.cover,
           ),
 
           // طبقة شفافة
+
           Container(
             color: Colors.black.withOpacity(0.35),
           ),
@@ -54,6 +66,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
             child: Stack(
               children: [
                 // محتوى الصفحة
+
                 SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -62,6 +75,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                       const SizedBox(height: 50), // مساحة تحت زر الرجوع
 
                       // الترحيب
+
                       Text(
                         title,
                         style: const TextStyle(
@@ -75,6 +89,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                       const SizedBox(height: 16),
 
                       // بطاقة الترحيب
+
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -119,13 +134,14 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
 
                       const SizedBox(height: 10),
 
-                      // زر الخريطة
+                      // زر الدخول كضيف → يفتح UserHome بمود ضيف
+
                       ElevatedButton.icon(
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (_) => const OmanGMapsScreen(
-                                enablePlanning: false,
+                              builder: (_) => const UserHome(
+                                isGuest: true, // 👈 مهم جداً
                               ),
                             ),
                           );
@@ -160,6 +176,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                       const SizedBox(height: 10),
 
                       // زر إنشاء حساب
+
                       ElevatedButton.icon(
                         onPressed: () =>
                             Navigator.pushNamed(context, '/signup'),
@@ -177,12 +194,14 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                           ),
                         ),
                       ),
+
                       const SizedBox(height: 30),
                     ],
                   ),
                 ),
 
-                // 🔙 زر الرجوع العلوي (دائري وأنيق)
+                // 🔙 زر الرجوع العلوي
+
                 Align(
                   alignment: Alignment.topLeft,
                   child: Padding(
@@ -198,6 +217,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                 ),
 
                 // 🌐 زر اللغة أعلى اليمين
+
                 Align(
                   alignment: Alignment.topRight,
                   child: Padding(

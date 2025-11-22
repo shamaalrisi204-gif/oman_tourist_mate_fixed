@@ -104,6 +104,10 @@ flutter:
    - assets/places/muscat/qurum_2.jpg
    - assets/places/muscat/muttrah_1.jpg
    - assets/places/muscat/muttrah_2.jpg
+   - assets/places/muscat/muttrah_3.jpg
+   - assets/places/muscat/qasr_alalm.jpg
+   - assets/places/muscat/hotel.jpg
+   - assets/places/muscat/resturant_muscat.jpg
    # Nizwa / Bahla
    - assets/places/nizwa/fort_1.jpg
    - assets/places/bahla/fort_1.jpg

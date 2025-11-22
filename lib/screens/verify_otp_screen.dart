@@ -64,8 +64,6 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     setState(() => _busy = true);
 
     try {
-      // ✅ نتحقق من الكود
-
       final ok = await OtpService.I.verifyCode(widget.email, code);
 
       if (!mounted) return;
@@ -78,8 +76,6 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
         return;
       }
 
-      // ✅ 1) إنشاء حساب في FirebaseAuth
-
       UserCredential cred =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: widget.email,
@@ -87,8 +83,6 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
       );
 
       final uid = cred.user!.uid;
-
-      // ✅ 2) تخزين بيانات المستخدم في Firestore (collection users)
 
       await FirebaseFirestore.instance.collection('users').doc(uid).set({
         'email': widget.email,
@@ -100,15 +94,11 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      // ✅ 3) حفظ حالة تسجيل الدخول
-
       await Prefs.setLoggedIn(true);
 
       await Prefs.setOnboardingDone(true);
 
       _snack('تم التحقق وإنشاء الحساب بنجاح ✅');
-
-      // ✅ 4) الذهاب لصفحة المستخدم / التفضيلات
 
       Navigator.pushReplacementNamed(context, '/preferences');
     } on FirebaseAuthException catch (e) {

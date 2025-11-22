@@ -1,25 +1,42 @@
+// lib/screens/user_home.dart
+
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+
 import 'package:video_player/video_player.dart';
 
 import '../core/prefs.dart';
+
 import '../core/app_state.dart';
+
 import '../screens/map_gmaps_screen.dart';
 
 class UserHome extends StatefulWidget {
-  const UserHome({super.key});
+  const UserHome({
+    super.key,
+    this.isGuest = false, // 👈 مهم: هل المستخدم ضيف؟
+  });
+
+  final bool isGuest;
 
   @override
   State<UserHome> createState() => _UserHomeState();
 }
 
 /// موديل للسلايد (صورة أو فيديو + نص)
+
 class _HeroSlide {
   final String asset;
+
   final bool isVideo;
+
   final String titleAr;
+
   final String titleEn;
+
   final String subtitleAr;
+
   final String subtitleEn;
 
   const _HeroSlide({
@@ -34,21 +51,29 @@ class _HeroSlide {
 
 class _UserHomeState extends State<UserHome> {
   Map<String, dynamic>? _userData;
+
   bool _isArabic = true;
 
   // ---------- إعدادات السلايدر + الفيديو ----------
+
   final PageController _pageController = PageController();
+
   int _currentPage = 0;
+
   Timer? _autoTimer;
+
   VideoPlayerController? _videoController;
 
   // ألوان ثابتة للثيم
-  static const Color _primary = Color(0xFF5E2BFF); // بنفسجي للهواشي
+
   static const Color _background = Color(0xFFF3EED9); // بيج فاتح للخلفية
+
   static const Color _cardColor = Color(0xFFE5D7B8); // بيج أغمق للكروت
+
   static const Color _prefButtonColor = Color(0xFFE0CDA0); // زر تعديل التفضيلات
 
   // أسماء الاهتمامات (نفس IDs الموجودة في شاشة التفضيلات)
+
   static const Map<String, Map<String, String>> _interestNames = {
     'shopping': {
       'ar': 'تسوّق',
@@ -76,7 +101,8 @@ class _UserHomeState extends State<UserHome> {
     },
   };
 
-  // تعريف السلايدات (غيّري النص بما يناسب صورك وفيديوك)
+  // تعريف السلايدات
+
   late final List<_HeroSlide> _slides = [
     _HeroSlide(
       asset: 'assets/hero/whales.jpg',
@@ -115,41 +141,56 @@ class _UserHomeState extends State<UserHome> {
   @override
   void initState() {
     super.initState();
+
     _loadSummary();
+
     _loadLanguage();
+
     _initVideoController();
+
     _startAutoSlide();
   }
 
   @override
   void dispose() {
     _autoTimer?.cancel();
+
     _pageController.dispose();
+
     _videoController?.dispose();
+
     super.dispose();
   }
 
   Future<void> _initVideoController() async {
     // نبحث عن أول سلايد فيديو
+
     final videoSlide =
         _slides.firstWhere((s) => s.isVideo, orElse: () => _slides[0]);
 
     if (!videoSlide.isVideo) return;
 
     _videoController = VideoPlayerController.asset(videoSlide.asset);
+
     await _videoController!.initialize();
+
     _videoController!
       ..setLooping(true)
       ..setVolume(0.0);
+
     if (mounted) setState(() {});
   }
 
   void _startAutoSlide() {
     _autoTimer?.cancel();
+
     _autoTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (!mounted || _slides.isEmpty) return;
+
       int next = _currentPage + 1;
+
       if (next >= _slides.length) next = 0;
+
       _pageController.animateToPage(
         next,
         duration: const Duration(milliseconds: 600),
@@ -160,6 +201,7 @@ class _UserHomeState extends State<UserHome> {
 
   Future<void> _loadSummary() async {
     final sp = await Prefs.raw;
+
     setState(() {
       _userData = {
         'city': sp.getString('user_city') ?? 'مسقط',
@@ -172,17 +214,83 @@ class _UserHomeState extends State<UserHome> {
 
   Future<void> _loadLanguage() async {
     final ar = await Prefs.isArabic;
+
     if (!mounted) return;
+
     setState(() => _isArabic = ar);
   }
 
   Future<void> _toggleLanguage() async {
     final app = AppStateProvider.of(context);
+
     final newCode = _isArabic ? 'en' : 'ar';
+
     await app.setLanguage(newCode);
+
     if (!mounted) return;
+
     setState(() => _isArabic = !_isArabic);
   }
+
+  // حوار يظهر للضيف لما يحاول يستخدم ميزة للمسجّلين فقط
+
+// خارج الكلاس _UserHomeState، فوقه أو تحت الـ imports مباشرة
+
+  void showGuestDialog(BuildContext context, bool isArabic) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          isArabic ? 'تسجيل الدخول مطلوب' : 'Login Required',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontFamily: 'Tajawal',
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          isArabic
+              ? 'هذه الميزة متاحة فقط للمستخدمين المسجلين.\nسجّل دخولك أو أنشئ حساباً جديداً للاستفادة من مساعد الرحلات والمفضلة.'
+              : 'This feature is available only for registered users.\nPlease sign in or create a new account to use trip assistant and favorites.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontFamily: 'Tajawal'),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+
+              Navigator.pushNamed(context, '/login');
+            },
+            child: Text(
+              isArabic ? 'تسجيل الدخول' : 'Sign In',
+              style: const TextStyle(
+                fontFamily: 'Tajawal',
+                color: Colors.blue,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              isArabic ? 'إلغاء' : 'Cancel',
+              style: const TextStyle(
+                fontFamily: 'Tajawal',
+                color: Colors.grey,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // تحويل IDs الاهتمامات إلى نصوص بحسب اللغة
 
   // تحويل IDs الاهتمامات إلى نصوص بحسب اللغة
   String _buildInterestsText() {
@@ -192,7 +300,6 @@ class _UserHomeState extends State<UserHome> {
           ? 'لم تختاري اهتمامات بعد'
           : 'No favorite interests selected yet';
     }
-
     final labels = ids.map((id) {
       final names = _interestNames[id];
       if (names == null) {
@@ -200,12 +307,7 @@ class _UserHomeState extends State<UserHome> {
       }
       return _isArabic ? names['ar']! : names['en']!;
     }).toList();
-
-    if (_isArabic) {
-      return labels.join('، ');
-    } else {
-      return labels.join(', ');
-    }
+    return _isArabic ? labels.join('، ') : labels.join(', ');
   }
 
   @override
@@ -215,7 +317,6 @@ class _UserHomeState extends State<UserHome> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-
     final title = _isArabic ? 'الصفحة الرئيسية' : 'Home Page';
     final welcome = _isArabic
         ? 'مرحبًا بك في ${_userData!['city']}'
@@ -224,20 +325,17 @@ class _UserHomeState extends State<UserHome> {
     final planBtn =
         _isArabic ? 'رحلة ممتعة تبدأ من هنا ✨' : 'Your journey starts here ✨';
     final favBtn = _isArabic ? 'المفضلة' : 'Favorites';
-
     final coords =
         '📍 ${_userData!['city']} – ${_userData!['lat']}, ${_userData!['lng']}';
     final interestsTitle =
         _isArabic ? 'اهتماماتك المفضلة:' : 'Your favorite interests:';
     final interestsText = _buildInterestsText();
-
     return Scaffold(
       backgroundColor: _background,
       appBar: AppBar(
         backgroundColor: _background,
         elevation: 0,
         centerTitle: true,
-
         // زر اللغة
         leadingWidth: 90,
         leading: TextButton(
@@ -252,7 +350,6 @@ class _UserHomeState extends State<UserHome> {
             ),
           ),
         ),
-
         title: Text(
           title,
           style: const TextStyle(
@@ -260,25 +357,10 @@ class _UserHomeState extends State<UserHome> {
             fontWeight: FontWeight.w600,
           ),
         ),
-
-        // معلومات قد تهمك + نبذة عنا + تواصل معنا
+        // زر "معلومات قد تهمك"
         actions: [
           PopupMenuButton<String>(
-            icon: Row(
-              children: [
-                Icon(Icons.info_outline, color: Colors.black87, size: 20),
-                SizedBox(width: 4),
-                Text(
-                  _isArabic ? 'معلومات قد تهمك' : 'Useful info',
-                  style: const TextStyle(
-                    fontFamily: 'Tajawal',
-                    color: Colors.black87,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
+            icon: const Icon(Icons.info_outline, color: Colors.black87),
             onSelected: (value) {
               switch (value) {
                 case 'tips':
@@ -323,7 +405,6 @@ class _UserHomeState extends State<UserHome> {
         children: [
           // ====== السلايدر مع الكتابة فوق الصور / الفيديو ======
           _buildHeroSlider(),
-
           const SizedBox(height: 16),
           Text(
             welcome,
@@ -333,8 +414,7 @@ class _UserHomeState extends State<UserHome> {
                 ),
           ),
           const SizedBox(height: 16),
-
-          // زر خريطة عمان
+          // زر خريطة عمان (مسموح للجميع)
           _cardItem(
             icon: Icons.map,
             title: mapBtn,
@@ -345,54 +425,74 @@ class _UserHomeState extends State<UserHome> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const OmanGMapsScreen(),
+                  builder: (_) => OmanGMapsScreen(
+                    enablePlanning: !widget.isGuest, // الضيف يشوف فقط
+                  ),
                 ),
               );
             },
           ),
-
-          // رحلة ممتعة
+          // رحلة ممتعة / مساعد الرحلات – ممنوع للضيف
           _cardItem(
             icon: Icons.tour,
             title: planBtn,
             subtitle: _isArabic
                 ? 'مساعدك الذكي لاقتراح الخطط السياحية'
                 : 'Your AI trip planner',
-            onTap: () => Navigator.pushNamed(context, '/ai_chat'),
+            onTap: () {
+              if (widget.isGuest) {
+                // 👈 هنا نستخدم الدالة الجديدة
+                showGuestDialog(context, _isArabic);
+              } else {
+                Navigator.pushNamed(context, '/ai_chat');
+              }
+            },
           ),
-
-          // المفضلة
+          // المفضلة – ممنوعة للضيف
           _cardItem(
             icon: Icons.favorite,
             title: favBtn,
             subtitle:
                 _isArabic ? 'الأماكن التي قمتِ بحفظها' : 'Your saved places',
-            onTap: () => Navigator.pushNamed(context, '/favorites'),
+            onTap: () {
+              if (widget.isGuest) {
+                showGuestDialog(context, _isArabic);
+              } else {
+                Navigator.pushNamed(context, '/favorites');
+              }
+            },
           ),
 
           const SizedBox(height: 16),
+
           Text(
             _isArabic ? 'موقعك المحفوظ:' : 'Your saved location:',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontFamily: 'Tajawal',
                 ),
           ),
+
           Text(
             coords,
             style: const TextStyle(fontSize: 16, fontFamily: 'Tajawal'),
           ),
+
           const SizedBox(height: 8),
+
           Text(
             interestsTitle,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontFamily: 'Tajawal',
                 ),
           ),
+
           Text(
             interestsText,
             style: const TextStyle(fontFamily: 'Tajawal'),
           ),
+
           const SizedBox(height: 20),
+
           SizedBox(
             height: 48,
             child: FilledButton(
@@ -420,6 +520,7 @@ class _UserHomeState extends State<UserHome> {
   }
 
   // ================= Hero Slider =================
+
   Widget _buildHeroSlider() {
     return AspectRatio(
       aspectRatio: 16 / 9,
@@ -433,8 +534,11 @@ class _UserHomeState extends State<UserHome> {
               itemCount: _slides.length,
               onPageChanged: (index) {
                 setState(() => _currentPage = index);
-                _startAutoSlide(); // نرجّع التايمر
+
+                _startAutoSlide();
+
                 final slide = _slides[index];
+
                 if (slide.isVideo && _videoController != null) {
                   _videoController!.play();
                 } else {
@@ -443,10 +547,12 @@ class _UserHomeState extends State<UserHome> {
               },
               itemBuilder: (context, index) {
                 final slide = _slides[index];
+
                 return Stack(
                   fit: StackFit.expand,
                   children: [
                     // صورة / فيديو
+
                     if (slide.isVideo && _videoController != null)
                       FittedBox(
                         fit: BoxFit.cover,
@@ -463,6 +569,7 @@ class _UserHomeState extends State<UserHome> {
                       ),
 
                     // تدرّج غامق بسيط عشان القراءة
+
                     Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -477,6 +584,7 @@ class _UserHomeState extends State<UserHome> {
                     ),
 
                     // النص فوق الصورة/الفيديو
+
                     Positioned(
                       left: 16,
                       right: 16,
@@ -512,6 +620,7 @@ class _UserHomeState extends State<UserHome> {
           ),
 
           // زر السابق
+
           Positioned(
             left: 8,
             child: CircleAvatar(
@@ -522,7 +631,9 @@ class _UserHomeState extends State<UserHome> {
                 icon: const Icon(Icons.chevron_left, color: Colors.white),
                 onPressed: () {
                   int prev = _currentPage - 1;
+
                   if (prev < 0) prev = _slides.length - 1;
+
                   _pageController.animateToPage(
                     prev,
                     duration: const Duration(milliseconds: 400),
@@ -534,6 +645,7 @@ class _UserHomeState extends State<UserHome> {
           ),
 
           // زر التالي
+
           Positioned(
             right: 8,
             child: CircleAvatar(
@@ -544,7 +656,9 @@ class _UserHomeState extends State<UserHome> {
                 icon: const Icon(Icons.chevron_right, color: Colors.white),
                 onPressed: () {
                   int next = _currentPage + 1;
+
                   if (next >= _slides.length) next = 0;
+
                   _pageController.animateToPage(
                     next,
                     duration: const Duration(milliseconds: 400),
@@ -556,12 +670,14 @@ class _UserHomeState extends State<UserHome> {
           ),
 
           // نقاط المؤشر
+
           Positioned(
             bottom: 6,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: List.generate(_slides.length, (i) {
                 final active = i == _currentPage;
+
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   margin: const EdgeInsets.symmetric(horizontal: 3),
@@ -582,6 +698,7 @@ class _UserHomeState extends State<UserHome> {
   }
 
   // ================= Card Item =================
+
   Widget _cardItem({
     required IconData icon,
     required String title,

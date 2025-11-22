@@ -134,14 +134,13 @@ class _GovPolygonData {
 /// =====================
 
 class OmanGMapsScreen extends StatefulWidget {
-  // 👈 بارامتر يحدد هل نسمح بالتخطيط أو لا
-  final bool enablePlanning;
-
+  final bool enablePlanning; // هل نسمح بالـ Trip Plan؟
+  final bool guestMode; // هل المستخدم ضيف؟
   const OmanGMapsScreen({
     super.key,
-    this.enablePlanning = true, // الافتراضي: مسموح التخطيط (لليوزر)
+    this.enablePlanning = true,
+    this.guestMode = false,
   });
-
   @override
   State<OmanGMapsScreen> createState() => _OmanGMapsScreenState();
 }
@@ -239,23 +238,61 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
 
   /// أماكن سياحية (بس أمثلة – عدّلي مكان وصور براحتك)
   final List<Place> _allPlaces = const [
+    // مسقط - أماكن بحريّة
     Place(
-      id: 'muttrah-corniche',
+      id: 'muttrah_corniche_sea',
       govKey: 'muscat',
-      nameAr: 'كورنيش مطرح',
-      nameEn: 'Muttrah Corniche',
-      imageAsset: 'assets/places/muscat/muttrah_1.jpg',
+      nameAr: 'كورنيش مطرح (بحري)',
+      nameEn: 'Muttrah Corniche (Sea)',
+      imageAsset: 'assets/places/muscat/muttrah_3.jpg',
       position: LatLng(23.6155, 58.5670),
       type: PlaceType.beach,
     ),
     Place(
-      id: 'qurum-beach',
+      id: 'qurum_beach_1',
       govKey: 'muscat',
-      nameAr: 'شاطئ القرم',
-      nameEn: 'Qurum Beach',
+      nameAr: 'شاطئ القرم ١',
+      nameEn: 'Qurum Beach 1',
       imageAsset: 'assets/places/muscat/qurum_1.jpg',
-      position: LatLng(23.6139, 58.4744),
+      position: LatLng(23.624667, 58.475167),
       type: PlaceType.beach,
+    ),
+    Place(
+      id: 'qurum_beach_2',
+      govKey: 'muscat',
+      nameAr: 'شاطئ القرم ٢',
+      nameEn: 'Qurum Beach 2',
+      imageAsset: 'assets/places/muscat/qurum_2.jpg',
+      position: LatLng(23.6145, 58.4760),
+      type: PlaceType.beach,
+    ),
+    // مسقط - أماكن تاريخية
+    Place(
+      id: 'muttrah_old_souk',
+      govKey: 'muscat',
+      nameAr: 'سوق مطرح القديم',
+      nameEn: 'Muttrah Old Souq',
+      imageAsset: 'assets/places/muscat/muttrah_1.jpg',
+      position: LatLng(23.6165, 58.5660),
+      type: PlaceType.historic,
+    ),
+    Place(
+      id: 'muttrah_gate',
+      govKey: 'muscat',
+      nameAr: 'بوابة مطرح',
+      nameEn: 'Muttrah Gate',
+      imageAsset: 'assets/places/muscat/muttrah_2.jpg',
+      position: LatLng(23.6160, 58.5650),
+      type: PlaceType.historic,
+    ),
+    Place(
+      id: 'qasr_alalam_place',
+      govKey: 'muscat',
+      nameAr: 'قصر العلم',
+      nameEn: 'Qasr Al Alam',
+      imageAsset: 'assets/places/muscat/qasr_alalm.jpg',
+      position: LatLng(23.6160124, 58.5945746),
+      type: PlaceType.historic,
     ),
     Place(
       id: 'salalah-beach',

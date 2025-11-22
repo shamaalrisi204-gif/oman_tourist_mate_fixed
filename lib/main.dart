@@ -26,6 +26,8 @@ import 'screens/welcome_screen.dart';
 
 import 'screens/login_screen.dart';
 
+import 'screens/forgot_password_screen.dart';
+
 import 'screens/signup_screen.dart';
 
 import 'screens/user_home.dart';
@@ -168,6 +170,8 @@ class OmanTouristMateApp extends StatelessWidget {
                 '/welcome': (_) => const WelcomeScreen(),
 
                 '/login': (_) => const LoginScreen(),
+
+                '/forgot_password': (_) => const ForgotPasswordScreen(),
 
                 '/signup': (_) => const SignUpScreen(),
 
