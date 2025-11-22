@@ -7,7 +7,7 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
-  bool isArabic = true; // ✅ اللغة الافتراضية
+  bool isArabic = true;
   @override
   Widget build(BuildContext context) {
     // النصوص بالعربي والإنجليزي

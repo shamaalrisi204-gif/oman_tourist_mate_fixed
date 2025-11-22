@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../models/gov_places.dart';
+import 'governorate_places_screen.dart';
 
 /// ستايل الخريطة: يخفي أسماء الدول / المدن / الطرق / الخ...
 const String _kMapStyle = '''
@@ -158,7 +160,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
 
   bool _loading = true;
   bool _locating = false;
-
+  bool _showQuickQuestions = true;
   // موقعي
   LatLng? _myLocation;
 
@@ -284,6 +286,31 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
     ),
   ];
 
+  /// أماكن كل محافظة (مطاعم، فنادق، أماكن سياحية... إلخ)
+  /// ناخذها من قائمة ثابتة kGovPlaces
+  List<GovPlace> _placesForGov(String govKey) {
+    return kGovPlaces.where((p) => p.govKey == govKey).toList();
+  }
+
+  /// فتح شاشة خاصة بالمحافظة (قائمة المطاعم + الفنادق + الأماكن السياحية)
+  void _openGovernoratePlaces(String govKey) {
+    final gov = _governorates.firstWhere((g) => g.key == govKey);
+    final places = _placesForGov(govKey);
+    final center = _govCenters[govKey];
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => GovernoratePlacesScreen(
+          govKey: govKey,
+          titleAr: gov.nameAr,
+          titleEn: gov.nameEn,
+          center: center,
+          places: places,
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -291,21 +318,8 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
     // نحمّل الـ GeoJSON
     _loadGeoJson();
 
-    // منطق الضيف / اليوزر
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_planningEnabled) {
-        // ضيف: استكشاف حر فقط
-        setState(() {
-          _freeExploreMode = true;
-        });
-        return;
-      }
-
-      if (!_welcomeShown) {
-        _welcomeShown = true;
-        _showModeChoiceSheet(); // يفتح شيت كيف تستخدم الخريطة
-      }
-    });
+    // لو التخطيط مسموح (user) نعرض كرت الأسئلة فوق الخريطة
+    _showQuickQuestions = _planningEnabled;
   }
 
   /// رجع نص عربي/إنجليزي في سطر واحد
@@ -603,35 +617,32 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
       );
     }
 
-    // ⭐ هنا الفرق:
-    // User (enablePlanning = true) → افتح شيت الأسئلة+الأماكن
-    // Guest (enablePlanning = false) → بس يحرك الخريطة وما يفتح شي
+// ⭐ إذا التخطيط مفعّل → افتح شاشة المحافظة (مطاعم + فنادق + أماكن سياحية)
     if (_planningEnabled) {
-      _openPlacesSheet();
+      _openGovernoratePlaces(govKey);
     }
   }
 
-  /// نص المسافة والوقت (بالدقائق لو قريب، وبالساعات لو بعيد) – بالعربي والإنجليزي
+  /// مسافة مركز المحافظة من موقعي (لنص قصير يظهر على التبويب)
+  /// دالة حساب المسافة بين موقعي وبين أي مكان
   String _distanceText(LatLng target) {
     if (_myLocation == null) {
-      return 'المسافة غير معروفة / Distance unknown';
+      return 'حدد موقعك لعرض المسافة / Enable location to show distance';
     }
+
     final meters = Geolocator.distanceBetween(
       _myLocation!.latitude,
       _myLocation!.longitude,
       target.latitude,
       target.longitude,
     );
-    final km = meters / 1000.0;
-    final minutes = km / 80.0 * 60.0; // تقدير بسرعة 80 كم/س
 
-    if (minutes < 60) {
-      final mins = minutes.round();
-      return 'حوالي $mins دقيقة بالسيارة / About $mins min driving • ${km.toStringAsFixed(1)} كم / km';
+    final km = meters / 1000.0;
+
+    if (km < 1) {
+      return '≈ ${meters.round()} م من موقعي';
     } else {
-      final hours = minutes / 60.0;
-      final hStr = hours.toStringAsFixed(1);
-      return 'حوالي $hStr ساعة بالسيارة / About $hStr hours driving • ${km.toStringAsFixed(1)} كم / km';
+      return '≈ ${km.toStringAsFixed(1)} كم من موقعي';
     }
   }
 
@@ -730,6 +741,87 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
           ),
         );
       },
+    );
+  }
+
+// كرت صغير فوق الخريطة لأسئلة الخطة + زر تخطي
+  Widget _buildQuickQuestionCard(BuildContext context) {
+    // لو التخطيط مقفول أو المستخدم سكّر الكرت -> لا نعرض شيء
+    if (!_planningEnabled || !_showQuickQuestions) {
+      return const SizedBox.shrink();
+    }
+
+    return Positioned(
+      bottom: MediaQuery.of(context).size.height * 0.35,
+      left: 16,
+      right: 16,
+      child: Material(
+        elevation: 10,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'هذه الأسئلة بتساعدنا نجهز لك خطة زيارة للمحافظة اللي تختارها 👇\n'
+                'These quick questions help us prepare a visit plan for you.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    // نخفي الكرت
+                    setState(() => _showQuickQuestions = false);
+                    // نفتح شيت السماح بالموقع + الأماكن
+                    await _askLocationPermissionSheet();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF5E2BFF),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'أبغي أسوي خطة زيارة / I want a visit plan',
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 14),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextButton(
+                onPressed: () {
+                  // يخفي الكرت ويخلي المستخدم يستكشف الخريطة بنفسه
+                  setState(() => _showQuickQuestions = false);
+                },
+                child: const Text(
+                  'تخطي الآن – أستكشف الخريطة بنفسي',
+                  style: TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontSize: 12,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -843,52 +935,87 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
 
                       /// Chips أنواع الأماكن
                       Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
+                        spacing: 10,
+                        runSpacing: 10,
                         children: [
-                          // خيار "سياحي عام" = بدون فلتر نوع
-                          ChoiceChip(
-                            label: const Text(
-                              'أماكن سياحية عامة / General tourist places',
-                              style: TextStyle(
-                                fontFamily: 'Tajawal',
-                                fontSize: 11,
-                              ),
-                            ),
-                            selected: _selectedType == null,
-                            selectedColor: const Color(0xFF5E2BFF),
-                            backgroundColor: Colors.grey.shade200,
-                            labelStyle: TextStyle(
-                              color: _selectedType == null
-                                  ? Colors.white
-                                  : Colors.black87,
-                            ),
-                            onSelected: (_) {
-                              setState(() {
-                                _selectedType = null;
-                              });
+                          GestureDetector(
+                            onTap: () {
+                              setState(() => _selectedType = null);
                             },
-                          ),
-                          for (final t in PlaceType.values)
-                            ChoiceChip(
-                              label: Text(
-                                _placeTypeLabel(t),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 14),
+                              decoration: BoxDecoration(
+                                color: _selectedType == null
+                                    ? const Color(0xFF5E2BFF)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: _selectedType == null
+                                      ? const Color(0xFF5E2BFF)
+                                      : Colors.grey.shade300,
+                                  width: 2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.08),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                'أماكن سياحية عامة / General tourist places',
                                 style: TextStyle(
                                   fontFamily: 'Tajawal',
-                                  fontSize: 11,
-                                  color: _selectedType == t
+                                  color: _selectedType == null
                                       ? Colors.white
                                       : Colors.black87,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              selected: _selectedType == t,
-                              selectedColor: const Color(0xFF5E2BFF),
-                              backgroundColor: Colors.grey.shade200,
-                              onSelected: (_) {
-                                setState(() {
-                                  _selectedType = t;
-                                });
+                            ),
+                          ),
+                          for (final t in PlaceType.values)
+                            GestureDetector(
+                              onTap: () {
+                                setState(() => _selectedType = t);
                               },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 14),
+                                decoration: BoxDecoration(
+                                  color: _selectedType == t
+                                      ? const Color(0xFF5E2BFF)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: _selectedType == t
+                                        ? const Color(0xFF5E2BFF)
+                                        : Colors.grey.shade300,
+                                    width: 2,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.08),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  _placeTypeLabel(t),
+                                  style: TextStyle(
+                                    fontFamily: 'Tajawal',
+                                    color: _selectedType == t
+                                        ? Colors.white
+                                        : Colors.black87,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
                             ),
                         ],
                       ),
@@ -1474,7 +1601,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
   /// ملخص الخطة + عرض الزمن والمسافة + زر المسار + أزرار المطاعم/الفنادق/الجلسات
   Future<void> _showPlanSummary(TripPlan plan) async {
     final place = plan.place;
-    final distanceInfo = _distanceText(place.position);
+
+    // نستخدم دالة حساب المسافة اللي عرفناها فوق
+    final String distanceInfo = _distanceText(place.position);
 
     await showModalBottomSheet(
       context: context,
@@ -1516,6 +1645,8 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                     ),
                   ),
                   const SizedBox(height: 10),
+
+                  // كرت التفاصيل
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 10),
@@ -1535,6 +1666,8 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                           ),
                         ),
                         const SizedBox(height: 6),
+
+                        // المدة اللي اختارتها
                         Text(
                           'المدة: ${plan.durationText}\n'
                           'Duration: ${plan.durationText}',
@@ -1544,6 +1677,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                           ),
                         ),
                         const SizedBox(height: 6),
+
                         const Text(
                           'المسافة والوقت التقريبي: / Approx distance & time:',
                           style: TextStyle(
@@ -1553,6 +1687,8 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                           ),
                         ),
                         const SizedBox(height: 4),
+
+                        // هنا يظهر النص اللي رجعته _distanceText
                         Text(
                           distanceInfo,
                           style: const TextStyle(
@@ -1560,6 +1696,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                             fontSize: 12,
                           ),
                         ),
+
                         const SizedBox(height: 8),
                         const Text(
                           'الخيارات التي اخترتها / Your preferences:',
@@ -1592,7 +1729,10 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                       ],
                     ),
                   ),
+
                   const SizedBox(height: 14),
+
+                  // زر فتح المسار في قوقل ماب
                   SizedBox(
                     width: double.infinity,
                     height: 44,
@@ -1616,7 +1756,10 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 8),
+
+                  // أزرار الأماكن القريبة
                   if (plan.wantHotels ||
                       plan.wantRestaurants ||
                       plan.wantSittings) ...[
@@ -1644,7 +1787,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                             label: const Text(
                               'فنادق قريبة / Hotels nearby',
                               style: TextStyle(
-                                  fontFamily: 'Tajawal', fontSize: 12),
+                                fontFamily: 'Tajawal',
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                         if (plan.wantRestaurants)
@@ -1655,7 +1800,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                             label: const Text(
                               'مطاعم قريبة / Restaurants nearby',
                               style: TextStyle(
-                                  fontFamily: 'Tajawal', fontSize: 12),
+                                fontFamily: 'Tajawal',
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                         if (plan.wantSittings)
@@ -1666,13 +1813,16 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                             label: const Text(
                               'أماكن جلسات / Sitting areas',
                               style: TextStyle(
-                                  fontFamily: 'Tajawal', fontSize: 12),
+                                fontFamily: 'Tajawal',
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                       ],
                     ),
                     const SizedBox(height: 8),
                   ],
+
                   TextButton(
                     onPressed: () => Navigator.of(ctx).pop(),
                     child: const Text(
@@ -1795,123 +1945,13 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
     return '${g.nameAr} / ${g.nameEn}';
   }
 
-  /// شاشة اختيار نمط الاستخدام عند أول دخول
-  Future<void> _showModeChoiceSheet() async {
-    // 🔒 لو الضيف داخل (enablePlanning = false) لا تفتح الشيت أبداً
-    if (!_planningEnabled) return;
-
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: false,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade400,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const Text(
-                'كيف حاب تستخدم الخريطة؟\nHow would you like to use the map?',
-                style: TextStyle(
-                  fontFamily: 'Tajawal',
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'تقدرين تختارين بين وضع “خطة زيارة” بأسئلة بسيطة تقترح لك أماكن، أو “استكشاف حر” بدون أسئلة.\nYou can choose between a guided visit plan or free exploration.',
-                style: TextStyle(
-                  fontFamily: 'Tajawal',
-                  fontSize: 13,
-                  color: Colors.black87,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _freeExploreMode = false;
-                    });
-                    Navigator.of(ctx).pop();
-                    _askLocationPermissionSheet();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5E2BFF),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const Text(
-                    'أبغي أسوي خطة زيارة / I want a visit plan',
-                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 14),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: OutlinedButton(
-                  onPressed: () {
-                    setState(() {
-                      _freeExploreMode = true;
-                    });
-                    Navigator.of(ctx).pop();
-                    // استكشاف حر: ما نفتح أسئلة الآن
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.black87,
-                    side: BorderSide(color: Colors.grey.shade400),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const Text(
-                    'أستكشف الخريطة بنفسي / I want to explore freely',
-                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 14),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showWelcomeOnce() {
-    if (_welcomeShown) return;
-    _welcomeShown = true;
-    _showModeChoiceSheet();
-  }
-
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
+  // ---------------- build ----------------
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -1935,40 +1975,33 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
       ),
       body: Stack(
         children: [
+          // ===== الخريطة =====
           GoogleMap(
             initialCameraPosition: CameraPosition(target: _center, zoom: 7.0),
             polygons: _polygons,
             markers: _markers,
             myLocationEnabled: false,
             myLocationButtonEnabled: false,
-
-            // حبس الكاميرا داخل حدود عمان
             cameraTargetBounds: CameraTargetBounds(_omanBounds),
-
-            // ما نسمح يبعد كثير عن عمان
             minMaxZoomPreference: const MinMaxZoomPreference(6.5, 12),
-
             onMapCreated: (c) {
               _map = c;
-
-              // نطبّق الستايل اللي يخفي أسماء الدول / المدن / الطرق
               _map!.setMapStyle(_kMapStyle);
-
-              // نركّز الكاميرا على حدود عمان
               Future.delayed(const Duration(milliseconds: 300), () {
                 _map!.animateCamera(
                   CameraUpdate.newLatLngBounds(_omanBounds, 32),
                 );
-                _showWelcomeOnce();
               });
             },
-
             onCameraMove: (pos) {
               _currentZoom = pos.zoom;
             },
           ),
 
-// 🔍 شريط البحث + عنوان المحافظة
+          // ===== كرت الأسئلة السريع =====
+          _buildQuickQuestionCard(context),
+
+          // ===== شريط البحث + اسم المحافظة =====
           Positioned(
             top: 16,
             left: 12,
@@ -2012,7 +2045,6 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-
                 // عنوان المحافظة المحددة
                 Container(
                   padding:
@@ -2034,7 +2066,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
             ),
           ),
 
-          // شريط المحافظات
+          // ===== تبويبات المحافظات بشكل مستطيل طويل + المسافة =====
           Positioned(
             left: 12,
             right: 12,
@@ -2053,51 +2085,82 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                 const SizedBox(height: 6),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.94),
+                    color: Colors.transparent,
                     borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.12),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
                   ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                  child: SizedBox(
-                    height: 40,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _governorates.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
-                      itemBuilder: (context, index) {
-                        final g = _governorates[index];
-                        final selected = g.key == _selectedGovKey;
+                  height: 90,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _governorates.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final g = _governorates[index];
+                      final selected = g.key == _selectedGovKey;
 
-                        return ChoiceChip(
-                          label: Text(
-                            '${g.nameAr} / ${g.nameEn}',
-                            style: TextStyle(
-                              fontFamily: 'Tajawal',
-                              fontSize: 12,
-                              color: selected ? Colors.white : Colors.black87,
+                      return GestureDetector(
+                        onTap: () => _onGovernorateSelected(g.key),
+                        child: Container(
+                          width: 230,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? const Color(0xFF5E2BFF)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.12),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                            border: Border.all(
+                              color: selected
+                                  ? const Color(0xFF5E2BFF)
+                                  : Colors.grey.shade300,
+                              width: 2,
                             ),
                           ),
-                          selected: selected,
-                          selectedColor: const Color(0xFF5E2BFF),
-                          backgroundColor: Colors.grey.shade200,
-                          onSelected: (_) => _onGovernorateSelected(g.key),
-                        );
-                      },
-                    ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${g.nameAr} / ${g.nameEn}',
+                                style: TextStyle(
+                                  fontFamily: 'Tajawal',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color:
+                                      selected ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _distanceText(
+                                  _govCenters[g.key] ?? const LatLng(0, 0),
+                                ),
+                                style: TextStyle(
+                                  fontFamily: 'Tajawal',
+                                  fontSize: 11,
+                                  color: selected
+                                      ? Colors.white.withOpacity(0.9)
+                                      : Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
             ),
           ),
 
-          // أزرار التكبير + زر موقعي
+          // ===== أزرار التكبير + موقعي =====
           Positioned(
             right: 16,
             bottom: 16,
