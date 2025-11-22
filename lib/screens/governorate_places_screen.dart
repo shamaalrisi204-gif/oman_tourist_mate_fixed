@@ -38,6 +38,19 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
 
   AttractionType? _selectedAttractionType;
 
+  /// صورة الهيدر الحالية (تتغير حسب نوع المكان)
+
+  String? _headerImageAsset;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _headerImageAsset = _findHeaderImageFor(null);
+  }
+
+  // —————————————  Helpers  —————————————
+
   String _categoryLabel(GovPlaceCategory c) {
     switch (c) {
       case GovPlaceCategory.attraction:
@@ -73,6 +86,26 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
     }
   }
 
+  /// اختيار صورة مناسبة للهيدر بناءً على نوع المكان السياحي
+
+  String? _findHeaderImageFor(AttractionType? type) {
+    if (widget.places.isEmpty) return null;
+
+    // لو فيه نوع معيّن، نجيب أول مكان سياحي من هذا النوع
+
+    if (type != null) {
+      final matches = widget.places.where((p) =>
+          p.category == GovPlaceCategory.attraction &&
+          p.attractionType == type);
+
+      if (matches.isNotEmpty) return matches.first.imageAsset;
+    }
+
+    // غير كذا: أول صورة في القائمة (أيًا كان نوعها)
+
+    return widget.places.first.imageAsset;
+  }
+
   Future<void> _openInMaps(LatLng loc) async {
     final url =
         'https://www.google.com/maps/search/?api=1&query=${loc.latitude},${loc.longitude}';
@@ -104,6 +137,8 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
       onSelected: (_) {
         setState(() {
           _selectedAttractionType = type;
+
+          _headerImageAsset = _findHeaderImageFor(type);
         });
       },
     );
@@ -200,7 +235,7 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
                     const SizedBox(height: 6),
                   ],
 
-                  // 🔗 أزرار الروابط الخارجية (إنستغرام / Booking / خريطة)
+                  // 🔗 روابط خارجية (إنستغرام / Booking / خريطة)
 
                   Wrap(
                     spacing: 8,
@@ -259,6 +294,8 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
     );
   }
 
+  // —————————————  BUILD  —————————————
+
   @override
   Widget build(BuildContext context) {
     // نقسم الأماكن حسب الكاتيجوري
@@ -268,6 +305,12 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
     for (final p in widget.places) {
       byCategory.putIfAbsent(p.category, () => []).add(p);
     }
+
+    final titleText = '${widget.titleAr} / ${widget.titleEn}';
+
+    final headlineAr = 'تقويم الفعاليات والأماكن في ${widget.titleAr}';
+
+    final headlineEn = 'Events & Places Calendar in ${widget.titleEn}';
 
     return Scaffold(
       body: CustomScrollView(
@@ -279,16 +322,21 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
             pinned: true,
             stretch: true,
             title: Text(
-              '${widget.titleAr} / ${widget.titleEn}',
+              titleText,
               style: const TextStyle(fontFamily: 'Tajawal'),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              background: widget.places.isNotEmpty
+              background: _headerImageAsset != null
                   ? Image.asset(
-                      widget.places.first.imageAsset,
+                      _headerImageAsset!,
                       fit: BoxFit.cover,
                     )
-                  : Container(color: Colors.grey.shade300),
+                  : (widget.places.isNotEmpty
+                      ? Image.asset(
+                          widget.places.first.imageAsset,
+                          fit: BoxFit.cover,
+                        )
+                      : Container(color: Colors.grey.shade300)),
             ),
           ),
 
@@ -298,8 +346,10 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // الجملة الرئيسية الواضحة بدل اللي كانت فوق الصورة
+
                   Text(
-                    'استكشف ${widget.titleAr} / Explore ${widget.titleEn}',
+                    headlineAr,
                     style: const TextStyle(
                       fontFamily: 'Tajawal',
                       fontSize: 18,
@@ -307,17 +357,29 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
                     ),
                   ),
 
+                  const SizedBox(height: 4),
+
+                  Text(
+                    headlineEn,
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 13,
+                      color: Colors.black54,
+                    ),
+                  ),
+
                   const SizedBox(height: 8),
 
                   const Text(
-                    'اختر من الأماكن التالية: سياحية، فنادق، مطاعم، كوفيهات.',
+                    'استعرض الأماكن البحرية، التاريخية، الجبلية والبرية،'
+                    ' بالإضافة إلى فنادق ومطاعم وكوفيهات مختارة في المحافظة.',
                     style: TextStyle(
                       fontFamily: 'Tajawal',
                       fontSize: 13,
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
                   // 🔻 لكل كاتيجوري نعرض عنوان + كروت
 
@@ -356,7 +418,7 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
                               .toList(),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                     ],
 
                     Column(
@@ -365,7 +427,7 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
                           .toList(),
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                   ],
                 ],
               ),

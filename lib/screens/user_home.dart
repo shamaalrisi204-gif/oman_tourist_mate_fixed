@@ -1,15 +1,11 @@
 // lib/screens/user_home.dart
 
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-
 import 'package:video_player/video_player.dart';
 
 import '../core/prefs.dart';
-
 import '../core/app_state.dart';
-
 import '../screens/map_gmaps_screen.dart';
 
 class UserHome extends StatefulWidget {
@@ -25,18 +21,12 @@ class UserHome extends StatefulWidget {
 }
 
 /// موديل للسلايد (صورة أو فيديو + نص)
-
 class _HeroSlide {
   final String asset;
-
   final bool isVideo;
-
   final String titleAr;
-
   final String titleEn;
-
   final String subtitleAr;
-
   final String subtitleEn;
 
   const _HeroSlide({
@@ -54,26 +44,21 @@ class _UserHomeState extends State<UserHome> {
 
   bool _isArabic = true;
 
+  /// عنوان زر "المزيد" في الـ AppBar
+  String get _moreLabel => _isArabic ? 'المزيد' : 'More';
+
   // ---------- إعدادات السلايدر + الفيديو ----------
-
   final PageController _pageController = PageController();
-
   int _currentPage = 0;
-
   Timer? _autoTimer;
-
   VideoPlayerController? _videoController;
 
   // ألوان ثابتة للثيم
-
   static const Color _background = Color(0xFFF3EED9); // بيج فاتح للخلفية
-
   static const Color _cardColor = Color(0xFFE5D7B8); // بيج أغمق للكروت
-
   static const Color _prefButtonColor = Color(0xFFE0CDA0); // زر تعديل التفضيلات
 
   // أسماء الاهتمامات (نفس IDs الموجودة في شاشة التفضيلات)
-
   static const Map<String, Map<String, String>> _interestNames = {
     'shopping': {
       'ar': 'تسوّق',
@@ -102,7 +87,6 @@ class _UserHomeState extends State<UserHome> {
   };
 
   // تعريف السلايدات
-
   late final List<_HeroSlide> _slides = [
     _HeroSlide(
       asset: 'assets/hero/whales.jpg',
@@ -141,39 +125,29 @@ class _UserHomeState extends State<UserHome> {
   @override
   void initState() {
     super.initState();
-
     _loadSummary();
-
     _loadLanguage();
-
     _initVideoController();
-
     _startAutoSlide();
   }
 
   @override
   void dispose() {
     _autoTimer?.cancel();
-
     _pageController.dispose();
-
     _videoController?.dispose();
-
     super.dispose();
   }
 
   Future<void> _initVideoController() async {
     // نبحث عن أول سلايد فيديو
-
     final videoSlide =
         _slides.firstWhere((s) => s.isVideo, orElse: () => _slides[0]);
 
     if (!videoSlide.isVideo) return;
 
     _videoController = VideoPlayerController.asset(videoSlide.asset);
-
     await _videoController!.initialize();
-
     _videoController!
       ..setLooping(true)
       ..setVolume(0.0);
@@ -188,7 +162,6 @@ class _UserHomeState extends State<UserHome> {
       if (!mounted || _slides.isEmpty) return;
 
       int next = _currentPage + 1;
-
       if (next >= _slides.length) next = 0;
 
       _pageController.animateToPage(
@@ -214,29 +187,20 @@ class _UserHomeState extends State<UserHome> {
 
   Future<void> _loadLanguage() async {
     final ar = await Prefs.isArabic;
-
     if (!mounted) return;
-
     setState(() => _isArabic = ar);
   }
 
   Future<void> _toggleLanguage() async {
     final app = AppStateProvider.of(context);
-
     final newCode = _isArabic ? 'en' : 'ar';
-
     await app.setLanguage(newCode);
-
     if (!mounted) return;
-
     setState(() => _isArabic = !_isArabic);
   }
 
-  // حوار يظهر للضيف لما يحاول يستخدم ميزة للمسجّلين فقط
-
-// خارج الكلاس _UserHomeState، فوقه أو تحت الـ imports مباشرة
-
-  void showGuestDialog(BuildContext context, bool isArabic) {
+  /// حوار يظهر للضيف لما يحاول يستخدم ميزة للمسجّلين فقط
+  void _showGuestDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -244,7 +208,7 @@ class _UserHomeState extends State<UserHome> {
           borderRadius: BorderRadius.circular(20),
         ),
         title: Text(
-          isArabic ? 'تسجيل الدخول مطلوب' : 'Login Required',
+          _isArabic ? 'تسجيل الدخول مطلوب' : 'Login Required',
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontFamily: 'Tajawal',
@@ -252,7 +216,7 @@ class _UserHomeState extends State<UserHome> {
           ),
         ),
         content: Text(
-          isArabic
+          _isArabic
               ? 'هذه الميزة متاحة فقط للمستخدمين المسجلين.\nسجّل دخولك أو أنشئ حساباً جديداً للاستفادة من مساعد الرحلات والمفضلة.'
               : 'This feature is available only for registered users.\nPlease sign in or create a new account to use trip assistant and favorites.',
           textAlign: TextAlign.center,
@@ -263,11 +227,10 @@ class _UserHomeState extends State<UserHome> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-
               Navigator.pushNamed(context, '/login');
             },
             child: Text(
-              isArabic ? 'تسجيل الدخول' : 'Sign In',
+              _isArabic ? 'تسجيل الدخول' : 'Sign In',
               style: const TextStyle(
                 fontFamily: 'Tajawal',
                 color: Colors.blue,
@@ -278,7 +241,7 @@ class _UserHomeState extends State<UserHome> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              isArabic ? 'إلغاء' : 'Cancel',
+              _isArabic ? 'إلغاء' : 'Cancel',
               style: const TextStyle(
                 fontFamily: 'Tajawal',
                 color: Colors.grey,
@@ -289,8 +252,6 @@ class _UserHomeState extends State<UserHome> {
       ),
     );
   }
-
-  // تحويل IDs الاهتمامات إلى نصوص بحسب اللغة
 
   // تحويل IDs الاهتمامات إلى نصوص بحسب اللغة
   String _buildInterestsText() {
@@ -317,6 +278,7 @@ class _UserHomeState extends State<UserHome> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
+
     final title = _isArabic ? 'الصفحة الرئيسية' : 'Home Page';
     final welcome = _isArabic
         ? 'مرحبًا بك في ${_userData!['city']}'
@@ -330,13 +292,14 @@ class _UserHomeState extends State<UserHome> {
     final interestsTitle =
         _isArabic ? 'اهتماماتك المفضلة:' : 'Your favorite interests:';
     final interestsText = _buildInterestsText();
+
     return Scaffold(
       backgroundColor: _background,
       appBar: AppBar(
         backgroundColor: _background,
         elevation: 0,
         centerTitle: true,
-        // زر اللغة
+        // زر اللغة يسار
         leadingWidth: 90,
         leading: TextButton(
           onPressed: _toggleLanguage,
@@ -357,10 +320,28 @@ class _UserHomeState extends State<UserHome> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        // زر "معلومات قد تهمك"
+        // زر "المزيد" فيه معلومات قد تهمك + نبذة عنا + تواصل معنا + محوّل العملات
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Icons.info_outline, color: Colors.black87),
+            // شكل الزر في الـ AppBar
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                children: [
+                  const Icon(Icons.menu, color: Colors.black87, size: 20),
+                  const SizedBox(width: 4),
+                  Text(
+                    _moreLabel, // "المزيد" / "More"
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      color: Colors.black87,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             onSelected: (value) {
               switch (value) {
                 case 'tips':
@@ -371,6 +352,9 @@ class _UserHomeState extends State<UserHome> {
                   break;
                 case 'contact':
                   Navigator.pushNamed(context, '/contact');
+                  break;
+                case 'currency':
+                  Navigator.pushNamed(context, '/currency');
                   break;
               }
             },
@@ -393,6 +377,14 @@ class _UserHomeState extends State<UserHome> {
                 value: 'contact',
                 child: Text(
                   _isArabic ? 'تواصل معنا' : 'Contact Us',
+                  style: const TextStyle(fontFamily: 'Tajawal'),
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'currency',
+                child: Text(
+                  _isArabic ? 'محوّل العملات' : 'Currency Converter',
                   style: const TextStyle(fontFamily: 'Tajawal'),
                 ),
               ),
@@ -441,8 +433,7 @@ class _UserHomeState extends State<UserHome> {
                 : 'Your AI trip planner',
             onTap: () {
               if (widget.isGuest) {
-                // 👈 هنا نستخدم الدالة الجديدة
-                showGuestDialog(context, _isArabic);
+                _showGuestDialog();
               } else {
                 Navigator.pushNamed(context, '/ai_chat');
               }
@@ -456,43 +447,35 @@ class _UserHomeState extends State<UserHome> {
                 _isArabic ? 'الأماكن التي قمتِ بحفظها' : 'Your saved places',
             onTap: () {
               if (widget.isGuest) {
-                showGuestDialog(context, _isArabic);
+                _showGuestDialog();
               } else {
                 Navigator.pushNamed(context, '/favorites');
               }
             },
           ),
-
           const SizedBox(height: 16),
-
           Text(
             _isArabic ? 'موقعك المحفوظ:' : 'Your saved location:',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontFamily: 'Tajawal',
                 ),
           ),
-
           Text(
             coords,
             style: const TextStyle(fontSize: 16, fontFamily: 'Tajawal'),
           ),
-
           const SizedBox(height: 8),
-
           Text(
             interestsTitle,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontFamily: 'Tajawal',
                 ),
           ),
-
           Text(
             interestsText,
             style: const TextStyle(fontFamily: 'Tajawal'),
           ),
-
           const SizedBox(height: 20),
-
           SizedBox(
             height: 48,
             child: FilledButton(
@@ -520,7 +503,6 @@ class _UserHomeState extends State<UserHome> {
   }
 
   // ================= Hero Slider =================
-
   Widget _buildHeroSlider() {
     return AspectRatio(
       aspectRatio: 16 / 9,
@@ -534,11 +516,8 @@ class _UserHomeState extends State<UserHome> {
               itemCount: _slides.length,
               onPageChanged: (index) {
                 setState(() => _currentPage = index);
-
                 _startAutoSlide();
-
                 final slide = _slides[index];
-
                 if (slide.isVideo && _videoController != null) {
                   _videoController!.play();
                 } else {
@@ -547,12 +526,10 @@ class _UserHomeState extends State<UserHome> {
               },
               itemBuilder: (context, index) {
                 final slide = _slides[index];
-
                 return Stack(
                   fit: StackFit.expand,
                   children: [
                     // صورة / فيديو
-
                     if (slide.isVideo && _videoController != null)
                       FittedBox(
                         fit: BoxFit.cover,
@@ -567,9 +544,7 @@ class _UserHomeState extends State<UserHome> {
                         slide.asset,
                         fit: BoxFit.cover,
                       ),
-
                     // تدرّج غامق بسيط عشان القراءة
-
                     Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -582,9 +557,7 @@ class _UserHomeState extends State<UserHome> {
                         ),
                       ),
                     ),
-
                     // النص فوق الصورة/الفيديو
-
                     Positioned(
                       left: 16,
                       right: 16,
@@ -618,9 +591,7 @@ class _UserHomeState extends State<UserHome> {
               },
             ),
           ),
-
           // زر السابق
-
           Positioned(
             left: 8,
             child: CircleAvatar(
@@ -631,9 +602,7 @@ class _UserHomeState extends State<UserHome> {
                 icon: const Icon(Icons.chevron_left, color: Colors.white),
                 onPressed: () {
                   int prev = _currentPage - 1;
-
                   if (prev < 0) prev = _slides.length - 1;
-
                   _pageController.animateToPage(
                     prev,
                     duration: const Duration(milliseconds: 400),
@@ -643,9 +612,7 @@ class _UserHomeState extends State<UserHome> {
               ),
             ),
           ),
-
           // زر التالي
-
           Positioned(
             right: 8,
             child: CircleAvatar(
@@ -656,9 +623,7 @@ class _UserHomeState extends State<UserHome> {
                 icon: const Icon(Icons.chevron_right, color: Colors.white),
                 onPressed: () {
                   int next = _currentPage + 1;
-
                   if (next >= _slides.length) next = 0;
-
                   _pageController.animateToPage(
                     next,
                     duration: const Duration(milliseconds: 400),
@@ -668,16 +633,13 @@ class _UserHomeState extends State<UserHome> {
               ),
             ),
           ),
-
           // نقاط المؤشر
-
           Positioned(
             bottom: 6,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: List.generate(_slides.length, (i) {
                 final active = i == _currentPage;
-
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   margin: const EdgeInsets.symmetric(horizontal: 3),
@@ -698,7 +660,6 @@ class _UserHomeState extends State<UserHome> {
   }
 
   // ================= Card Item =================
-
   Widget _cardItem({
     required IconData icon,
     required String title,

@@ -44,6 +44,8 @@ flutter:
  assets:
    - assets/images/oman_background.jpg
    - assets/images/omansplash.jpg
+   - assets/images/omr_notes.jpg
+   - assets/images/currency_bg.png
    - assets/hero/whales.jpg
    - assets/hero/mountains.mp4
    - assets/hero/girl.jpg

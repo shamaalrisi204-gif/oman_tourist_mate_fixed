@@ -26,6 +26,8 @@ import 'screens/welcome_screen.dart';
 
 import 'screens/login_screen.dart';
 
+import 'screens/currency_converter_screen.dart';
+
 import 'screens/forgot_password_screen.dart';
 
 import 'screens/signup_screen.dart';
@@ -196,6 +198,8 @@ class OmanTouristMateApp extends StatelessWidget {
                 '/main': (_) => const MainMenuScreen(),
 
                 '/user_home': (_) => const UserHome(),
+
+                '/currency': (_) => const CurrencyConverterScreen(),
 
                 '/map_guest': (_) =>
                     const OmanGMapsScreen(enablePlanning: false), // guest
