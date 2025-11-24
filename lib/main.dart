@@ -40,6 +40,8 @@ import 'screens/place_details_screen.dart';
 
 import 'screens/ai_chat_screen.dart';
 
+import 'screens/your_trip_screen.dart';
+
 import 'screens/preference_screen.dart';
 
 import 'screens/guest_home.dart';
@@ -200,6 +202,8 @@ class OmanTouristMateApp extends StatelessWidget {
                 '/user_home': (_) => const UserHome(),
 
                 '/currency': (_) => const CurrencyConverterScreen(),
+
+                '/my_trip': (context) => const YourTripScreen(),
 
                 '/map_guest': (_) =>
                     const OmanGMapsScreen(enablePlanning: false), // guest

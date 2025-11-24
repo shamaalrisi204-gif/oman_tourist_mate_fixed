@@ -3,7 +3,7 @@ import '../models/trip_plan.dart';
 import '../services/trip_storage.dart';
 
 class TripPlanScreen extends StatelessWidget {
-  final TripPlan plan;
+  final MapTripPlan plan;
   final bool isArabic;
   const TripPlanScreen({super.key, required this.plan, required this.isArabic});
   @override

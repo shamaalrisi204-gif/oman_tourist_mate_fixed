@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 
-import 'user_home.dart'; // 👈 عشان نفتح الصفحة الرئيسية بمود ضيف
+import 'user_home.dart';
 
 class GuestHomeScreen extends StatefulWidget {
   const GuestHomeScreen({super.key});
@@ -49,33 +49,22 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // الخلفية
-
           Image.asset(
             'assets/images/oman_background.jpg',
             fit: BoxFit.cover,
           ),
-
-          // طبقة شفافة
-
           Container(
             color: Colors.black.withOpacity(0.35),
           ),
-
           SafeArea(
             child: Stack(
               children: [
-                // محتوى الصفحة
-
                 SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(height: 50), // مساحة تحت زر الرجوع
-
-                      // الترحيب
-
+                      const SizedBox(height: 50),
                       Text(
                         title,
                         style: const TextStyle(
@@ -85,11 +74,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-
                       const SizedBox(height: 16),
-
-                      // بطاقة الترحيب
-
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -119,9 +104,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                           ],
                         ),
                       ),
-
                       const SizedBox(height: 30),
-
                       Text(
                         exploreTitle,
                         style: const TextStyle(
@@ -131,17 +114,13 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-
                       const SizedBox(height: 10),
-
-                      // زر الدخول كضيف → يفتح UserHome بمود ضيف
-
                       ElevatedButton.icon(
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => const UserHome(
-                                isGuest: true, // 👈 مهم جداً
+                                isGuest: true,
                               ),
                             ),
                           );
@@ -160,9 +139,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 40),
-
                       Text(
                         accountTitle,
                         style: const TextStyle(
@@ -172,11 +149,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-
                       const SizedBox(height: 10),
-
-                      // زر إنشاء حساب
-
                       ElevatedButton.icon(
                         onPressed: () =>
                             Navigator.pushNamed(context, '/signup'),
@@ -194,14 +167,10 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 30),
                     ],
                   ),
                 ),
-
-                // 🔙 زر الرجوع العلوي
-
                 Align(
                   alignment: Alignment.topLeft,
                   child: Padding(
@@ -215,9 +184,6 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
                     ),
                   ),
                 ),
-
-                // 🌐 زر اللغة أعلى اليمين
-
                 Align(
                   alignment: Alignment.topRight,
                   child: Padding(

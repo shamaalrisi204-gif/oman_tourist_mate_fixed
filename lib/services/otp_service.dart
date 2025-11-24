@@ -19,7 +19,6 @@ class OtpService {
             }),
           )
           .timeout(const Duration(seconds: 20));
-      // لفحص ما الذي يرجع من السيرفر
       // debugPrint('SEND status=${res.statusCode} body=${res.body}');
       if (res.statusCode == 200) {
         final body = jsonDecode(res.body);
@@ -27,7 +26,6 @@ class OtpService {
       }
       return false;
     } catch (e) {
-      // هذي الرسالة بتظهر في الـ SnackBar
       throw Exception('تعذر الإتصال بالخادم: $e');
     }
   }

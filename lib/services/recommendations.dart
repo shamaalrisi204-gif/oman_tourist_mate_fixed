@@ -1,28 +1,40 @@
 // lib/services/recommendations.dart
+
 import '../models/trip_plan.dart';
 
-/// يبني خطة جاهزة بالحقول المطلوبة من TripPlan
+/// يبني خطة جاهزة من بيانات المستخدم.
+
+/// مخلي أغلب الأشياء اختيارية عشان ما يعطيك Missing required argument
+
 class Recommendations {
-  static TripPlan buildTrip({
-    // المطلوبة
-    required String category, // 'sea' | 'desert' | 'historic'
-    required String placeName, // اسم المكان المختار
-    required String placeCity, // مدينة المكان
-    required String stayCity, // مدينة السكن
-    required bool willBookHere, // يحجز في نفس المكان أو لا
-    required int hours, // عدد الساعات التي حدّدها المستخدم
-    required int
-        etaMinutes, // مدة القيادة بالدقائق (حقيقية من Distance Matrix أو تقديرك)
-    // اختياري: لو ما توفر نعطي قيم افتراضية
-    String suggestedHotel = 'Suggested hotel nearby',
-    String suggestedRestaurant = 'Suggested restaurant nearby',
+  static MapTripPlan buildTrip({
+    // ✨ هذا الوحيد الإجباري (مدينة الإقامة)
+
+    required String stayCity,
+
+    // ✨ الباقي اختياري مع قيم افتراضية مريحة
+
+    String category = 'sea', // sea | desert | historic | mountain | ...
+
+    String placeName = '',
+    String placeCity = '',
+    bool willBookHere = false,
+    int days = 1, // عدد الأيام الافتراضي
+
+    int hours = 0, // عدد الساعات في المكان
+
+    int etaMinutes = 0, // مدة القيادة بالدقائق
+
+    String suggestedHotel = '',
+    String suggestedRestaurant = '',
   }) {
-    return TripPlan(
+    return MapTripPlan(
       category: category,
       placeName: placeName,
       placeCity: placeCity,
       stayCity: stayCity,
       willBookHere: willBookHere,
+      days: days,
       hours: hours,
       etaMinutes: etaMinutes,
       suggestedHotel: suggestedHotel,

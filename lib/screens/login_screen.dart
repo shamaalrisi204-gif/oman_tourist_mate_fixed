@@ -1,33 +1,48 @@
 import 'package:flutter/material.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
+
 import '../core/prefs.dart';
-import 'user_home.dart'; // 👈 مهم عشان نقدر نروح لـ UserHome كضيف
+
+import 'user_home.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
   final _usernameCtrl = TextEditingController();
+
   final _passwordCtrl = TextEditingController();
+
   bool _busy = false;
+
   bool _isArabic = true;
+
   bool _obscure = true;
+
   String _tr(String ar, String en) => _isArabic ? ar : en;
+
   @override
   void initState() {
     super.initState();
+
     final sys = WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+
     _isArabic = (sys == 'ar');
   }
 
   @override
   void dispose() {
     _usernameCtrl.dispose();
+
     _passwordCtrl.dispose();
+
     super.dispose();
   }
 
@@ -39,76 +54,114 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _doLogin() async {
     if (_busy) return;
+
     final uname = _usernameCtrl.text.trim();
+
     final pass = _passwordCtrl.text;
+
     if (uname.isEmpty) {
       _snack('رجاءً أدخلي اسم المستخدم', 'Please enter username');
+
       return;
     }
+
     if (pass.length < 6) {
       _snack(
         'كلمة المرور ٦ أحرف على الأقل',
         'Password must be at least 6 characters',
       );
+
       return;
     }
+
     setState(() => _busy = true);
+
     FocusScope.of(context).unfocus();
+
     try {
       final snap = await FirebaseFirestore.instance
           .collection('users')
           .where('usernameLower', isEqualTo: uname.toLowerCase())
           .limit(1)
           .get();
+
       if (snap.docs.isEmpty) {
         _snack('اسم المستخدم غير موجود', 'Username not found');
+
         return;
       }
+
       final data = snap.docs.first.data();
+
       final email = (data['email'] ?? '') as String;
+
       if (email.isEmpty) {
         _snack(
           'حدث خطأ في بيانات الحساب، حاولي لاحقاً',
           'Profile data is invalid, please try later',
         );
+
         return;
       }
+
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: pass,
       );
+
       await Prefs.setLoggedIn(true);
+
       await Prefs.setOnboardingDone(true);
+
       _snack('تم تسجيل الدخول بنجاح ✅', 'Logged in successfully ✅');
+
       if (!mounted) return;
+
       Navigator.pushReplacementNamed(context, '/preferences');
     } on FirebaseAuthException catch (e) {
       String ar = 'فشل تسجيل الدخول';
+
       String en = 'Login failed';
+
       switch (e.code) {
         case 'wrong-password':
           ar = 'كلمة المرور غير صحيحة';
+
           en = 'Incorrect password';
+
           break;
+
         case 'user-disabled':
           ar = 'هذا الحساب غير مفعَّل';
+
           en = 'This account has been disabled';
+
           break;
+
         case 'too-many-requests':
           ar = 'محاولات كثيرة فاشلة، حاولي بعد قليل';
+
           en = 'Too many attempts, please try again later';
+
           break;
+
         case 'user-not-found':
           ar = 'لم يتم العثور على حساب بهذا الإيميل';
+
           en = 'No user found for this email';
+
           break;
+
         default:
           ar = 'تعذّر تسجيل الدخول، تحققي من البيانات';
+
           en = 'Could not sign in, please check your data';
       }
+
       _snack(ar, en);
     } on FirebaseException catch (e) {
       debugPrint('🔥 FIRESTORE LOGIN ERROR: ${e.code} – ${e.message}');
+
       if (e.code == 'permission-denied') {
         _snack(
           'لا يوجد إذن للوصول لبيانات المستخدم (تحققي من قواعد Firestore).',
@@ -122,7 +175,9 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e, s) {
       debugPrint('🔥 UNEXPECTED LOGIN ERROR: $e');
+
       debugPrint('STACK: $s');
+
       _snack(
         'حدث خطأ غير متوقَّع، حاولي مرة أخرى',
         'Unexpected error, please try again',
@@ -132,17 +187,18 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// 🔹 المتابعة كـ "ضيف"
   Future<void> _continueAsGuest() async {
-    // ما نعتبره مستخدم مسجّل فعلياً، لكن نعلم التطبيق إن الأونبوردنق خلص
     await Prefs.setOnboardingDone(true);
-    await Prefs.setLoggedIn(false); // لو حابة تخليه false / أو اشليه تماماً
+
+    await Prefs.setLoggedIn(false);
+
     if (!mounted) return;
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (_) => const UserHome(
-          isGuest: true, // 👈 هنا السحر: نفس صلاحيات الضيف
+          isGuest: true,
         ),
       ),
     );
@@ -151,6 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final isAr = _isArabic;
+
     return Directionality(
       textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
@@ -159,26 +216,26 @@ class _LoginScreenState extends State<LoginScreen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: Icon(
-              isAr ? Icons.arrow_forward_ios : Icons.arrow_back_ios_new,
-              color: Colors.white,
+            icon: const Icon(
+              Icons.arrow_back_ios_new,
+              color: Colors.white, // 🎨 ← هنا صار أبيض
+              size: 22,
             ),
-            onPressed: () {
-              if (Navigator.of(context).canPop()) {
-                Navigator.of(context).pop();
-              } else {
-                // ممكن تضيفي انتقال لصفحة الترحيب لو حبيتي
-              }
-            },
+            onPressed: () => Navigator.pop(context),
           ),
           title: Text(
-            _tr('تسجيل الدخول', 'Sign In'),
-            style: const TextStyle(fontFamily: 'Tajawal'),
+            _tr('إنشاء حساب جديد', 'Create a new account'),
+            style: const TextStyle(
+              fontFamily: 'Tajawal',
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           centerTitle: true,
           actions: [
             Padding(
-              padding: const EdgeInsets.only(right: 8, left: 8, top: 4),
+              padding: const EdgeInsets.only(right: 8.0, left: 8.0),
               child: ElevatedButton.icon(
                 onPressed: () => setState(() => _isArabic = !_isArabic),
                 style: ElevatedButton.styleFrom(
@@ -284,14 +341,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
                       onPressed: _busy ? null : _doLogin,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
+                        backgroundColor: const Color(0xFFB68B5E),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -305,13 +362,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               _tr('تسجيل الدخول', 'Sign In'),
                               style: const TextStyle(
                                 fontFamily: 'Tajawal',
-                                fontSize: 16,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  // 👇 هنا زر "المتابعة كزائر" صار يفتح UserHome كـ Guest
                   TextButton(
                     onPressed: _continueAsGuest,
                     child: Text(
@@ -342,6 +399,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: const TextStyle(
                             fontFamily: 'Tajawal',
                             color: Colors.tealAccent,
+                            fontSize: 17,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

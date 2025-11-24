@@ -1,11 +1,8 @@
 // lib/screens/signup_screen.dart
 
 import 'package:flutter/material.dart';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'package:firebase_auth/firebase_auth.dart';
-
 import '../services/otp_service.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -17,54 +14,55 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController first = TextEditingController();
-
   final TextEditingController last = TextEditingController();
-
   final TextEditingController username = TextEditingController();
-
   final TextEditingController email = TextEditingController();
-
   final TextEditingController phone = TextEditingController();
-
   final TextEditingController pass = TextEditingController();
-
   final TextEditingController pass2 = TextEditingController();
 
   bool busy = false;
-
   bool showPass = false;
-
   bool showPass2 = false;
-
   bool _isArabic = true;
+
+  // عشان نعرف إذا اليوزر كتب اليوزرنيم بنفسه
+  bool _usernameEditedByUser = false;
+
+  // ✅ حالة شروط اليوزرنيم
+  bool _uLenOK = false;
+  bool _uCaseOK = false;
+  bool _uCharsOK = false;
+
+  // ✅ حالة شروط الباسورد
+  bool _pLenOK = false;
+  bool _pUpperOK = false;
+  bool _pLowerOK = false;
+  bool _pDigitOK = false;
+  bool _pSymbolOK = false;
 
   String _tr(String ar, String en) => _isArabic ? ar : en;
 
   @override
   void initState() {
     super.initState();
-
     final sys = WidgetsBinding.instance.platformDispatcher.locale.languageCode;
-
     _isArabic = (sys == 'ar');
+
+    // لما يتغير الاسم الأول أو الأخير نقترح اسم مستخدم
+    first.addListener(_onNameChanged);
+    last.addListener(_onNameChanged);
   }
 
   @override
   void dispose() {
     first.dispose();
-
     last.dispose();
-
     username.dispose();
-
     email.dispose();
-
     phone.dispose();
-
     pass.dispose();
-
     pass2.dispose();
-
     super.dispose();
   }
 
@@ -75,20 +73,97 @@ class _SignUpScreenState extends State<SignUpScreen> {
         SnackBar(content: Text(_tr(ar, en))),
       );
 
-  /// ✅ التحقق من أن الإيميل غير مستخدم في FirebaseAuth
+  // ============================
+  //  🔹 اقتراح اسم المستخدم
+  // ============================
 
+  void _onNameChanged() {
+    if (_usernameEditedByUser) {
+      // المستخدم عدّل اليوزرنيم بنفسه؛ لا نلمسه
+      return;
+    }
+    final suggestion = _buildUsernameSuggestion(first.text, last.text);
+
+    if (suggestion.isEmpty) return;
+
+    username.value = TextEditingValue(
+      text: suggestion,
+      selection: TextSelection.collapsed(offset: suggestion.length),
+    );
+
+    _updateUsernameValidation(suggestion);
+  }
+
+  String _buildUsernameSuggestion(String f, String l) {
+    f = f.trim();
+    l = l.trim();
+
+    if (f.isEmpty && l.isEmpty) return '';
+
+    // نحول لإنجليزي صغير لو المستخدم كتب إنجليزي
+    f = f.toLowerCase();
+    l = l.toLowerCase();
+
+    if (f.isEmpty) return l;
+    if (l.isEmpty) return f;
+
+    final base = '${f}_${l}';
+    final suffixNumber = DateTime.now().millisecond % 100; // 0–99
+    return '$base#${suffixNumber.toString().padLeft(2, '0')}';
+  }
+
+  // ============================
+  //  🔹 التحقق من اليوزرنيم
+  // ============================
+
+  void _updateUsernameValidation([String? value]) {
+    final u = (value ?? username.text).trim();
+
+    setState(() {
+      _uLenOK = u.length >= 4 && u.length <= 20;
+      final hasLower = RegExp(r'[a-z]').hasMatch(u);
+      final hasUpper = RegExp(r'[A-Z]').hasMatch(u);
+      _uCaseOK = hasLower && hasUpper;
+      _uCharsOK = RegExp(r'^[A-Za-z0-9_.#~]*$').hasMatch(u) && u.isNotEmpty;
+    });
+  }
+
+  bool _isValidUsername(String uname) {
+    _updateUsernameValidation(uname);
+    return _uLenOK && _uCaseOK && _uCharsOK;
+  }
+
+  // ============================
+  //  🔹 التحقق من الباسورد
+  // ============================
+
+  void _updatePasswordValidation([String? value]) {
+    final p = (value ?? pass.text);
+
+    setState(() {
+      _pLenOK = p.length >= 8;
+      _pUpperOK = RegExp(r'[A-Z]').hasMatch(p);
+      _pLowerOK = RegExp(r'[a-z]').hasMatch(p);
+      _pDigitOK = RegExp(r'\d').hasMatch(p);
+      _pSymbolOK = RegExp(r'[^\w\s]').hasMatch(p); // أي رمز
+    });
+  }
+
+  bool _isValidPassword(String p) {
+    _updatePasswordValidation(p);
+    return _pLenOK && _pUpperOK && _pLowerOK && _pDigitOK && _pSymbolOK;
+  }
+
+  /// ✅ التحقق من أن الإيميل غير مستخدم في FirebaseAuth
   Future<bool> _emailAlreadyUsed(String email) async {
     final methods =
         await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
-
     return methods.isNotEmpty;
   }
 
   /// ✅ التحقق من أن اليوزر نيم غير مكرر في Firestore
-
   Future<bool> _usernameAlreadyUsed(String uname) async {
     final u = uname.trim().toLowerCase();
-
     if (u.isEmpty) return false;
 
     final snap = await FirebaseFirestore.instance
@@ -102,13 +177,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Future<void> _send() async {
     final e = email.text.trim();
-
     final p = pass.text;
-
     final p2 = pass2.text;
-
     final uname = username.text.trim();
 
+    // ✅ التحقق من اسم المستخدم
     if (uname.isEmpty) {
       return _snack(
         'رجاءً أدخلي اسم المستخدم',
@@ -116,6 +189,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
     }
 
+    if (!_isValidUsername(uname)) {
+      return _snack(
+        'اسم المستخدم لا يطابق كل الشروط.\n'
+            'راجعي القائمة تحت خانة اسم المستخدم.',
+        'Username does not satisfy all rules.\nPlease check the rules below the username field.',
+      );
+    }
+
+    // ✅ التحقق من الإيميل
     if (!_okEmail(e)) {
       return _snack(
         'البريد الإلكتروني غير صالح',
@@ -123,10 +205,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
     }
 
-    if (p.length < 6) {
+    // ✅ التحقق من الباسورد
+    if (!_isValidPassword(p)) {
       return _snack(
-        'كلمة المرور 6 أحرف على الأقل',
-        'Password must be at least 6 characters',
+        'كلمة المرور لا تطابق كل الشروط.\n'
+            'راجعي القائمة تحت خانة كلمة المرور.',
+        'Password does not satisfy all rules.\nPlease check the rules below the password field.',
       );
     }
 
@@ -141,33 +225,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     try {
       // ✅ 1) تأكيد أن الإيميل غير مستخدم
-
       if (await _emailAlreadyUsed(e)) {
         _snack(
-          'هذا البريد مستخدم من قبل، جرّبي بريد آخر',
+          'هذا البريد مستخدم من قبل، جرّبي بريدًا آخر',
           'This email is already registered, please use another one',
         );
-
         setState(() => busy = false);
-
         return;
       }
 
       // ✅ 2) تأكيد أن اليوزر نيم غير مكرر
-
       if (await _usernameAlreadyUsed(uname)) {
         _snack(
           'اسم المستخدم مسجّل من قبل، اختاري اسمًا آخر',
           'This username is already taken, choose another one',
         );
-
         setState(() => busy = false);
-
         return;
       }
 
       // ✅ 3) إرسال كود التحقق عبر OtpService
-
       final sent = await OtpService.I.sendVerificationCode(e);
 
       if (!mounted) return;
@@ -183,15 +260,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
           '/verify_otp',
           arguments: {
             'email': e,
-
-            'username': uname, // 👈 مهم
-
+            'username': uname,
             'firstName': first.text.trim(),
-
             'lastName': last.text.trim(),
-
             'phone': phone.text.trim(),
-
             'password': p,
           },
         );
@@ -203,13 +275,39 @@ class _SignUpScreenState extends State<SignUpScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
     } finally {
       if (mounted) setState(() => busy = false);
     }
+  }
+
+  // 🔹 ويدجت صغيرة لعرض الشرط (ستايل A)
+  Widget _ruleItem(bool ok, String ar, String en) {
+    final textColor = ok ? Colors.green : Colors.grey;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          ok ? Icons.check_circle : Icons.radio_button_unchecked,
+          size: 14,
+          color: textColor,
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            _tr(ar, en),
+            style: TextStyle(
+              fontSize: 11,
+              color: textColor,
+              fontFamily: 'Tajawal',
+              fontWeight: ok ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -223,7 +321,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          title: Text(_tr('إنشاء حساب جديد', 'Create a new account')),
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new,
+              color: Colors.white, // 🎨 ← هنا صار أبيض
+              size: 22,
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Text(
+            _tr('إنشاء حساب جديد', 'Create a new account'),
+            style: const TextStyle(
+              fontFamily: 'Tajawal',
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           centerTitle: true,
           actions: [
             Padding(
@@ -287,9 +401,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             fontFamily: 'Tajawal',
                           ),
                         ),
-
                         const SizedBox(height: 8),
-
                         Text(
                           _tr(
                             'أنشئ حسابك للبدء في استكشاف سلطنة عُمان ✨',
@@ -302,11 +414,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             fontFamily: 'Tajawal',
                           ),
                         ),
-
                         const SizedBox(height: 20),
 
                         // الاسم الأول
-
                         TextField(
                           controller: first,
                           decoration: InputDecoration(
@@ -317,11 +427,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           textInputAction: TextInputAction.next,
                         ),
-
                         const SizedBox(height: 12),
 
                         // الاسم الأخير
-
                         TextField(
                           controller: last,
                           decoration: InputDecoration(
@@ -332,11 +440,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           textInputAction: TextInputAction.next,
                         ),
-
                         const SizedBox(height: 12),
 
                         // اسم المستخدم
-
                         TextField(
                           controller: username,
                           decoration: InputDecoration(
@@ -345,13 +451,34 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
+                          onChanged: (v) {
+                            _usernameEditedByUser = v.isNotEmpty;
+                            _updateUsernameValidation(v);
+                          },
                           textInputAction: TextInputAction.next,
+                        ),
+                        const SizedBox(height: 6),
+
+                        // قواعد اسم المستخدم (هايلايت ستايل A)
+                        _ruleItem(
+                          _uLenOK,
+                          '٤–٢٠ حرفًا',
+                          '4–20 characters',
+                        ),
+                        _ruleItem(
+                          _uCaseOK,
+                          'يحتوي حروف إنجليزية كبيرة وصغيرة',
+                          'Contains uppercase & lowercase letters',
+                        ),
+                        _ruleItem(
+                          _uCharsOK,
+                          'أحرف إنجليزية / أرقام / الرموز:  _  .  #  ~',
+                          'Letters / numbers / symbols:  _  .  #  ~',
                         ),
 
                         const SizedBox(height: 12),
 
-                        // الإيميل (L→R)
-
+                        // الإيميل
                         Directionality(
                           textDirection: TextDirection.ltr,
                           child: TextField(
@@ -367,11 +494,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             textInputAction: TextInputAction.next,
                           ),
                         ),
-
                         const SizedBox(height: 12),
 
                         // الهاتف
-
                         TextField(
                           controller: phone,
                           keyboardType: TextInputType.phone,
@@ -386,11 +511,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           textInputAction: TextInputAction.next,
                         ),
-
                         const SizedBox(height: 12),
 
                         // كلمة المرور
-
                         TextField(
                           controller: pass,
                           obscureText: !showPass,
@@ -409,13 +532,41 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
+                          onChanged: _updatePasswordValidation,
                           textInputAction: TextInputAction.next,
+                        ),
+                        const SizedBox(height: 6),
+
+                        // قواعد كلمة المرور (هايلايت ستايل A)
+                        _ruleItem(
+                          _pLenOK,
+                          '٨ أحرف على الأقل',
+                          'At least 8 characters',
+                        ),
+                        _ruleItem(
+                          _pUpperOK,
+                          'يحتوي حرفًا إنجليزيًا كبيرًا (A-Z)',
+                          'Contains an uppercase letter (A-Z)',
+                        ),
+                        _ruleItem(
+                          _pLowerOK,
+                          'يحتوي حرفًا إنجليزيًا صغيرًا (a-z)',
+                          'Contains a lowercase letter (a-z)',
+                        ),
+                        _ruleItem(
+                          _pDigitOK,
+                          'يحتوي رقمًا واحدًا على الأقل',
+                          'Contains at least one digit',
+                        ),
+                        _ruleItem(
+                          _pSymbolOK,
+                          'يحتوي رمزًا واحدًا مثل (! @ # \$ % ^ & *)',
+                          'Contains at least one symbol (e.g. ! @ # \$ % ^ & *)',
                         ),
 
                         const SizedBox(height: 12),
 
                         // تأكيد كلمة المرور
-
                         TextField(
                           controller: pass2,
                           obscureText: !showPass2,
@@ -442,15 +593,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         const SizedBox(height: 20),
 
                         // زر إرسال كود التحقق
-
                         ElevatedButton.icon(
                           onPressed: busy ? null : _send,
                           icon: busy
                               ? const SizedBox(
                                   height: 18,
                                   width: 18,
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : const Icon(Icons.send),
                           label: Text(
