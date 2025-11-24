@@ -3,20 +3,14 @@
 import 'package:flutter/material.dart';
 
 import '../core/ai_services.dart';
-
 import '../core/image_service.dart';
-
-import '../core/places_service.dart';
+import '../data/tourism_repository.dart';
 
 /// نموذج الرسالة (نص + صور)
-
 class ChatMessage {
   final String text;
-
   final bool isUser;
-
   final DateTime time;
-
   final List<String> imageUrls;
 
   ChatMessage({
@@ -36,32 +30,26 @@ class AiChatScreen extends StatefulWidget {
 
 class _AiChatScreenState extends State<AiChatScreen> {
   final _ai = AiService();
-
-  final _placesService = PlacesService();
+  final _repo = TourismRepository.I;
 
   final TextEditingController _textController = TextEditingController();
-
   final ScrollController _scrollController = ScrollController();
 
   final List<ChatMessage> _messages = [];
 
   bool _sending = false;
-
   bool _isArabicUi = true;
 
   @override
   void dispose() {
     _textController.dispose();
-
     _scrollController.dispose();
-
     super.dispose();
   }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
-
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent + 80,
         duration: const Duration(milliseconds: 400),
@@ -71,7 +59,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
   }
 
   /// يحدّد نوع المكان من نصّ المستخدم (فنادق / مطاعم / أماكن سياحية)
-
   String _detectPlaceType(String text) {
     final lower = text.toLowerCase();
 
@@ -89,12 +76,10 @@ class _AiChatScreenState extends State<AiChatScreen> {
     }
 
     // أماكن سياحية عامة
-
     return 'tourist_attraction';
   }
 
   /// يكتشف المدينة من النص (مسقط، صحار، صلالة، نزوى...)
-
   String? _detectCity(String text) {
     final lower = text.toLowerCase();
 
@@ -115,22 +100,46 @@ class _AiChatScreenState extends State<AiChatScreen> {
     for (final entry in cityKeywords.entries) {
       for (final kw in entry.value) {
         if (lower.contains(kw)) {
-          return entry.key; // نرجّع اسم المدينة بالإنجليزي لـ Google
+          return entry.key; // نرجّع اسم المدينة بالإنجليزي
         }
       }
     }
-
     return null; // ما لقينا مدينة
+  }
+
+  /// 🔹 دالة تساعدنا نعرض الصورة صح (Asset أو Network)
+  Widget _chatImage(String url) {
+    // لو المسار يبدأ بـ assets/ نعتبره صورة داخل التطبيق
+    if (url.startsWith('assets/')) {
+      return Image.asset(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          color: Colors.grey.shade300,
+          alignment: Alignment.center,
+          child: const Icon(Icons.broken_image),
+        ),
+      );
+    }
+
+    // غير ذلك نعتبره رابط إنترنت
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => Container(
+        color: Colors.grey.shade300,
+        alignment: Alignment.center,
+        child: const Icon(Icons.broken_image),
+      ),
+    );
   }
 
   Future<void> _sendMessage() async {
     final text = _textController.text.trim();
-
     if (text.isEmpty || _sending) return;
 
     setState(() {
       _sending = true;
-
       _messages.add(
         ChatMessage(
           text: text,
@@ -138,44 +147,43 @@ class _AiChatScreenState extends State<AiChatScreen> {
           time: DateTime.now(),
         ),
       );
-
       _textController.clear();
     });
 
     _scrollToBottom();
 
     try {
-      // (1) رد Gemini (نص الخطة / المعلومات)
-
+      // 1) رد Gemini الأساسي
       final aiResponse = await _ai.sendMessage(text);
 
-      // (2) جلب صور حقيقية من Google Places حسب المدينة + نوع المكان
-
+      // 2) نجرّب أولاً نجلب بيانات حقيقية من Firestore
       List<String> imageUrls = [];
-
+      final placeType = _detectPlaceType(text);
       final city = _detectCity(text);
 
-      final placeType = _detectPlaceType(text);
+      List<Map<String, dynamic>> fsResults = [];
 
-      if (city != null) {
-        final results = await _placesService.searchPlaces(
-          city: city,
-          type: placeType,
-        );
-
-        imageUrls = results
-            .where((p) => p.photoUrl != null)
-            .map((p) => p.photoUrl!)
+      if (placeType == 'lodging' && city != null) {
+        // فنادق من accommodations
+        fsResults = await _repo.searchAccommodations(city: city);
+        imageUrls = fsResults
+            .map((e) => e['imageUrl'] ?? '')
+            .where((url) => url.isNotEmpty)
+            .cast<String>()
+            .toList();
+      } else if (placeType == 'tourist_attraction') {
+        // أماكن سياحية من attractions
+        fsResults = await _repo.searchAttractions(governorate: city);
+        imageUrls = fsResults
+            .map((e) => e['imageUrl'] ?? '')
+            .where((url) => url.isNotEmpty)
+            .cast<String>()
             .toList();
       }
 
-      // (3) لو ما لقينا صور في Google Places → نستخدم Unsplash
-
+      // 3) لو ما لقينا صور في Firestore → نستخدم خدمة الصور العامة
       if (imageUrls.isEmpty) {
         final imgQuery = ImageService.queryFromUserText(text);
-
-        // ⚠️ مهم: لا تستخدم "final imageUrls" هنا عشان لا نغطي على المتغيّر فوق
-
         imageUrls = await ImageService.searchImages(imgQuery);
       }
 
@@ -188,7 +196,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
             imageUrls: imageUrls,
           ),
         );
-
         _sending = false;
       });
     } catch (e) {
@@ -196,12 +203,11 @@ class _AiChatScreenState extends State<AiChatScreen> {
         _messages.add(
           ChatMessage(
             text:
-                'صار خطأ أثناء جلب الرد أو الصور: $e\nحاولي مرة ثانية بعد قليل 🙏',
+                'صار خطأ أثناء جلب الرد أو البيانات: $e\nحاولي مرة ثانية بعد قليل 🙏',
             isUser: false,
             time: DateTime.now(),
           ),
         );
-
         _sending = false;
       });
     }
@@ -215,16 +221,13 @@ class _AiChatScreenState extends State<AiChatScreen> {
         _isArabicUi ? '✨ مساعد رحلتك الذكي' : '✨ Your smart trip assistant';
 
     final inputHint = _isArabicUi
-        ? 'اكتبي سؤالك هنا (مثلاً: فنادق في صحار مع صور).. ✍️'
-        : 'Ask anything (e.g. hotels in Sohar with pictures)… ✍️';
+        ? 'اكتبي سؤالك هنا (مثلاً: فنادق في مسقط مع صور).. ✍️'
+        : 'Ask anything (e.g. hotels in Muscat with pictures)… ✍️';
 
     return Directionality(
       textDirection: _isArabicUi ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        // خلفية بسيطة قريبة من الواتساب
-
         backgroundColor: const Color(0xFFE5DDD5),
-
         appBar: AppBar(
           backgroundColor: const Color(0xFF075E54),
           elevation: 0,
@@ -242,15 +245,8 @@ class _AiChatScreenState extends State<AiChatScreen> {
             const SizedBox(width: 4),
           ],
         ),
-
         body: Stack(
           children: [
-            // لو حبيتي تضيفي خلفية صورة للشات، تقدرين تبدلين هذا:
-
-            // Image.asset('assets/images/chat_bg.png', fit: BoxFit.cover)
-
-            // مع التأكد من إضافة الصورة للـ pubspec.yaml
-
             Positioned.fill(
               child: Container(
                 decoration: const BoxDecoration(
@@ -265,11 +261,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 ),
               ),
             ),
-
             Column(
               children: [
                 // الرسائل
-
                 Expanded(
                   child: ListView.builder(
                     controller: _scrollController,
@@ -278,16 +272,13 @@ class _AiChatScreenState extends State<AiChatScreen> {
                     itemCount: _messages.length,
                     itemBuilder: (context, i) {
                       final msg = _messages[i];
-
                       final isUser = msg.isUser;
 
                       final bubbleColor = isUser
-                          ? const Color(0xFF128C7E) // أخضر للمستخدم
-
-                          : const Color(0xFFFFFFFF); // أبيض للـ AI
+                          ? const Color(0xFF128C7E)
+                          : const Color(0xFFFFFFFF);
 
                       final textColor = isUser ? Colors.white : Colors.black87;
-
                       final align =
                           isUser ? Alignment.centerRight : Alignment.centerLeft;
 
@@ -327,9 +318,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
                                   height: 1.5,
                                 ),
                               ),
-
-                              // الصور تحت الرد
-
                               if (msg.imageUrls.isNotEmpty) ...[
                                 const SizedBox(height: 8),
                                 for (final img in msg.imageUrls)
@@ -340,18 +328,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                                       borderRadius: BorderRadius.circular(12),
                                       child: AspectRatio(
                                         aspectRatio: 4 / 3,
-                                        child: Image.network(
-                                          img,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) =>
-                                              Container(
-                                            color: Colors.grey.shade300,
-                                            alignment: Alignment.center,
-                                            child: const Icon(
-                                              Icons.broken_image,
-                                            ),
-                                          ),
-                                        ),
+                                        child: _chatImage(img),
                                       ),
                                     ),
                                   ),
@@ -365,7 +342,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 ),
 
                 // شريط الكتابة
-
                 SafeArea(
                   top: false,
                   child: Container(

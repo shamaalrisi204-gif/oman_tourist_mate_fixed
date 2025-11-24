@@ -62,6 +62,8 @@ import 'screens/info_screen.dart';
 
 import 'screens/travel_tips_screen.dart';
 
+import 'package:oman_tourist_mate_fixed/screens/ai_concierge_screen.dart';
+
 // الإذونات
 
 import 'package:permission_handler/permission_handler.dart';
@@ -187,7 +189,7 @@ class OmanTouristMateApp extends StatelessWidget {
 
                 '/favorites': (_) => const FavoritesScreen(),
 
-                '/ai_chat': (_) => const AiChatScreen(),
+                '/ai_chat': (_) => const AiConciergeScreen(),
 
                 '/preferences': (_) => const PreferencesScreen(),
 
