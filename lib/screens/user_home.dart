@@ -6,12 +6,11 @@ import 'package:video_player/video_player.dart';
 
 import '../core/prefs.dart';
 import '../core/app_state.dart';
-import '../screens/map_gmaps_screen.dart';
 
 class UserHome extends StatefulWidget {
   const UserHome({
     super.key,
-    this.isGuest = false, // 👈 مهم: هل المستخدم ضيف؟
+    this.isGuest = false,
   });
 
   final bool isGuest;
@@ -39,56 +38,46 @@ class _HeroSlide {
   });
 }
 
+/// موديل للكروت السريعة (رحلات الطيران، الإقامة، ...)
+class _CategoryItem {
+  final IconData icon;
+  final String titleAr;
+  final String titleEn;
+
+  const _CategoryItem({
+    required this.icon,
+    required this.titleAr,
+    required this.titleEn,
+  });
+}
+
 class _UserHomeState extends State<UserHome> {
   Map<String, dynamic>? _userData;
 
   bool _isArabic = true;
+  String? _userName;
 
-  /// عنوان زر "المزيد" في الـ AppBar
-  String get _moreLabel => _isArabic ? 'المزيد' : 'More';
-
-  // ---------- إعدادات السلايدر + الفيديو ----------
   final PageController _pageController = PageController();
   int _currentPage = 0;
   Timer? _autoTimer;
   VideoPlayerController? _videoController;
 
-  // ألوان ثابتة للثيم
-  static const Color _background = Color(0xFFF3EED9); // بيج فاتح للخلفية
-  static const Color _cardColor = Color(0xFFE5D7B8); // بيج أغمق للكروت
-  static const Color _prefButtonColor = Color(0xFFE0CDA0); // زر تعديل التفضيلات
+  static const Color _background = Color(0xFFF3EED9);
+  static const Color _prefButtonColor = Color(0xFFE0CDA0);
 
-  // أسماء الاهتمامات (نفس IDs الموجودة في شاشة التفضيلات)
+  // أسماء الاهتمامات
   static const Map<String, Map<String, String>> _interestNames = {
-    'shopping': {
-      'ar': 'تسوّق',
-      'en': 'Shopping',
-    },
-    'heritage': {
-      'ar': 'أماكن تراثية وتاريخية',
-      'en': 'Heritage & history',
-    },
-    'nature': {
-      'ar': 'مواقع طبيعية',
-      'en': 'Nature spots',
-    },
-    'beach': {
-      'ar': 'شواطئ',
-      'en': 'Beaches',
-    },
-    'adventure': {
-      'ar': 'مغامرات',
-      'en': 'Adventures',
-    },
-    'food': {
-      'ar': 'مقاهي ومطاعم',
-      'en': 'Cafés & restaurants',
-    },
+    'shopping': {'ar': 'تسوّق', 'en': 'Shopping'},
+    'heritage': {'ar': 'أماكن تراثية وتاريخية', 'en': 'Heritage & history'},
+    'nature': {'ar': 'مواقع طبيعية', 'en': 'Nature spots'},
+    'beach': {'ar': 'شواطئ', 'en': 'Beaches'},
+    'adventure': {'ar': 'مغامرات', 'en': 'Adventures'},
+    'food': {'ar': 'مقاهي ومطاعم', 'en': 'Cafés & restaurants'},
   };
 
-  // تعريف السلايدات
+  // السلايدات
   late final List<_HeroSlide> _slides = [
-    _HeroSlide(
+    const _HeroSlide(
       asset: 'assets/hero/whales.jpg',
       isVideo: false,
       titleAr: 'لحظات لا تُنسى في سواحل عُمان',
@@ -96,7 +85,7 @@ class _UserHomeState extends State<UserHome> {
       subtitleAr: 'اكتشفي البحر والحياة البحرية في أجواء هادئة.',
       subtitleEn: 'Discover the sea and marine life in peaceful vibes.',
     ),
-    _HeroSlide(
+    const _HeroSlide(
       asset: 'assets/hero/mountains.mp4',
       isVideo: true,
       titleAr: 'مغامرات بين الجبال والوديان',
@@ -104,7 +93,7 @@ class _UserHomeState extends State<UserHome> {
       subtitleAr: 'شاهدي الطبيعة العُمانية من زوايا جديدة.',
       subtitleEn: 'See Oman’s nature from new perspectives.',
     ),
-    _HeroSlide(
+    const _HeroSlide(
       asset: 'assets/hero/girl.jpg',
       isVideo: false,
       titleAr: 'روح الضيافة العُمانية',
@@ -112,7 +101,7 @@ class _UserHomeState extends State<UserHome> {
       subtitleAr: 'ابتسامة واحدة تكفي لتشعري وكأنك في بيتك.',
       subtitleEn: 'One smile is enough to feel at home.',
     ),
-    _HeroSlide(
+    const _HeroSlide(
       asset: 'assets/hero/tower.jpg',
       isVideo: false,
       titleAr: 'تاريخ وحضارة عبر القرون',
@@ -122,11 +111,46 @@ class _UserHomeState extends State<UserHome> {
     ),
   ];
 
+  // الكروت السريعة مثل Visit Qatar (Flights, Stays, ...)
+  static const List<_CategoryItem> _categories = [
+    _CategoryItem(
+      icon: Icons.flight_takeoff,
+      titleAr: 'رحلات الطيران',
+      titleEn: 'Flights',
+    ),
+    _CategoryItem(
+      icon: Icons.hotel,
+      titleAr: 'أماكن الإقامة',
+      titleEn: 'Stays',
+    ),
+    _CategoryItem(
+      icon: Icons.tour,
+      titleAr: 'الرحلات السياحية',
+      titleEn: 'Tours',
+    ),
+    _CategoryItem(
+      icon: Icons.attractions,
+      titleAr: 'المعالم السياحية',
+      titleEn: 'Attractions',
+    ),
+    _CategoryItem(
+      icon: Icons.directions_bus,
+      titleAr: 'النقل',
+      titleEn: 'Transport',
+    ),
+    _CategoryItem(
+      icon: Icons.restaurant,
+      titleAr: 'الطعام',
+      titleEn: 'Food & Dining',
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
     _loadSummary();
     _loadLanguage();
+    _loadUserName();
     _initVideoController();
     _startAutoSlide();
   }
@@ -140,10 +164,8 @@ class _UserHomeState extends State<UserHome> {
   }
 
   Future<void> _initVideoController() async {
-    // نبحث عن أول سلايد فيديو
     final videoSlide =
         _slides.firstWhere((s) => s.isVideo, orElse: () => _slides[0]);
-
     if (!videoSlide.isVideo) return;
 
     _videoController = VideoPlayerController.asset(videoSlide.asset);
@@ -157,13 +179,10 @@ class _UserHomeState extends State<UserHome> {
 
   void _startAutoSlide() {
     _autoTimer?.cancel();
-
     _autoTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (!mounted || _slides.isEmpty) return;
-
       int next = _currentPage + 1;
       if (next >= _slides.length) next = 0;
-
       _pageController.animateToPage(
         next,
         duration: const Duration(milliseconds: 600),
@@ -174,7 +193,6 @@ class _UserHomeState extends State<UserHome> {
 
   Future<void> _loadSummary() async {
     final sp = await Prefs.raw;
-
     setState(() {
       _userData = {
         'city': sp.getString('user_city') ?? 'مسقط',
@@ -191,6 +209,12 @@ class _UserHomeState extends State<UserHome> {
     setState(() => _isArabic = ar);
   }
 
+  Future<void> _loadUserName() async {
+    final name = await Prefs.getUserName();
+    if (!mounted) return;
+    setState(() => _userName = name);
+  }
+
   Future<void> _toggleLanguage() async {
     final app = AppStateProvider.of(context);
     final newCode = _isArabic ? 'en' : 'ar';
@@ -199,7 +223,6 @@ class _UserHomeState extends State<UserHome> {
     setState(() => _isArabic = !_isArabic);
   }
 
-  /// حوار يظهر للضيف لما يحاول يستخدم ميزة للمسجّلين فقط
   void _showGuestDialog() {
     showDialog(
       context: context,
@@ -253,7 +276,6 @@ class _UserHomeState extends State<UserHome> {
     );
   }
 
-  // تحويل IDs الاهتمامات إلى نصوص بحسب اللغة
   String _buildInterestsText() {
     final ids = List<String>.from(_userData!['interests'] as List);
     if (ids.isEmpty) {
@@ -263,9 +285,7 @@ class _UserHomeState extends State<UserHome> {
     }
     final labels = ids.map((id) {
       final names = _interestNames[id];
-      if (names == null) {
-        return _isArabic ? 'غير معروف' : 'Unknown';
-      }
+      if (names == null) return _isArabic ? 'غير معروف' : 'Unknown';
       return _isArabic ? names['ar']! : names['en']!;
     }).toList();
     return _isArabic ? labels.join('، ') : labels.join(', ');
@@ -283,10 +303,6 @@ class _UserHomeState extends State<UserHome> {
     final welcome = _isArabic
         ? 'مرحبًا بك في ${_userData!['city']}'
         : 'Welcome to ${_userData!['city']}';
-    final mapBtn = _isArabic ? 'خريطة عمان' : 'Oman Map';
-    final planBtn =
-        _isArabic ? 'رحلة ممتعة تبدأ من هنا ✨' : 'Your journey starts here ✨';
-    final favBtn = _isArabic ? 'المفضلة' : 'Favorites';
     final coords =
         '📍 ${_userData!['city']} – ${_userData!['lat']}, ${_userData!['lng']}';
     final interestsTitle =
@@ -299,7 +315,6 @@ class _UserHomeState extends State<UserHome> {
         backgroundColor: _background,
         elevation: 0,
         centerTitle: true,
-        // زر اللغة يسار
         leadingWidth: 90,
         leading: TextButton(
           onPressed: _toggleLanguage,
@@ -320,84 +335,44 @@ class _UserHomeState extends State<UserHome> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        // زر "المزيد" فيه معلومات قد تهمك + نبذة عنا + تواصل معنا + محوّل العملات
-        actions: [
-          PopupMenuButton<String>(
-            // شكل الزر في الـ AppBar
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Row(
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        children: [
+          // اسم المستخدم
+          if (_userName != null && _userName!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.menu, color: Colors.black87, size: 20),
-                  const SizedBox(width: 4),
                   Text(
-                    _moreLabel, // "المزيد" / "More"
+                    _isArabic ? 'مرحباً،' : 'Hello,',
                     style: const TextStyle(
                       fontFamily: 'Tajawal',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
                       color: Colors.black87,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    _userName!,
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 23,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
                   ),
                 ],
               ),
             ),
-            onSelected: (value) {
-              switch (value) {
-                case 'tips':
-                  Navigator.pushNamed(context, '/tips');
-                  break;
-                case 'about':
-                  Navigator.pushNamed(context, '/about');
-                  break;
-                case 'contact':
-                  Navigator.pushNamed(context, '/contact');
-                  break;
-                case 'currency':
-                  Navigator.pushNamed(context, '/currency');
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'tips',
-                child: Text(
-                  _isArabic ? 'معلومات قد تهمك' : 'Useful Info',
-                  style: const TextStyle(fontFamily: 'Tajawal'),
-                ),
-              ),
-              PopupMenuItem(
-                value: 'about',
-                child: Text(
-                  _isArabic ? 'نبذة عنا' : 'About Us',
-                  style: const TextStyle(fontFamily: 'Tajawal'),
-                ),
-              ),
-              PopupMenuItem(
-                value: 'contact',
-                child: Text(
-                  _isArabic ? 'تواصل معنا' : 'Contact Us',
-                  style: const TextStyle(fontFamily: 'Tajawal'),
-                ),
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'currency',
-                child: Text(
-                  _isArabic ? 'محوّل العملات' : 'Currency Converter',
-                  style: const TextStyle(fontFamily: 'Tajawal'),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        children: [
-          // ====== السلايدر مع الكتابة فوق الصور / الفيديو ======
+
+          // السلايدر
           _buildHeroSlider(),
           const SizedBox(height: 16),
+
           Text(
             welcome,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -405,55 +380,22 @@ class _UserHomeState extends State<UserHome> {
                   fontFamily: 'Tajawal',
                 ),
           ),
+
+          const SizedBox(height: 12),
+
+          // كرت Useful Info العريض
+          _buildUsefulInfoCard(),
           const SizedBox(height: 16),
-          // زر خريطة عمان (مسموح للجميع)
-          _cardItem(
-            icon: Icons.map,
-            title: mapBtn,
-            subtitle: _isArabic
-                ? 'استكشفي المواقع والمعالم السياحية في عمان'
-                : 'Explore Oman’s famous landmarks',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => OmanGMapsScreen(
-                    enablePlanning: !widget.isGuest, // الضيف يشوف فقط
-                  ),
-                ),
-              );
-            },
-          ),
-          // رحلة ممتعة / مساعد الرحلات – ممنوع للضيف
-          _cardItem(
-            icon: Icons.tour,
-            title: planBtn,
-            subtitle: _isArabic
-                ? 'مساعدك الذكي لاقتراح الخطط السياحية'
-                : 'Your AI trip planner',
-            onTap: () {
-              if (widget.isGuest) {
-                _showGuestDialog();
-              } else {
-                Navigator.pushNamed(context, '/ai_chat');
-              }
-            },
-          ),
-          // المفضلة – ممنوعة للضيف
-          _cardItem(
-            icon: Icons.favorite,
-            title: favBtn,
-            subtitle:
-                _isArabic ? 'الأماكن التي قمتِ بحفظها' : 'Your saved places',
-            onTap: () {
-              if (widget.isGuest) {
-                _showGuestDialog();
-              } else {
-                Navigator.pushNamed(context, '/favorites');
-              }
-            },
-          ),
+
+          // الكروت السريعة Flights / Stays / ...
+          _buildQuickCategories(),
           const SizedBox(height: 16),
+
+          // كرت My Trip العريض تحت الكروت
+          _buildMyTripCard(),
+          const SizedBox(height: 20),
+
+          // معلومات الموقع والاهتمامات
           Text(
             _isArabic ? 'موقعك المحفوظ:' : 'Your saved location:',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -499,6 +441,202 @@ class _UserHomeState extends State<UserHome> {
           ),
         ],
       ),
+      bottomNavigationBar: _buildBottomNav(context),
+    );
+  }
+
+  // ====== كرت Useful Info العريض في الهوم ======
+  Widget _buildUsefulInfoCard() {
+    final label = _isArabic ? 'معلومات قد تهمك' : 'Useful Info';
+
+    return InkWell(
+      onTap: () => Navigator.pushNamed(context, '/tips'),
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.info_outline, color: Colors.black87, size: 24),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'Tajawal',
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ====== كرت My Trip العريض ======
+  Widget _buildMyTripCard() {
+    final label = _isArabic ? 'رحلتي' : 'My Trip';
+
+    return InkWell(
+      onTap: () {
+        if (widget.isGuest) {
+          _showGuestDialog();
+        } else {
+          Navigator.pushNamed(context, '/my_trip');
+        }
+      },
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.flag_outlined, color: Colors.black87, size: 24),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'Tajawal',
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ================= Bottom Navigation =================
+  Widget _buildBottomNav(BuildContext context) {
+    final isAr = _isArabic;
+
+    return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
+      currentIndex: 0,
+      onTap: (index) {
+        switch (index) {
+          case 0:
+            break;
+          case 1: // AI
+            if (widget.isGuest) {
+              _showGuestDialog();
+            } else {
+              Navigator.pushNamed(context, '/ai_chat');
+            }
+            break;
+          case 2: // Favorites
+            if (widget.isGuest) {
+              _showGuestDialog();
+            } else {
+              Navigator.pushNamed(context, '/favorites');
+            }
+            break;
+          case 3: // Map
+            Navigator.pushNamed(
+              context,
+              widget.isGuest ? '/map_guest' : '/map',
+            );
+            break;
+          case 4: // Essentials (بدون Useful Info الآن)
+            showModalBottomSheet(
+              context: context,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              builder: (_) {
+                return SafeArea(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.group),
+                        title: Text(
+                          isAr ? 'نبذة عنا' : 'About Us',
+                          style: const TextStyle(fontFamily: 'Tajawal'),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.pushNamed(context, '/about');
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.mail_outline),
+                        title: Text(
+                          isAr ? 'تواصل معنا' : 'Contact Us',
+                          style: const TextStyle(fontFamily: 'Tajawal'),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.pushNamed(context, '/contact');
+                        },
+                      ),
+                      const Divider(height: 0),
+                      ListTile(
+                        leading: const Icon(Icons.currency_exchange),
+                        title: Text(
+                          isAr ? 'محوّل العملات' : 'Currency Converter',
+                          style: const TextStyle(fontFamily: 'Tajawal'),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.pushNamed(context, '/currency');
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+            break;
+        }
+      },
+      items: [
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.home_outlined),
+          label: isAr ? 'الرئيسية' : 'Home',
+        ),
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.auto_awesome),
+          label: isAr ? 'المساعد الذكي' : 'AI',
+        ),
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.favorite_border),
+          label: isAr ? 'المفضلة' : 'Favorites',
+        ),
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.map_outlined),
+          label: isAr ? 'الخريطة' : 'Map',
+        ),
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.grid_view),
+          label: isAr ? 'الخدمات' : 'Essentials',
+        ),
+      ],
     );
   }
 
@@ -529,7 +667,6 @@ class _UserHomeState extends State<UserHome> {
                 return Stack(
                   fit: StackFit.expand,
                   children: [
-                    // صورة / فيديو
                     if (slide.isVideo && _videoController != null)
                       FittedBox(
                         fit: BoxFit.cover,
@@ -544,7 +681,6 @@ class _UserHomeState extends State<UserHome> {
                         slide.asset,
                         fit: BoxFit.cover,
                       ),
-                    // تدرّج غامق بسيط عشان القراءة
                     Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -557,7 +693,6 @@ class _UserHomeState extends State<UserHome> {
                         ),
                       ),
                     ),
-                    // النص فوق الصورة/الفيديو
                     Positioned(
                       left: 16,
                       right: 16,
@@ -591,49 +726,6 @@ class _UserHomeState extends State<UserHome> {
               },
             ),
           ),
-          // زر السابق
-          Positioned(
-            left: 8,
-            child: CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.black45,
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                icon: const Icon(Icons.chevron_left, color: Colors.white),
-                onPressed: () {
-                  int prev = _currentPage - 1;
-                  if (prev < 0) prev = _slides.length - 1;
-                  _pageController.animateToPage(
-                    prev,
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeInOut,
-                  );
-                },
-              ),
-            ),
-          ),
-          // زر التالي
-          Positioned(
-            right: 8,
-            child: CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.black45,
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                icon: const Icon(Icons.chevron_right, color: Colors.white),
-                onPressed: () {
-                  int next = _currentPage + 1;
-                  if (next >= _slides.length) next = 0;
-                  _pageController.animateToPage(
-                    next,
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeInOut,
-                  );
-                },
-              ),
-            ),
-          ),
-          // نقاط المؤشر
           Positioned(
             bottom: 6,
             child: Row(
@@ -659,44 +751,63 @@ class _UserHomeState extends State<UserHome> {
     );
   }
 
-  // ================= Card Item =================
-  Widget _cardItem({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      color: _cardColor,
-      elevation: 0,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: ListTile(
-        leading: Icon(icon, color: Colors.black87, size: 30),
-        title: Text(
-          title,
-          style: const TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Tajawal',
+  // ✅ الكروت السريعة (Flights / Stays / Tours / ...)
+  Widget _buildQuickCategories() {
+    return GridView.count(
+      crossAxisCount: 2,
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      childAspectRatio: 3.2,
+      children: _categories.map((cat) {
+        final label = _isArabic ? cat.titleAr : cat.titleEn;
+        return InkWell(
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  _isArabic ? 'قريباً: $label' : 'Coming soon: $label',
+                  style: const TextStyle(fontFamily: 'Tajawal'),
+                ),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 6,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                Icon(cat.icon, size: 26, color: Colors.black87),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: const TextStyle(
-            color: Colors.black87,
-            fontFamily: 'Tajawal',
-          ),
-        ),
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: Colors.black87,
-        ),
-        onTap: onTap,
-      ),
+        );
+      }).toList(),
     );
   }
 }

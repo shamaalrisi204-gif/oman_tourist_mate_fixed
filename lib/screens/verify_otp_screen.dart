@@ -1,13 +1,10 @@
 // lib/screens/verify_otp_screen.dart
 
 import 'package:flutter/material.dart';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../core/prefs.dart';
-
 import '../services/otp_service.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
@@ -22,15 +19,10 @@ class VerifyOtpScreen extends StatefulWidget {
   });
 
   final String email;
-
   final String username;
-
   final String firstName;
-
   final String lastName;
-
   final String phone;
-
   final String password;
 
   @override
@@ -39,13 +31,11 @@ class VerifyOtpScreen extends StatefulWidget {
 
 class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
   final _code = TextEditingController();
-
   bool _busy = false;
 
   @override
   void dispose() {
     _code.dispose();
-
     super.dispose();
   }
 
@@ -57,7 +47,6 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
 
     if (code.length < 4) {
       _snack('أدخلي كود التحقق');
-
       return;
     }
 
@@ -70,12 +59,11 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
 
       if (!ok) {
         _snack('الكود غير صحيح');
-
         setState(() => _busy = false);
-
         return;
       }
 
+      // إنشاء المستخدم في Firebase Auth
       UserCredential cred =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: widget.email,
@@ -84,6 +72,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
 
       final uid = cred.user!.uid;
 
+      // حفظ بياناته في Firestore
       await FirebaseFirestore.instance.collection('users').doc(uid).set({
         'email': widget.email,
         'username': widget.username,
@@ -94,12 +83,16 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
+      // ✅ حفظ حالة الدخول و الـ onboarding
       await Prefs.setLoggedIn(true);
-
       await Prefs.setOnboardingDone(true);
+
+      // ✅ أهم سطر: حفظ اسم المستخدم في SharedPreferences
+      await Prefs.setUserName(widget.username);
 
       _snack('تم التحقق وإنشاء الحساب بنجاح ✅');
 
+      // الانتقال إلى شاشة التفضيلات
       Navigator.pushReplacementNamed(context, '/preferences');
     } on FirebaseAuthException catch (e) {
       String msg = 'حدث خطأ أثناء إنشاء الحساب';
