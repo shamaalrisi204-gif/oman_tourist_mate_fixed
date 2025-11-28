@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/prefs.dart';
+
 class OmanSplashScreen extends StatefulWidget {
   const OmanSplashScreen({super.key});
 
@@ -7,196 +9,103 @@ class OmanSplashScreen extends StatefulWidget {
   State<OmanSplashScreen> createState() => _OmanSplashScreenState();
 }
 
-class _OmanSplashScreenState extends State<OmanSplashScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ac;
-
-  late final Animation<double> _scale;
-
-  late final Animation<double> _fadeLogo;
-
-  late final Animation<double> _fadeTexts;
+class _OmanSplashScreenState extends State<OmanSplashScreen> {
+  bool _showWelcome = false;
 
   @override
   void initState() {
     super.initState();
 
-    _ac = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    );
-
-    _scale = Tween(begin: 0.90, end: 1.0).animate(
-      CurvedAnimation(parent: _ac, curve: Curves.easeOutBack),
-    );
-
-    _fadeLogo = CurvedAnimation(
-      parent: _ac,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
-    );
-
-    _fadeTexts = CurvedAnimation(
-      parent: _ac,
-      curve: const Interval(0.3, 1.0, curve: Curves.easeIn),
-    );
-
-    _ac.forward();
+    _startAnimation();
   }
 
-  @override
-  void dispose() {
-    _ac.dispose();
+  void _startAnimation() async {
+    // أول شي نعرض Plan your trip
 
-    super.dispose();
-  }
+    await Future.delayed(const Duration(seconds: 2));
 
-  void _goNext() {
-    Navigator.of(context).pushReplacementNamed('/welcome');
+    if (mounted) {
+      setState(() => _showWelcome = true); // نغيّر النص
+    }
+
+    // بعدين ننتقل إلى صفحة welcome
+
+    await Future.delayed(const Duration(seconds: 3));
+
+    if (mounted) {
+      await Prefs.setOnboardingDone(true); // نحفظ انه دخلها
+
+      Navigator.of(context).pushReplacementNamed('/welcome');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    const omaniGreen = Color(0xFF006C35);
+    return Scaffold(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // الخلفية (صورة الورد)
 
-    const omaniRed = Color(0xFFCF1020);
+          Image.asset(
+            'assets/images/rose_bg.jpg', // غيري المسار حسب صورتك
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: _goNext,
-      child: Scaffold(
-        body: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.asset(
-              'assets/images/omansplash.jpg',
-              fit: BoxFit.cover,
-            ),
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black38,
-                    Colors.black87,
-                  ],
-                ),
+            fit: BoxFit.cover,
+          ),
+
+          // تدرج خفيف لتوضيح النص
+
+          Container(
+            color: Colors.black.withOpacity(0.3),
+          ),
+
+          // المحتوى
+
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // الشعار
+
+              Image.asset(
+                'assets/images/logo.png', // الشعار
+
+                width: 130,
+
+                height: 130,
               ),
-            ),
-            Center(
-              child: ScaleTransition(
-                scale: _scale,
-                child: FadeTransition(
-                  opacity: _fadeLogo,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // كلمة Oman
 
-                      const Text(
-                        "Oman",
-                        style: TextStyle(
-                          fontFamily: "ElMessiri",
-                          fontSize: 34,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          height: 1.1,
-                        ),
-                      ),
+              const SizedBox(height: 25),
 
-                      const SizedBox(height: 8),
+              // النص المتغير
 
-                      // OTM
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 800),
+                child: Text(
+                  _showWelcome ? 'Welcome to Oman' : 'Plan your trip',
+                  key: ValueKey(_showWelcome),
+                  style: const TextStyle(
+                    fontSize: 28,
 
-                      const Text(
-                        "OTM",
-                        style: TextStyle(
-                          fontFamily: "Montserrat",
-                          fontSize: 42,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 6,
-                          color: Colors.white,
-                        ),
-                      ),
+                    fontFamily: 'ElMessiri', // أو أي خط جميل عندك
 
-                      const SizedBox(height: 18),
+                    color: Colors.white,
 
-                      FadeTransition(
-                        opacity: _fadeTexts,
-                        child: Column(
-                          children: [
-                            // عربي
+                    fontWeight: FontWeight.bold,
 
-                            const Text(
-                              "مخطِّط رحلتك في عُمان",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontFamily: "ElMessiri",
-                                fontSize: 26,
-                                color: Colors.white,
-                              ),
-                            ),
-
-                            const SizedBox(height: 6),
-
-                            // English
-
-                            const Text(
-                              "Plan your tourism in Oman",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontFamily: "Montserrat",
-                                fontSize: 16,
-                                color: Colors.white70,
-                                letterSpacing: 1.0,
-                              ),
-                            ),
-
-                            const SizedBox(height: 20),
-
-                            // شريط ألوان (أحمر + أخضر)
-
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                    width: 60, height: 4, color: omaniRed),
-                                const SizedBox(width: 8),
-                                Container(
-                                    width: 60, height: 4, color: omaniGreen),
-                              ],
-                            ),
-
-                            const SizedBox(height: 26),
-
-                            // اضغط للمتابعة
-
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Icon(Icons.touch_app_rounded,
-                                    color: Colors.white70, size: 18),
-                                SizedBox(width: 6),
-                                Text(
-                                  "اضغط للمتابعة • Tap to continue",
-                                  style: TextStyle(
-                                    fontFamily: "Tajawal",
-                                    fontSize: 14,
-                                    color: Colors.white70,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                    shadows: [
+                      Shadow(
+                        blurRadius: 5,
+                        color: Colors.black54,
+                        offset: Offset(1, 2),
                       ),
                     ],
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }

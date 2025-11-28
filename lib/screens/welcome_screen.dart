@@ -10,11 +10,9 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> {
   bool isArabic = true;
 
-  // ⭐ ألوان
-
   static const Color kPrimaryBeige = Color(0xFFB68B5E);
 
-  static const Color kNeonCyan = Color(0xFF00F6FF); // لون اكتشف
+  static const Color kNeonCyan = Color(0xFF00F6FF);
 
   @override
   Widget build(BuildContext context) {
@@ -70,19 +68,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         body: Stack(
           fit: StackFit.expand,
           children: [
-            // 🔹 الخلفية الأصلية
-
             Image.asset(
               'assets/images/oman_background.jpg',
               fit: BoxFit.cover,
             ),
-
-            // 🔹 طبقة سوداء شفافة فوق الصورة بالكامل
-
             Container(
-              color: Colors.black.withOpacity(0.38), // ← هنا التعتيم الأسود
+              color: Colors.black.withOpacity(0.38),
             ),
-
             SafeArea(
               child: Padding(
                 padding:
@@ -90,9 +82,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 child: Column(
                   children: [
                     const Spacer(),
-
-                    // ⭐ العنوان (أبيض واضح)
-
                     Text(
                       title,
                       textAlign: TextAlign.center,
@@ -102,63 +91,39 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         fontSize: 34,
                       ),
                     ),
-
                     const SizedBox(height: 18),
-
-                    // ⭐ جملة 1 (أبيض)
-
                     Text(
                       subtitle,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: Colors.white, // ← أبيض
-
+                        color: Colors.white,
                         fontSize: 18,
-
                         height: 1.5,
-
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-
                     const SizedBox(height: 10),
-
-                    // ⭐ "اكتشف" ← يبقى فسفوري
-
                     Text(
                       slogan,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: kNeonCyan, // ← بدون تغيير
-
+                        color: kNeonCyan,
                         fontSize: 20,
-
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     const SizedBox(height: 10),
-
-                    // ⭐ جملة 3 (أبيض)
-
                     Text(
                       tourismDesc,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: Colors.white, // ← أبيض
-
+                        color: Colors.white,
                         fontSize: 17,
-
                         height: 1.4,
-
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-
                     const SizedBox(height: 28),
-
-                    // ⭐ زر تسجيل الدخول
-
                     ElevatedButton(
                       onPressed: () => Navigator.pushNamed(context, '/login'),
                       style: ElevatedButton.styleFrom(
@@ -177,11 +142,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 14),
-
-                    // ⭐ زر إنشاء حساب
-
                     ElevatedButton(
                       onPressed: () => Navigator.pushNamed(context, '/signup'),
                       style: ElevatedButton.styleFrom(
@@ -200,11 +161,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
-                    // ⭐ زائر أسود
-
                     TextButton(
                       onPressed: () => Navigator.pushNamed(context, '/guest'),
                       child: const Text(
@@ -217,7 +174,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 16),
                   ],
                 ),
