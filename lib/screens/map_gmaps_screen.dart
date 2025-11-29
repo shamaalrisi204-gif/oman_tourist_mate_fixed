@@ -2502,7 +2502,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                     decoration: const InputDecoration(
                       icon: Icon(Icons.search),
                       hintText:
-                          'ابحث عن مكان أو ولاية (مثلاً: الصريحه، صحار...)',
+                          'ابحث عن مكان أو ولاية (مثلاً: الصويحره، صحار...)',
                       hintStyle: TextStyle(
                         fontFamily: 'Tajawal',
                         fontSize: 12,

@@ -2,19 +2,15 @@
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-/// نوع المكان داخل شاشة المحافظة
-
 enum GovPlaceCategory {
-  attraction, // مكان سياحي / مَعْلَم
+  attraction,
 
-  hotel, // فندق
+  hotel,
 
-  restaurant, // مطعم
+  restaurant,
 
-  cafe, // كوفي
+  cafe,
 }
-
-/// نوع المكان السياحي نفسه (بحري / تاريخي / جبلي / بر)
 
 enum AttractionType {
   beach,
@@ -46,17 +42,13 @@ class GovPlace {
 
   final GovPlaceCategory category;
 
-  /// لو كان المكان "سياحي" نقدر نحدد نوعه
-
   final AttractionType? attractionType;
 
-  /// جديد:
+  final String? instagramUrl;
 
-  final String? instagramUrl; // حساب إنستغرام (للمطعم / الكوفي)
+  final String? bookingUrl;
 
-  final String? bookingUrl; // رابط حجز (Booking / موقع الفندق)
-
-  final double? rating; // تقييم من 5 مثلاً
+  final double? rating;
 
   const GovPlace({
     required this.id,
@@ -75,11 +67,7 @@ class GovPlace {
   });
 }
 
-/// أمثلة مبدئية لمسقط + بعض الأماكن من المحافظات الأخرى
-
 const List<GovPlace> kGovPlaces = [
-  // ---------- مسقط: أماكن بحريّة ----------
-
   GovPlace(
     id: 'muscat_qurum_beach_1',
     govKey: 'muscat',
@@ -215,6 +203,20 @@ const List<GovPlace> kGovPlaces = [
     rating: 4.7,
   ),
 
+  GovPlace(
+    id: 'muscat_qaha_cafe',
+    govKey: 'muscat',
+    nameAr: 'قَهَا كافيه',
+    nameEn: 'Qaha Cafe',
+    descriptionAr: 'كوفي متخصص بالقهوة والحلويات.',
+    descriptionEn: 'Specialty coffee and desserts.',
+    imageAsset: 'assets/places/muscat/qaha.jpg',
+    location: LatLng(23.5681589, 58.4149115),
+    category: GovPlaceCategory.cafe,
+    instagramUrl: 'https://www.instagram.com/qahacafe/',
+    rating: 4.6,
+  ),
+
   // ---------- صحار ----------
 
   GovPlace(
@@ -245,18 +247,213 @@ const List<GovPlace> kGovPlaces = [
     attractionType: AttractionType.historic,
   ),
 
-  // ---------- صلالة ----------
+  // ---------- صحار: فندق ميركيور ----------
 
   GovPlace(
-    id: 'salalah_beach',
+    id: 'sohar_mercure_hotel',
+
+    govKey: 'albatinahnorth', // نفس مفتاح صحار
+
+    nameAr: 'فندق ميركيور صحار',
+
+    nameEn: 'Mercure Sohar',
+
+    descriptionAr:
+        'فندق مريح في صحار مع مسبح خارجي وخدمة واي فاي مجاني وموقع قريب من الخدمات.',
+
+    descriptionEn:
+        'Comfortable hotel in Sohar with outdoor pool, free Wi-Fi and a convenient location.',
+
+    imageAsset: 'assets/places/sohar/mercure_sohar.jpg',
+
+    // الإحداثيات من الخريطة
+
+    location: LatLng(24.3290712, 56.7407024),
+
+    category: GovPlaceCategory.hotel,
+
+    bookingUrl: 'https://www.booking.com/hotel/om/mercure-sohar.ar.html',
+
+    rating: 4.5, // عدّلي الرقم لو حابة
+  ),
+
+  // ---------- صحار: مطعم الخاطر ----------
+
+  GovPlace(
+    id: 'sohar_alkhater_restaurant',
+
+    govKey: 'albatinahnorth',
+
+    nameAr: 'مطعم الخاطر',
+
+    nameEn: 'Al Khater Restaurant',
+
+    descriptionAr:
+        'مطعم يقدم مشاوي وباستا وبيتزا في حدائق النخيل بجانب رد تاغ في صحار.',
+
+    descriptionEn:
+        'Restaurant serving grills, pasta and pizza in Palm Gardens next to Red Tag in Sohar.',
+
+    imageAsset: 'assets/places/sohar/alkhater.jpg',
+
+    // الإحداثيات من الخريطة
+
+    location: LatLng(24.3366920, 56.7354403),
+
+    category: GovPlaceCategory.restaurant,
+
+    instagramUrl: 'https://www.instagram.com/alkhater.om/',
+
+    rating: 4.6, // تقديري – تقدرين تغيّرينه
+  ),
+  GovPlace(
+    id: 'sohar_robusta_cafe',
+    govKey: 'albatinahnorth',
+    nameAr: 'روبوستا كافيه',
+    nameEn: 'Robusta Cafe',
+    descriptionAr: 'كوفي مختص يقدم قهوة عالية الجودة وإطلالة جميلة.',
+    descriptionEn: 'Specialty coffee shop with a nice view and great drinks.',
+    imageAsset: 'assets/places/sohar/robusta.jpg',
+    location: LatLng(24.3663161, 56.7478676),
+    category: GovPlaceCategory.cafe,
+    instagramUrl: 'https://www.instagram.com/robusta__cafe/',
+    rating: 4.6,
+  ),
+
+// ---------- صلالة / ظفار ----------
+
+  GovPlace(
+    id: 'salalah_corniche',
+
     govKey: 'dhofar',
-    nameAr: 'شاطئ صلالة',
-    nameEn: 'Salalah Beach',
-    descriptionAr: 'شاطئ جميل خاصة وقت الخريف.',
-    descriptionEn: 'Beautiful beach, especially during Khareef.',
-    imageAsset: 'assets/places/salalah/beach_1.jpg',
-    location: LatLng(17.0150, 54.0924),
+
+    nameAr: 'كورنيش صلالة',
+
+    nameEn: 'Salalah Corniche',
+
+    descriptionAr:
+        'ممشى بحري جميل مع جلسات مطلة على البحر وأشجار النخيل، مناسب للعائلات خصوصاً في موسم الخريف.',
+
+    descriptionEn:
+        'Seaside corniche with palm trees and sea views, popular for families especially during Khareef season.',
+
+    imageAsset: 'assets/places/salalah/corniche.jpg',
+
+    location: LatLng(17.0110, 54.0920), // عدّليها من Google Maps لو حابة
+
+    category: GovPlaceCategory.attraction,
+
+    attractionType: AttractionType.beach,
+  ),
+
+  GovPlace(
+    id: 'salalah_al_haffa_beach',
+    govKey: 'dhofar',
+    nameAr: 'شاطئ الحافة',
+    nameEn: 'Al Haffa Beach',
+    descriptionAr:
+        'أحد أشهر شواطئ صلالة، رمل أبيض ناعم وقريب من سوق الحافة التقليدي.',
+    descriptionEn:
+        'One of Salalah’s most famous beaches with soft white sand, close to Al Haffa traditional market.',
+    imageAsset: 'assets/places/salalah/haffa_beach.jpg',
+    location: LatLng(17.0100, 54.1040),
     category: GovPlaceCategory.attraction,
     attractionType: AttractionType.beach,
+  ),
+
+  GovPlace(
+    id: 'salalah_al_baleed_park',
+    govKey: 'dhofar',
+    nameAr: 'منتزه البليد الأثري',
+    nameEn: 'Al Baleed Archaeological Park',
+    descriptionAr:
+        'موقع أثري مهم يروي تاريخ اللبان والحضارة البحرية في ظفار، مع متحف جميل وإطلالة على البحر.',
+    descriptionEn:
+        'Important archaeological site telling the story of frankincense and maritime history, with a nice museum and sea views.',
+    imageAsset: 'assets/places/salalah/al_baleed.jpg',
+    location: LatLng(17.0175, 54.1090),
+    category: GovPlaceCategory.attraction,
+    attractionType: AttractionType.historic,
+  ),
+
+// ---------- صلالة: فندق ميليـنيوم ----------
+
+  GovPlace(
+    id: 'salalah_millennium_resort',
+
+    govKey: 'dhofar',
+
+    nameAr: 'منتجع ميلينيوم صلالة',
+
+    nameEn: 'Millennium Resort Salalah',
+
+    descriptionAr:
+        'منتجع راقي مع مسابح ومرافق عائلية، يقع في صلالة بالقرب من الشاطئ.',
+
+    descriptionEn:
+        'Upscale resort with pools and family facilities, located in Salalah near the beach.',
+
+    imageAsset:
+        'assets/places/salalah/millennium_resort.jpg', // عدّلي اسم الصورة حسب ملفك
+
+    location: LatLng(
+      17.0366370, // latitude
+
+      54.1703445, // longitude
+    ),
+
+    category: GovPlaceCategory.hotel,
+
+    bookingUrl:
+        'https://www.booking.com/hotel/om/millennium-resort-salalah-salalah.ar.html',
+
+    rating: 4.5, // من Booking (قدّري أو عدّليه)
+  ),
+
+  // ---------- صلالة: مطعم/كافيه لت لن على شاطئ الدهاريز ----------
+
+  GovPlace(
+    id: 'salalah_lit_lin',
+
+    govKey: 'dhofar',
+
+    nameAr: 'لت لن | LIT LIN',
+
+    nameEn: 'LIT LIN Restaurant & Café',
+
+    descriptionAr:
+        'مطعم وكافيه على شاطئ الدهاريز في صلالة بإطلالة بحرية جميلة.',
+
+    descriptionEn:
+        'Restaurant & café at Dhareez beach in Salalah with a nice sea view.',
+
+    imageAsset:
+        'assets/places/salalah/lit_lin.jpg', // حطي صورة من عندك في assets
+
+    location: LatLng(
+      17.010949, // latitude من الخريطة
+
+      54.17153, // longitude من الخريطة
+    ),
+
+    category: GovPlaceCategory.restaurant,
+
+    instagramUrl: 'https://www.instagram.com/litlin.om/',
+
+    rating: 4.5, // تقديري، عدّليه لو حابة
+  ),
+
+  GovPlace(
+    id: 'salalah_55coffee',
+    govKey: 'dhofar',
+    nameAr: 'Fifty Five كوفي',
+    nameEn: 'Fifty Five Coffee',
+    descriptionAr: 'كوفي مختص بإطلالة جميلة وأجواء مميزة في صلالة.',
+    descriptionEn: 'Specialty coffee shop with a beautiful view in Salalah.',
+    imageAsset: 'assets/places/salalah/55coffee.jpg',
+    location: LatLng(17.0010976, 54.1054716),
+    category: GovPlaceCategory.cafe,
+    instagramUrl: 'https://www.instagram.com/55_coffee/',
+    rating: 4.7,
   ),
 ];

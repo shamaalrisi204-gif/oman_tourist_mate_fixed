@@ -108,6 +108,9 @@ flutter:
    - assets/places/sohar/fort_2.jpg
    - assets/places/sohar/souq_1.jpg
    - assets/places/sohar/souq_2.jpg
+   - assets/places/sohar/alkhater.jpg
+   - assets/places/sohar/robusta.jpg
+   - assets/places/sohar/mercure_sohar.jpg
    # Muscat
    - assets/places/muscat/qurum_1.jpg
    - assets/places/muscat/qurum_2.jpg
@@ -117,12 +120,20 @@ flutter:
    - assets/places/muscat/qasr_alalm.jpg
    - assets/places/muscat/hotel.jpg
    - assets/places/muscat/resturant_muscat.jpg
+   - assets/places/muscat/qaha.jpg
    # Nizwa / Bahla
    - assets/places/nizwa/fort_1.jpg
    - assets/places/bahla/fort_1.jpg
    # Salalah
    - assets/places/salalah/beach_1.jpg
    - assets/places/salalah/beach_2.jpg
+   - assets/places/salalah/al_baleed.jpg
+   - assets/places/salalah/haffa_beach.jpg
+   - assets/places/salalah/millennium_resort.jpg
+   - assets/places/salalah/lit_lin.jpg 
+   - assets/places/salalah/corniche.jpg
+   - assets/places/salalah/header.jpg
+   - assets/places/salalah/55coffee.jpg
    # Desert generic
    - assets/places/desert/wahiba_1.jpg
    - assets/places/desert/wahiba_2.jpg

@@ -15,9 +15,9 @@ class GovernoratePlacesScreen extends StatefulWidget {
 
   final String titleEn;
 
-  final LatLng? center; // مركز المحافظة (من الخريطة)
+  final LatLng? center;
 
-  final List<GovPlace> places; // الأماكن الخاصة بهذه المحافظة
+  final List<GovPlace> places;
 
   const GovernoratePlacesScreen({
     super.key,
@@ -34,15 +34,9 @@ class GovernoratePlacesScreen extends StatefulWidget {
 }
 
 class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
-  /// التصنيف الرئيسي المختار (أماكن سياحية / فنادق / مطاعم / كوفيهات)
-
   GovPlaceCategory _selectedCategory = GovPlaceCategory.attraction;
 
-  /// الفلتر الحالي داخل الأماكن السياحية (null = الكل)
-
   AttractionType? _selectedAttractionType;
-
-  // ---------- نصوص المساعدة ----------
 
   String _categoryTitleAr(GovPlaceCategory c) {
     switch (c) {
@@ -91,11 +85,9 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
         return 'أماكن جبلية';
 
       case AttractionType.desert:
-        return 'أماكن برية / صحراوية';
+        return 'أماكن صحراوية / برية';
     }
   }
-
-  // ---------- فتح الخرائط / الروابط ----------
 
   Future<void> _openInMaps(LatLng loc) async {
     final url =
@@ -107,10 +99,6 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
-
-  // ---------- Widgets مساعدة ----------
-
-  /// Chip لاختيار التصنيف الرئيسي (سياحي / فندق / مطعم / كوفي)
 
   Widget _buildCategoryChip(GovPlaceCategory cat) {
     final bool selected = _selectedCategory == cat;
@@ -131,8 +119,6 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
         setState(() {
           _selectedCategory = cat;
 
-          // إذا تغيّر التصنيف عن الأماكن السياحية نحذف فلتر الأنواع
-
           if (cat != GovPlaceCategory.attraction) {
             _selectedAttractionType = null;
           }
@@ -140,8 +126,6 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
       },
     );
   }
-
-  /// Chip لنوع المكان السياحي (بحري / تاريخي / جبلي / برية)
 
   Widget _buildTypeChip(AttractionType? type) {
     final bool selected = _selectedAttractionType == type;
@@ -165,8 +149,6 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
       },
     );
   }
-
-  /// بطاقة المكان (تستخدم لكل التصنيفات)
 
   Widget _buildPlaceCard(GovPlace place) {
     return Container(
@@ -211,9 +193,7 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-
                   const SizedBox(height: 6),
-
                   Text(
                     place.descriptionAr,
                     maxLines: 2,
@@ -224,11 +204,7 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
                       color: Colors.black87,
                     ),
                   ),
-
                   const SizedBox(height: 6),
-
-                  // ⭐ التقييم لو موجود
-
                   if (place.rating != null) ...[
                     Row(
                       children: [
@@ -245,12 +221,8 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
                     ),
                     const SizedBox(height: 6),
                   ],
-
-                  // 🔗 روابط خارجية (إنستغرام / Booking / خريطة)
-
                   Wrap(
                     spacing: 8,
-                    runSpacing: 4,
                     children: [
                       if (place.instagramUrl != null)
                         OutlinedButton.icon(
@@ -281,7 +253,7 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
                           },
                           icon: const Icon(Icons.hotel, size: 16),
                           label: const Text(
-                            'احجز عن طريق Booking / Book',
+                            'احجز عبر Booking / Book',
                             style:
                                 TextStyle(fontFamily: 'Tajawal', fontSize: 11),
                           ),
@@ -295,7 +267,7 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
                         ),
                       ),
                     ],
-                  ),
+                  )
                 ],
               ),
             ),
@@ -305,21 +277,13 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
     );
   }
 
-  // ---------- build ----------
-
   @override
   Widget build(BuildContext context) {
-    // الأماكن الخاصة بهذه المحافظة
-
     final allPlaces =
         widget.places.where((p) => p.govKey == widget.govKey).toList();
 
-    // نفلتر حسب التصنيف الرئيسي
-
     List<GovPlace> visiblePlaces =
         allPlaces.where((p) => p.category == _selectedCategory).toList();
-
-    // ولو كانت أماكن سياحية نطبّق فلتر الأنواع
 
     if (_selectedCategory == GovPlaceCategory.attraction &&
         _selectedAttractionType != null) {
@@ -331,8 +295,6 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // الهيدر بالصورة الكبيرة
-
           SliverAppBar(
             expandedHeight: 260,
             pinned: true,
@@ -342,23 +304,18 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
               style: const TextStyle(fontFamily: 'Tajawal'),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              background: allPlaces.isNotEmpty
-                  ? Image.asset(
-                      allPlaces.first.imageAsset,
-                      fit: BoxFit.cover,
-                    )
-                  : Container(color: Colors.grey.shade300),
+              background: Image.asset(
+                'assets/places/salalah/header.jpg',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
-
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 👇 عنوان واضح بدل النص فوق الصورة
-
                   Text(
                     'تقويم الفعاليات والأماكن في ${widget.titleAr}',
                     style: const TextStyle(
@@ -367,9 +324,7 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(height: 4),
-
                   Text(
                     'Events & Places Calendar in ${widget.titleEn}',
                     style: TextStyle(
@@ -378,21 +333,15 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
                       color: Colors.grey.shade700,
                     ),
                   ),
-
                   const SizedBox(height: 8),
-
                   const Text(
-                    'استعرض الأماكن البحرية، الجبلية، التاريخية، إلى جانب الفنادق والمطاعم والكوفيهات المميزة في المحافظة.',
+                    'استعرض أجمل الأماكن البحرية، الجبلية، التاريخية، الفنادق، المطاعم، والكوفيهات في المحافظة.',
                     style: TextStyle(
                       fontFamily: 'Tajawal',
                       fontSize: 13,
                     ),
                   ),
-
                   const SizedBox(height: 16),
-
-                  // 🔹 تصنيفات رئيسية: سياحية / فنادق / مطاعم / كوفيهات
-
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
@@ -407,11 +356,7 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 16),
-
-                  // عنوان القسم الحالي
-
                   Text(
                     '${_categoryTitleAr(_selectedCategory)} / ${_categoryTitleEn(_selectedCategory)}',
                     style: const TextStyle(
@@ -420,37 +365,40 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-
-                  const SizedBox(height: 4),
-
-                  // وصف بسيط حسب التصنيف
-
-                  Text(
-                    () {
-                      switch (_selectedCategory) {
-                        case GovPlaceCategory.attraction:
-                          return 'تعرّف على أجمل الأماكن السياحية في ${widget.titleAr}.';
-
-                        case GovPlaceCategory.hotel:
-                          return 'اكتشفي أفضل خيارات الإقامة في ${widget.titleAr}.';
-
-                        case GovPlaceCategory.restaurant:
-                          return 'تذوّقي أشهى الأطباق في مطاعم ${widget.titleAr}.';
-
-                        case GovPlaceCategory.cafe:
-                          return 'استمتعي بأجواء الكوفيهات المميزة في ${widget.titleAr}.';
-                      }
-                    }(),
-                    style: const TextStyle(
-                      fontFamily: 'Tajawal',
-                      fontSize: 13,
+                  const SizedBox(height: 6),
+                  if (_selectedCategory == GovPlaceCategory.attraction)
+                    Text(
+                      'اكتشفي أجمل الوجهات في ${widget.titleAr}.',
+                      style: const TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontSize: 13,
+                      ),
+                    )
+                  else if (_selectedCategory == GovPlaceCategory.hotel)
+                    Text(
+                      'أفضل أماكن الإقامة في ${widget.titleAr}.',
+                      style: const TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontSize: 13,
+                      ),
+                    )
+                  else if (_selectedCategory == GovPlaceCategory.restaurant)
+                    Text(
+                      'أشهى المطاعم والمقاهي في ${widget.titleAr}.',
+                      style: const TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontSize: 13,
+                      ),
+                    )
+                  else
+                    Text(
+                      'أفضل الكوفيهات في ${widget.titleAr}.',
+                      style: const TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontSize: 13,
+                      ),
                     ),
-                  ),
-
                   const SizedBox(height: 12),
-
-                  // لو التصنيف "أماكن سياحية" نعرض فلاتر الأنواع
-
                   if (_selectedCategory == GovPlaceCategory.attraction) ...[
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
@@ -468,29 +416,25 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 12),
                   ],
-
-                  // قائمة الأماكن حسب الفلاتر
-
-                  if (visiblePlaces.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 32),
-                      child: Center(
-                        child: Text(
-                          'لا توجد أماكن متاحة لهذا التصنيف حاليًا.',
-                          style: TextStyle(
-                            fontFamily: 'Tajawal',
-                            fontSize: 13,
-                            color: Colors.grey,
+                  const SizedBox(height: 16),
+                  visiblePlaces.isEmpty
+                      ? const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 32),
+                            child: Text(
+                              'لا توجد أماكن متاحة لهذا التصنيف.',
+                              style: TextStyle(
+                                fontFamily: 'Tajawal',
+                                fontSize: 13,
+                                color: Colors.grey,
+                              ),
+                            ),
                           ),
+                        )
+                      : Column(
+                          children: visiblePlaces.map(_buildPlaceCard).toList(),
                         ),
-                      ),
-                    )
-                  else
-                    Column(
-                      children: visiblePlaces.map(_buildPlaceCard).toList(),
-                    ),
                 ],
               ),
             ),

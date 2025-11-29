@@ -13,10 +13,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   bool _loading = true;
   bool _isArabic = true;
 
-  // ألوان نفس الثيم
-  static const Color _primary = Color(0xFF5E2BFF); // بنفسجي
-  static const Color _background = Color(0xFFF3EED9); // بيج فاتح
-  static const Color _cardColor = Color(0xFFE5D7B8); // بيج أغمق للكروت
+  static const Color _primary = Color(0xFF5E2BFF);
+  static const Color _background = Color(0xFFF3EED9);
+  static const Color _cardColor = Color(0xFFE5D7B8);
 
   String t(String ar, String en) => _isArabic ? ar : en;
 

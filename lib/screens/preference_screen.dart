@@ -9,7 +9,6 @@ class PreferencesScreen extends StatefulWidget {
   State<PreferencesScreen> createState() => _PreferencesScreenState();
 }
 
-/// موديل interest واحد مع صورة
 class _Interest {
   final String id;
   final String titleAr;
@@ -28,11 +27,9 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
   bool _isArabic = true;
   bool _useCurrentLocation = true;
 
-  //  ألوان
   static const Color _primary = Color(0xFF5E2BFF);
   static const Color _background = Color(0xFFF3EED9);
 
-  // كل الاهتمامات (غيري الصور/النص لو حبيتي)
   static const List<_Interest> _allInterests = [
     _Interest(
       id: 'shopping',

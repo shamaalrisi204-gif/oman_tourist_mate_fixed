@@ -26,15 +26,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool showPass2 = false;
   bool _isArabic = true;
 
-  // عشان نعرف إذا اليوزر كتب اليوزرنيم بنفسه
   bool _usernameEditedByUser = false;
 
-  // ✅ حالة شروط اليوزرنيم
   bool _uLenOK = false;
   bool _uCaseOK = false;
   bool _uCharsOK = false;
 
-  // ✅ حالة شروط الباسورد
   bool _pLenOK = false;
   bool _pUpperOK = false;
   bool _pLowerOK = false;
@@ -49,7 +46,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final sys = WidgetsBinding.instance.platformDispatcher.locale.languageCode;
     _isArabic = (sys == 'ar');
 
-    // لما يتغير الاسم الأول أو الأخير نقترح اسم مستخدم
     first.addListener(_onNameChanged);
     last.addListener(_onNameChanged);
   }
@@ -73,13 +69,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
         SnackBar(content: Text(_tr(ar, en))),
       );
 
-  // ============================
-  //  🔹 اقتراح اسم المستخدم
-  // ============================
-
   void _onNameChanged() {
     if (_usernameEditedByUser) {
-      // المستخدم عدّل اليوزرنيم بنفسه؛ لا نلمسه
       return;
     }
     final suggestion = _buildUsernameSuggestion(first.text, last.text);
@@ -100,7 +91,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     if (f.isEmpty && l.isEmpty) return '';
 
-    // نحول لإنجليزي صغير لو المستخدم كتب إنجليزي
     f = f.toLowerCase();
     l = l.toLowerCase();
 
@@ -111,10 +101,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final suffixNumber = DateTime.now().millisecond % 100; // 0–99
     return '$base#${suffixNumber.toString().padLeft(2, '0')}';
   }
-
-  // ============================
-  //  🔹 التحقق من اليوزرنيم
-  // ============================
 
   void _updateUsernameValidation([String? value]) {
     final u = (value ?? username.text).trim();
@@ -133,10 +119,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return _uLenOK && _uCaseOK && _uCharsOK;
   }
 
-  // ============================
-  //  🔹 التحقق من الباسورد
-  // ============================
-
   void _updatePasswordValidation([String? value]) {
     final p = (value ?? pass.text);
 
@@ -145,7 +127,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _pUpperOK = RegExp(r'[A-Z]').hasMatch(p);
       _pLowerOK = RegExp(r'[a-z]').hasMatch(p);
       _pDigitOK = RegExp(r'\d').hasMatch(p);
-      _pSymbolOK = RegExp(r'[^\w\s]').hasMatch(p); // أي رمز
+      _pSymbolOK = RegExp(r'[^\w\s]').hasMatch(p);
     });
   }
 
@@ -154,14 +136,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return _pLenOK && _pUpperOK && _pLowerOK && _pDigitOK && _pSymbolOK;
   }
 
-  /// ✅ التحقق من أن الإيميل غير مستخدم في FirebaseAuth
   Future<bool> _emailAlreadyUsed(String email) async {
     final methods =
         await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
     return methods.isNotEmpty;
   }
 
-  /// ✅ التحقق من أن اليوزر نيم غير مكرر في Firestore
   Future<bool> _usernameAlreadyUsed(String uname) async {
     final u = uname.trim().toLowerCase();
     if (u.isEmpty) return false;
@@ -181,7 +161,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final p2 = pass2.text;
     final uname = username.text.trim();
 
-    // ✅ التحقق من اسم المستخدم
     if (uname.isEmpty) {
       return _snack(
         'رجاءً أدخلي اسم المستخدم',
@@ -197,7 +176,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
     }
 
-    // ✅ التحقق من الإيميل
     if (!_okEmail(e)) {
       return _snack(
         'البريد الإلكتروني غير صالح',
@@ -205,7 +183,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
     }
 
-    // ✅ التحقق من الباسورد
     if (!_isValidPassword(p)) {
       return _snack(
         'كلمة المرور لا تطابق كل الشروط.\n'
@@ -224,7 +201,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     setState(() => busy = true);
 
     try {
-      // ✅ 1) تأكيد أن الإيميل غير مستخدم
       if (await _emailAlreadyUsed(e)) {
         _snack(
           'هذا البريد مستخدم من قبل، جرّبي بريدًا آخر',
@@ -234,7 +210,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
         return;
       }
 
-      // ✅ 2) تأكيد أن اليوزر نيم غير مكرر
       if (await _usernameAlreadyUsed(uname)) {
         _snack(
           'اسم المستخدم مسجّل من قبل، اختاري اسمًا آخر',
@@ -244,7 +219,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
         return;
       }
 
-      // ✅ 3) إرسال كود التحقق عبر OtpService
       final sent = await OtpService.I.sendVerificationCode(e);
 
       if (!mounted) return;
@@ -283,7 +257,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  // 🔹 ويدجت صغيرة لعرض الشرط (ستايل A)
   Widget _ruleItem(bool ok, String ar, String en) {
     final textColor = ok ? Colors.green : Colors.grey;
     return Row(
@@ -324,7 +297,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           leading: IconButton(
             icon: const Icon(
               Icons.arrow_back_ios_new,
-              color: Colors.white, // 🎨 ← هنا صار أبيض
+              color: Colors.white,
               size: 22,
             ),
             onPressed: () => Navigator.pop(context),
@@ -415,8 +388,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-
-                        // الاسم الأول
                         TextField(
                           controller: first,
                           decoration: InputDecoration(
@@ -428,8 +399,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 12),
-
-                        // الاسم الأخير
                         TextField(
                           controller: last,
                           decoration: InputDecoration(
@@ -441,8 +410,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 12),
-
-                        // اسم المستخدم
                         TextField(
                           controller: username,
                           decoration: InputDecoration(
@@ -458,8 +425,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 6),
-
-                        // قواعد اسم المستخدم (هايلايت ستايل A)
                         _ruleItem(
                           _uLenOK,
                           '٤–٢٠ حرفًا',
@@ -475,10 +440,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           'أحرف إنجليزية / أرقام / الرموز:  _  .  #  ~',
                           'Letters / numbers / symbols:  _  .  #  ~',
                         ),
-
                         const SizedBox(height: 12),
-
-                        // الإيميل
                         Directionality(
                           textDirection: TextDirection.ltr,
                           child: TextField(
@@ -495,8 +457,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-
-                        // الهاتف
                         TextField(
                           controller: phone,
                           keyboardType: TextInputType.phone,
@@ -512,8 +472,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 12),
-
-                        // كلمة المرور
                         TextField(
                           controller: pass,
                           obscureText: !showPass,
@@ -536,8 +494,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 6),
-
-                        // قواعد كلمة المرور (هايلايت ستايل A)
                         _ruleItem(
                           _pLenOK,
                           '٨ أحرف على الأقل',
@@ -563,10 +519,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           'يحتوي رمزًا واحدًا مثل (! @ # \$ % ^ & *)',
                           'Contains at least one symbol (e.g. ! @ # \$ % ^ & *)',
                         ),
-
                         const SizedBox(height: 12),
-
-                        // تأكيد كلمة المرور
                         TextField(
                           controller: pass2,
                           obscureText: !showPass2,
@@ -589,10 +542,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 20),
-
-                        // زر إرسال كود التحقق
                         ElevatedButton.icon(
                           onPressed: busy ? null : _send,
                           icon: busy

@@ -35,7 +35,7 @@ class PlacesRepo {
     PlaceData(
       id: 'mugsail',
       nameAr: 'شاطئ المغسيل',
-      nameEn: 'Al Mughsail Beach',
+      nameEn: ' Mughsail Beach',
       category: PlaceCategory.sea,
       governorate: 'ظفار',
       city: 'صلالة',
