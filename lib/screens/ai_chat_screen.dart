@@ -3,14 +3,22 @@
 import 'package:flutter/material.dart';
 
 import '../core/ai_services.dart';
+
 import '../core/image_service.dart';
+
 import '../data/tourism_repository.dart';
 
+import '../models/ai_place_suggestion.dart';
+
 /// نموذج الرسالة (نص + صور)
+
 class ChatMessage {
   final String text;
+
   final bool isUser;
+
   final DateTime time;
+
   final List<String> imageUrls;
 
   ChatMessage({
@@ -30,26 +38,32 @@ class AiChatScreen extends StatefulWidget {
 
 class _AiChatScreenState extends State<AiChatScreen> {
   final _ai = AiService();
+
   final _repo = TourismRepository.I;
 
   final TextEditingController _textController = TextEditingController();
+
   final ScrollController _scrollController = ScrollController();
 
   final List<ChatMessage> _messages = [];
 
   bool _sending = false;
+
   bool _isArabicUi = true;
 
   @override
   void dispose() {
     _textController.dispose();
+
     _scrollController.dispose();
+
     super.dispose();
   }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
+
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent + 80,
         duration: const Duration(milliseconds: 400),
@@ -58,28 +72,41 @@ class _AiChatScreenState extends State<AiChatScreen> {
     });
   }
 
-  /// يحدّد نوع المكان من نصّ المستخدم (فنادق / مطاعم / أماكن سياحية)
+  // ------------ كشف نوع المكان من نص المستخدم ------------
+
   String _detectPlaceType(String text) {
     final lower = text.toLowerCase();
 
     if (lower.contains('hotel') ||
         lower.contains('فنادق') ||
         lower.contains('فندق')) {
-      return 'lodging'; // فنادق
+      return 'lodging';
     }
 
     if (lower.contains('restaurant') ||
         lower.contains('مطعم') ||
         lower.contains('أكل') ||
         lower.contains('اكل')) {
-      return 'restaurant'; // مطاعم
+      return 'restaurant';
     }
 
-    // أماكن سياحية عامة
     return 'tourist_attraction';
   }
 
-  /// يكتشف المدينة من النص (مسقط، صحار، صلالة، نزوى...)
+  // نوع السكن داخل الفنادق: hotel أو resort (اختياري)
+
+  String? _detectLodgingCategory(String text) {
+    final lower = text.toLowerCase();
+
+    if (lower.contains('منتجع') || lower.contains('resort')) return 'resort';
+
+    if (lower.contains('فندق') || lower.contains('hotel')) return 'hotel';
+
+    return null;
+  }
+
+  // ------------ كشف المدينة ------------
+
   String? _detectCity(String text) {
     final lower = text.toLowerCase();
 
@@ -104,116 +131,142 @@ class _AiChatScreenState extends State<AiChatScreen> {
         }
       }
     }
+
     return null; // ما لقينا مدينة
   }
 
-  /// 🔹 دالة تساعدنا نعرض الصورة صح (Asset أو Network)
+  // ------------ عرض صورة (assets أو Network) ------------
+
   Widget _chatImage(String url) {
-    // لو المسار يبدأ بـ assets/ نعتبره صورة داخل التطبيق
     if (url.startsWith('assets/')) {
       return Image.asset(
         url,
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) => Container(
-          color: Colors.grey.shade300,
-          alignment: Alignment.center,
-          child: const Icon(Icons.broken_image),
-        ),
+            color: Colors.grey.shade300, child: const Icon(Icons.broken_image)),
       );
     }
 
-    // غير ذلك نعتبره رابط إنترنت
     return Image.network(
       url,
       fit: BoxFit.cover,
       errorBuilder: (_, __, ___) => Container(
-        color: Colors.grey.shade300,
-        alignment: Alignment.center,
-        child: const Icon(Icons.broken_image),
-      ),
+          color: Colors.grey.shade300, child: const Icon(Icons.broken_image)),
     );
   }
 
+  // ------------ إرسال الرسالة + ربطها مع CSV ------------
+
   Future<void> _sendMessage() async {
     final text = _textController.text.trim();
+
     if (text.isEmpty || _sending) return;
 
     setState(() {
       _sending = true;
-      _messages.add(
-        ChatMessage(
-          text: text,
-          isUser: true,
-          time: DateTime.now(),
-        ),
-      );
+
+      _messages.add(ChatMessage(
+        text: text,
+        isUser: true,
+        time: DateTime.now(),
+      ));
+
       _textController.clear();
     });
 
     _scrollToBottom();
 
     try {
-      // 1) رد Gemini الأساسي
+      // 1) رد الذكاء الاصطناعي (النص)
+
       final aiResponse = await _ai.sendMessage(text);
 
-      // 2) نجرّب أولاً نجلب بيانات حقيقية من Firestore
-      List<String> imageUrls = [];
+      // 2) نحدد نوع المكان والمدينة
+
       final placeType = _detectPlaceType(text);
+
       final city = _detectCity(text);
 
-      List<Map<String, dynamic>> fsResults = [];
+      final category =
+          placeType == 'lodging' ? _detectLodgingCategory(text) : null;
 
-      if (placeType == 'lodging' && city != null) {
-        // فنادق من accommodations
-        fsResults = await _repo.searchAccommodations(city: city);
-        imageUrls = fsResults
-            .map((e) => e['imageUrl'] ?? '')
-            .where((url) => url.isNotEmpty)
-            .cast<String>()
-            .toList();
+      // 3) نجيب بيانات حقيقية من CSV عبر TourismRepository
+
+      List<String> imageUrls = [];
+
+      List<AiPlaceSuggestion> places = [];
+
+      if (placeType == 'lodging') {
+        // فنادق / منتجعات من accommodations.csv فقط
+
+        places = await _repo.searchAccommodations(
+          city: city,
+          category: category,
+        );
       } else if (placeType == 'tourist_attraction') {
-        // أماكن سياحية من attractions
-        fsResults = await _repo.searchAttractions(governorate: city);
-        imageUrls = fsResults
-            .map((e) => e['imageUrl'] ?? '')
-            .where((url) => url.isNotEmpty)
-            .cast<String>()
-            .toList();
+        // أماكن سياحية من attractions.csv
+
+        places = await _repo.searchAttractions(city: city);
+      } else {
+        // مطاعم (ما عندنا CSV حالياً) -> نخلي places فاضية
+
+        places = [];
       }
 
-      // 3) لو ما لقينا صور في Firestore → نستخدم خدمة الصور العامة
+      imageUrls =
+          places.map((p) => p.imageUrl).where((url) => url.isNotEmpty).toList();
+
+      // 4) لو ما حصلنا صور من CSV نستخدم ImageService
+
       if (imageUrls.isEmpty) {
         final imgQuery = ImageService.queryFromUserText(text);
+
         imageUrls = await ImageService.searchImages(imgQuery);
       }
 
+      // 5) نص نضيفه تحت رد الـ AI (اختياري)
+
+      String finalText = aiResponse;
+
+      if (places.isNotEmpty) {
+        finalText +=
+            "\n\nهذه بعض الاقتراحات الحقيقية من قاعدة البيانات لدينا:\n" +
+                places
+                    .take(3)
+                    .map((p) => "• ${p.displayName} (${p.city})")
+                    .join("\n");
+      }
+
       setState(() {
-        _messages.add(
-          ChatMessage(
-            text: aiResponse,
-            isUser: false,
-            time: DateTime.now(),
-            imageUrls: imageUrls,
-          ),
-        );
+        _messages.add(ChatMessage(
+          text: finalText,
+          isUser: false,
+          time: DateTime.now(),
+          imageUrls: imageUrls,
+        ));
+
         _sending = false;
       });
-    } catch (e) {
+    } catch (e, st) {
+      // ignore: avoid_print
+
+      print('ERROR in _sendMessage: $e\n$st');
+
       setState(() {
-        _messages.add(
-          ChatMessage(
-            text:
-                'صار خطأ أثناء جلب الرد أو البيانات: $e\nحاولي مرة ثانية بعد قليل 🙏',
-            isUser: false,
-            time: DateTime.now(),
-          ),
-        );
+        _messages.add(ChatMessage(
+          text: 'صار خطأ أثناء جلب البيانات: $e\nحاولي مرة ثانية 🙏',
+          isUser: false,
+          time: DateTime.now(),
+        ));
+
         _sending = false;
       });
     }
 
     _scrollToBottom();
   }
+
+  // ------------ الواجهة ------------
 
   @override
   Widget build(BuildContext context) {
@@ -221,8 +274,8 @@ class _AiChatScreenState extends State<AiChatScreen> {
         _isArabicUi ? '✨ مساعد رحلتك الذكي' : '✨ Your smart trip assistant';
 
     final inputHint = _isArabicUi
-        ? 'اكتبي سؤالك هنا (مثلاً: فنادق في مسقط مع صور).. ✍️'
-        : 'Ask anything (e.g. hotels in Muscat with pictures)… ✍️';
+        ? 'اكتبي سؤالك هنا… (مثلاً: فنادق في مسقط مع صور)'
+        : 'Ask anything… (example: hotels in Muscat with pictures)';
 
     return Directionality(
       textDirection: _isArabicUi ? TextDirection.rtl : TextDirection.ltr,
@@ -230,11 +283,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
         backgroundColor: const Color(0xFFE5DDD5),
         appBar: AppBar(
           backgroundColor: const Color(0xFF075E54),
-          elevation: 0,
-          title: Text(
-            title,
-            style: const TextStyle(fontFamily: 'Tajawal'),
-          ),
+          title: Text(title, style: const TextStyle(fontFamily: 'Tajawal')),
           actions: [
             IconButton(
               icon: const Icon(Icons.language),
@@ -242,168 +291,128 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 setState(() => _isArabicUi = !_isArabicUi);
               },
             ),
-            const SizedBox(width: 4),
           ],
         ),
-        body: Stack(
+        body: Column(
           children: [
-            Positioned.fill(
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Color(0xFFE5DDD5),
-                      Color(0xFFD7C8B6),
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                ),
+            // الرسائل
+
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(12),
+                itemCount: _messages.length,
+                itemBuilder: (context, i) {
+                  final msg = _messages[i];
+
+                  final isUser = msg.isUser;
+
+                  final bubbleColor =
+                      isUser ? const Color(0xFF128C7E) : Colors.white;
+
+                  final textColor = isUser ? Colors.white : Colors.black87;
+
+                  return Align(
+                    alignment:
+                        isUser ? Alignment.centerRight : Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      decoration: BoxDecoration(
+                        color: bubbleColor,
+                        borderRadius: BorderRadius.only(
+                          topLeft: const Radius.circular(16),
+                          topRight: const Radius.circular(16),
+                          bottomLeft: Radius.circular(isUser ? 16 : 4),
+                          bottomRight: Radius.circular(isUser ? 4 : 16),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SelectableText(
+                            msg.text,
+                            style: TextStyle(
+                              color: textColor,
+                              fontFamily: 'Tajawal',
+                              fontSize: 14.5,
+                              height: 1.5,
+                            ),
+                          ),
+                          if (msg.imageUrls.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            for (final url in msg.imageUrls)
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 4),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: AspectRatio(
+                                    aspectRatio: 4 / 3,
+                                    child: _chatImage(url),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-            Column(
-              children: [
-                // الرسائل
-                Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 16),
-                    itemCount: _messages.length,
-                    itemBuilder: (context, i) {
-                      final msg = _messages[i];
-                      final isUser = msg.isUser;
 
-                      final bubbleColor = isUser
-                          ? const Color(0xFF128C7E)
-                          : const Color(0xFFFFFFFF);
+            // شريط إدخال الرسالة
 
-                      final textColor = isUser ? Colors.white : Colors.black87;
-                      final align =
-                          isUser ? Alignment.centerRight : Alignment.centerLeft;
-
-                      return Align(
-                        alignment: align,
-                        child: Container(
-                          constraints: BoxConstraints(
-                            maxWidth: MediaQuery.of(context).size.width * 0.80,
-                          ),
-                          margin: const EdgeInsets.symmetric(vertical: 6),
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: bubbleColor,
-                            borderRadius: BorderRadius.only(
-                              topLeft: const Radius.circular(16),
-                              topRight: const Radius.circular(16),
-                              bottomLeft: Radius.circular(isUser ? 16 : 4),
-                              bottomRight: Radius.circular(isUser ? 4 : 16),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 3,
-                                offset: const Offset(0, 1),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SelectableText(
-                                msg.text,
-                                style: TextStyle(
-                                  color: textColor,
-                                  fontFamily: 'Tajawal',
-                                  fontSize: 14.5,
-                                  height: 1.5,
-                                ),
-                              ),
-                              if (msg.imageUrls.isNotEmpty) ...[
-                                const SizedBox(height: 8),
-                                for (final img in msg.imageUrls)
-                                  Padding(
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 4),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: AspectRatio(
-                                        aspectRatio: 4 / 3,
-                                        child: _chatImage(img),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ],
-                          ),
+            SafeArea(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                color: const Color(0xFFEEEEEE),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
                         ),
-                      );
-                    },
-                  ),
-                ),
-
-                // شريط الكتابة
-                SafeArea(
-                  top: false,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEEEEEE),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.10),
-                          blurRadius: 4,
-                          offset: const Offset(0, -1),
+                        child: TextField(
+                          controller: _textController,
+                          minLines: 1,
+                          maxLines: 4,
+                          decoration: InputDecoration(
+                            hintText: inputHint,
+                            border: InputBorder.none,
+                          ),
+                          onSubmitted: (_) => _sendMessage(),
                         ),
-                      ],
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            child: TextField(
-                              controller: _textController,
-                              minLines: 1,
-                              maxLines: 4,
-                              decoration: InputDecoration(
-                                hintText: inputHint,
-                                border: InputBorder.none,
+                    const SizedBox(width: 10),
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor:
+                          _sending ? Colors.grey : const Color(0xFF128C7E),
+                      child: _sending
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
-                              onSubmitted: (_) => _sendMessage(),
+                            )
+                          : IconButton(
+                              icon: const Icon(Icons.send, color: Colors.white),
+                              onPressed: _sendMessage,
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundColor:
-                              _sending ? Colors.grey : const Color(0xFF128C7E),
-                          child: _sending
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white),
-                                  ),
-                                )
-                              : IconButton(
-                                  icon: const Icon(Icons.send,
-                                      color: Colors.white, size: 18),
-                                  onPressed: _sendMessage,
-                                ),
-                        ),
-                      ],
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ],
         ),

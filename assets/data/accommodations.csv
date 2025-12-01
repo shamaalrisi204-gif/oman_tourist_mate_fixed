@@ -1,0 +1,23 @@
+id,nameAr,nameEn,category,stars,governorate,city,tags,imageUrl,descriptionArShort,descriptionEnShort,rating
+ 
+1,فندق شيراتون عمان,Sheraton Oman Hotel,Hotel,5,مسقط,مسقط,"فاخر, عائلي, قريب من الخدمات","assets/hotels/muscat/sheraton.jpg","فندق فاخر في قلب مسقط بالقرب من مطرح.","Luxury hotel located in central Muscat near Muttrah.",4.7
+ 
+2,منتجع شانغريلا بر الجصة,Shangri-La Barr Al Jissah Resort,Resort,5,مسقط,مسقط,"شاطئي, فاخر, مناسب للعائلات","assets/hotels/muscat/shangrila.jpg","منتجع فخم بإطلالة بحرية مميزة.","Luxury beachfront resort with outstanding sea views.",4.8
+ 
+3,فندق راديسون بلو مسقط,Radisson Blu Hotel Muscat,Hotel,4,مسقط,مسقط,"مناسب للأعمال, مركزي","assets/hotels/muscat/radisson.jpg","فندق راقٍ في وسط مسقط.","Premium hotel in the center of Muscat.",4.6
+ 
+4,فندق كمبينسكي مسقط,Kempinski Hotel Muscat,Hotel,5,مسقط,مسقط,"فاخر, على البحر, استجمام","assets/hotels/muscat/kempinski.jpg","منتجع فاخر على الواجهة البحرية.","Luxury beachfront hotel.",4.8
+ 
+5,جراند حياة مسقط,Grand Hyatt Muscat,Hotel,5,مسقط,مسقط,"شاطئي, فاخر","assets/hotels/muscat/grandhyatt.jpg","فندق فاخر على شاطئ القرم.","Luxury hotel on Qurum beach.",4.7
+ 
+6,كراون بلازا مسقط,Crowne Plaza Muscat,Hotel,4,مسقط,مسقط,"إطلالة بحر, رومانسي","assets/hotels/muscat/crowneplaza.jpg","فندق بإطلالة خلابة على الساحل.","Hotel with stunning coastal views.",4.6
+ 
+7,إنتركونتيننتال مسقط,InterContinental Muscat,Hotel,5,مسقط,مسقط,"شاطئي, فاخر","assets/hotels/muscat/intercontinental.jpg","فندق فخم بالقرب من الشاطئ.","Luxury hotel near the beach.",4.7
+ 
+8,موفنبيك مسقط,Movenpick Hotel Muscat,Hotel,4,مسقط,مسقط,"مناسب للعائلات, حديث","assets/hotels/muscat/movenpick.jpg","فندق حديث ومناسب للعائلات.","Modern family-friendly hotel.",4.5
+ 
+9,أفاني مسقط,Avani Muscat Hotel,Hotel,4,مسقط,مسقط,"جديد, هادئ","assets/hotels/muscat/avani.jpg","فندق جديد وهادئ.","A new and peaceful hotel.",4.5
+ 
+10,ويندهام جاردن مسقط,Wyndham Garden Muscat,Hotel,4,مسقط,مسقط,"اقتصادي, مناسب للأعمال","assets/hotels/muscat/wyndham.jpg","فندق اقتصادي ومناسب لرجال الأعمال.","Budget-friendly business hotel.",4.4
+ 
+ 

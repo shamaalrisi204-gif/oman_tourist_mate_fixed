@@ -41,6 +41,7 @@ dev_dependencies:
    sdk: flutter
  flutter_lints: ^4.0.0
  flutter_launcher_icons: "^0.13.1"
+ csv: ^5.1.0
 flutter:
  uses-material-design: true
  assets:
@@ -140,6 +141,53 @@ flutter:
    - assets/places/desert/empty_1.jpg
    - assets/places/desert/empty_2.jpg
    - assets/places/generic/placeholder.jpg
+   #flight
+   - assets/airlines/oman_air.jpg
+   - assets/airlines/salam_air.jpg
+   - assets/airlines/lounge.jpg
+   - assets/airlines/meet_assist.jpg
+   - assets/airlines/home_checkin.jpg
+   - assets/airlines/hero.jpg
+   #hotels
+   - assets/hotels/hero.jpg
+   -  assets/hotels/shangrila.jpg
+   -  assets/hotels/sheraton.jpg
+   -  assets/hotels/radisson.jpg
+   - assets/hotels/muscat/kempinski.jpg
+   - assets/hotels/muscat/grandhyatt.jpg
+   - assets/hotels/muscat/crowneplaza.jpg
+   - assets/hotels/muscat/intercontinental.jpg
+   - assets/hotels/muscat/movenpick.jpg
+   - assets/hotels/muscat/avani.jpg
+   - assets/hotels/muscat/wyndham.jpg
+   - assets/images/accommodations/kempinski.jpg
+   - assets/images/accommodations/grandhyatt.jpg
+   - assets/images/accommodations/crowneplaza.jpg
+   - assets/images/accommodations/intercontinental.jpg
+   - assets/images/accommodations/movenpick.jpg
+   - assets/images/accommodations/avani.jpg
+   - assets/images/accommodations/wyndham.jpg
+   #tours
+   - assets/tours/nature.jpg
+   - assets/tours/hero_tours.jpg
+   - assets/tours/desert.jpg
+   - assets/tours/dhow.jpg
+   - assets/tours/helicopter.jpg
+   #attractions
+   - assets/attractions/hero.jpg
+   - assets/attractions/al_hoota_cave.jpg
+   - assets/attractions/opera_house.jpg
+   - assets/attractions/national_museum.jpg
+   #transports
+   - assets/transport/airport.jpg
+   #dining
+   - assets/dining/alaqr.jpg
+   - assets/dining/oman_food.jpg
+   - assets/dining/global.jpg
+   - assets/dining/luxury.jpg
+   - assets/dining/hero.jpg
+   - assets/data/accommodations.csv
+   - assets/data/attractions.csv
 fonts:
 
   - family: ElMessiri

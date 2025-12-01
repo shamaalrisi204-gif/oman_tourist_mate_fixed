@@ -1,0 +1,22 @@
+id,nameAr,nameEn,category,governorate,city,tags,imageUrl,descriptionArShort,descriptionEnShort,lat,lng
+
+mughsail_beach,شاطئ المغسيل,Mughsail Beach,Beach,ظفار,صلالة,"طبيعي, شاطئ","assets/images/attractions/mughsail.jpg","شاطئ مشهور يتميز بنافورات الموج الطبيعية.","A famous beach known for natural blowholes.",16.8686,53.7854
+
+nizwa_fort,قلعة نزوى,Nizwa Fort,Castle,الداخلية,نزوى,"تاريخي, تراث","assets/images/attractions/nizwa_fort.jpg","قلعة تاريخية تعتبر من أهم معالم عمان.","A historic fort and one of Oman's top landmarks.",22.9333,57.5333
+
+sultan_qaboos_mosque,جامع السلطان قابوس,Sultan Qaboos Grand Mosque,Mosque,مسقط,مسقط,"ديني, معماري","assets/images/attractions/grand_mosque.jpg","من أكبر الجوامع في عمان وتصميم معماري مميز.","One of the biggest mosques with stunning architecture.",23.5880,58.3895
+
+muttrah_souk,سوق مطرح,Muttrah Souq,Market,مسقط,مسقط,"تسوق, تراث","assets/images/attractions/muttrah_souk.jpg","سوق شعبي قديم مليء بالمحلات والهدايا.","Old traditional market full of shops and culture.",23.6161,58.5644
+
+jebel_shams,جبل شمس,Jebel Shams,Mountain,الداخلية,الحمراء,"طبيعة, جبال","assets/images/attractions/jebel_shams.jpg","أعلى قمة في عمان ومكان مثالي للمغامرات.","Oman's highest peak perfect for hiking.",23.2000,57.2667
+
+wadi_bani_khalid,وادي بني خالد,Wadi Bani Khalid,Wadi,الشرقية الشمالية,صور,"طبيعة, وادي","assets/images/attractions/wadi_bani_khalid.jpg","أحد أجمل الأودية بمياهه الصافية.","One of the most beautiful wadis with clear water.",22.6000,59.2000
+
+tiwi_beach,شاطئ تيWi,Tiwi Beach,Beach,الشرقية الجنوبية,صور,"شاطئ, طبيعة","assets/images/attractions/tiwi_beach.jpg","شاطئ هادئ بإطلالات جميلة.","A quiet beach with scenic views.",22.8297,59.2464
+
+bait_alzubair,بيت الزبير,Bait Al Zubair,Museum,مسقط,مسقط,"ثقافي, تاريخ","assets/images/attractions/bait_al_zubair.jpg","متحف يعرض التراث العماني.","A museum showcasing Omani heritage.",23.6150,58.5900
+
+al_hoota_cave,كهف الهوته,Al Hoota Cave,Cave,الداخلية,الحمراء,"مغامرات, طبيعة","assets/images/attractions/al_hoota.jpg","كهف طبيعي شهير يحتوي على بركة تحت الأرض.","A natural cave featuring an underground lake.",23.0670,57.3350
+
+qurm_park,حديقة القرم,Qurum Park,Park,مسقط,مسقط,"حدائق, طبيعة","assets/images/attractions/qurm_park.jpg","حديقة كبيرة مناسبة للعائلات.","Large family-friendly park.",23.6110,58.4584
+ 

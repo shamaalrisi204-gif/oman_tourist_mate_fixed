@@ -1,102 +1,134 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+// lib/data/tourism_repository.dart
+
+import 'dart:async';
+
+import 'package:flutter/services.dart' show rootBundle;
+
+import 'package:csv/csv.dart';
 
 import '../models/ai_place_suggestion.dart';
 
 class TourismRepository {
   TourismRepository._();
-  static final I = TourismRepository._();
 
-  final _accommodationsRef =
-      FirebaseFirestore.instance.collection('accommodations');
+  static final TourismRepository I = TourismRepository._();
 
-  final _attractionsRef = FirebaseFirestore.instance.collection('attractions');
+  bool _initialized = false;
 
-  // 🔍 بحث فنادق حسب المدينة
-  Future<List<Map<String, dynamic>>> searchAccommodations({
-    String? city,
-  }) async {
-    Query<Map<String, dynamic>> q = _accommodationsRef;
+  List<Map<String, dynamic>> _accommodations = [];
 
-    if (city != null && city.isNotEmpty) {
-      q = q.where('city', isEqualTo: city);
-    }
+  List<Map<String, dynamic>> _attractions = [];
 
-    final snap = await q.get();
+  // نتأكد إننا نحمّل CSV مرة وحدة بس
 
-    // نرجّع البيانات + id
-    return snap.docs.map((d) {
-      final data = d.data();
-      data['id'] = d.id;
-      return data;
+  Future<void> _ensureInitialized() async {
+    if (_initialized) return;
+
+    // حمّل ملفات CSV من assets
+
+    final accCsv =
+        await rootBundle.loadString('assets/data/accommodations.csv');
+
+    final attCsv = await rootBundle.loadString('assets/data/attractions.csv');
+
+    _accommodations = _parseCsv(accCsv);
+
+    _attractions = _parseCsv(attCsv);
+
+    _initialized = true;
+  }
+
+  // نحول CSV -> List<Map<String, dynamic>>
+
+  List<Map<String, dynamic>> _parseCsv(String csv) {
+    final converter = const CsvToListConverter(eol: '\n');
+
+    final rows = converter.convert(csv);
+
+    if (rows.isEmpty) return [];
+
+    final headers = rows.first.map((e) => e.toString()).toList();
+
+    return rows.skip(1).where((row) => row.isNotEmpty).map((row) {
+      final map = <String, dynamic>{};
+
+      for (int i = 0; i < headers.length && i < row.length; i++) {
+        map[headers[i]] = row[i];
+      }
+
+      // نخزّن category أيضاً في حقل type علشان AiPlaceSuggestion يستخدمه
+
+      if (!map.containsKey('type') && map['category'] != null) {
+        map['type'] = map['category'];
+      }
+
+      return map;
     }).toList();
   }
 
-  // 🔍 أماكن سياحية حسب المحافظة أو المدينة أو النوع (شاطئ، مطعم، ... إلخ)
-  Future<List<Map<String, dynamic>>> searchAttractions({
-    String? governorate,
-    String? type,
+  // -------------------------------------------------------------
+
+  // 1) البحث عن فنادق / منتجعات من accommodations.csv
+
+  //    city مثل Muscat, Salalah...
+
+  //    category مثل "hotel" أو "resort" (تقدر تتركيها null عشان يرجّع الكل)
+
+  // -------------------------------------------------------------
+
+  Future<List<AiPlaceSuggestion>> searchAccommodations({
+    String? city,
+    String? category,
   }) async {
-    Query<Map<String, dynamic>> q = _attractionsRef;
+    await _ensureInitialized();
 
-    if (governorate != null && governorate.isNotEmpty) {
-      q = q.where('governorate', isEqualTo: governorate);
+    bool matchesCity(Map<String, dynamic> row) {
+      if (city == null || city.isEmpty) return true;
+
+      final c = row['city']?.toString().toLowerCase() ?? '';
+
+      return c.contains(city.toLowerCase());
     }
 
-    if (type != null && type.isNotEmpty) {
-      q = q.where('type', isEqualTo: type);
+    bool matchesCategory(Map<String, dynamic> row) {
+      if (category == null || category.isEmpty) return true;
+
+      final cat =
+          (row['category'] ?? row['type'] ?? '').toString().toLowerCase();
+
+      return cat.contains(category.toLowerCase());
     }
 
-    final snap = await q.get();
-
-    // نرجّع البيانات + id
-    return snap.docs.map((d) {
-      final data = d.data();
-      data['id'] = d.id;
-      return data;
+    final data = _accommodations.where((row) {
+      return matchesCity(row) && matchesCategory(row);
     }).toList();
+
+    return data
+        .map((row) => AiPlaceSuggestion.fromMap(row, source: "accommodations"))
+        .toList();
   }
 
-  /// 🔹 دالة عامة يستخدمها الـ AI Concierge
-  /// ترجع قائمة AiPlaceSuggestion جاهزة للكروت
-  Future<List<AiPlaceSuggestion>> conciergeSearchPlaces({
-    required String
-        placeType, // 'lodging' أو 'restaurant' أو 'tourist_attraction'
+  // -------------------------------------------------------------
+
+  // 2) البحث عن أماكن سياحية من attractions.csv
+
+  // -------------------------------------------------------------
+
+  Future<List<AiPlaceSuggestion>> searchAttractions({
     String? city,
   }) async {
-    // فنادق
-    if (placeType == 'lodging') {
-      final rows = await searchAccommodations(city: city);
-      return rows
-          .map((m) => AiPlaceSuggestion.fromMap(
-                m,
-                source: 'accommodations',
-              ))
-          .toList();
-    }
+    await _ensureInitialized();
 
-    // مطاعم: نعتبرها نوع داخل attractions
-    if (placeType == 'restaurant') {
-      final rows = await searchAttractions(
-        governorate: city,
-        type: 'restaurant',
-      );
-      return rows
-          .map((m) => AiPlaceSuggestion.fromMap(
-                m,
-                source: 'attractions',
-              ))
-          .toList();
-    }
+    final data = _attractions.where((row) {
+      if (city == null || city.isEmpty) return true;
 
-    // أماكن سياحية عامة
-    final rows = await searchAttractions(
-      governorate: city,
-    );
-    return rows
-        .map((m) => AiPlaceSuggestion.fromMap(
-              m,
-              source: 'attractions',
-            ))
+      final c = row['city']?.toString().toLowerCase() ?? '';
+
+      return c.contains(city.toLowerCase());
+    }).toList();
+
+    return data
+        .map((row) => AiPlaceSuggestion.fromMap(row, source: "attractions"))
         .toList();
   }
 }

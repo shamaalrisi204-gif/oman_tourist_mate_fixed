@@ -6,6 +6,17 @@ import 'package:video_player/video_player.dart';
 
 import '../core/prefs.dart';
 import '../core/app_state.dart';
+import 'map_gmaps_screen.dart'; // فيه kTripPlans
+import '../screens/your_trip_screen.dart';
+import 'flight_services_screen.dart';
+import 'hotel_services_screen.dart';
+import 'transport_services_screen.dart'; // شاشة النقل الجديدة
+import 'dining_services_screen.dart';
+import 'attractions_screen.dart';
+import '../models/trip_hotel_item.dart' show kTripHotels;
+import 'tour_services_screen.dart'; // شاشة الرحلات السياحية
+import '../models/trip_tour_item.dart'
+    show kTripTours; // قائمة التورز المضافة لرحلتي
 
 class UserHome extends StatefulWidget {
   const UserHome({
@@ -486,6 +497,8 @@ class _UserHomeState extends State<UserHome> {
   }
 
   // ====== كرت My Trip العريض ======
+  // ====== كرت My Trip العريض ======
+
   Widget _buildMyTripCard() {
     final label = _isArabic ? 'رحلتي' : 'My Trip';
 
@@ -494,7 +507,35 @@ class _UserHomeState extends State<UserHome> {
         if (widget.isGuest) {
           _showGuestDialog();
         } else {
-          Navigator.pushNamed(context, '/my_trip');
+          // ✅ تحقق من: أماكن الخريطة + الفنادق + الرحلات السياحية
+
+          final hasPlaces = kTripPlans.isNotEmpty;
+
+          final hasHotels = kTripHotels.isNotEmpty;
+
+          final hasTours = kTripTours.isNotEmpty;
+
+          if (!hasPlaces && !hasHotels && !hasTours) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  _isArabic
+                      ? 'ما أضفتِ أي أماكن أو فنادق أو رحلات إلى رحلتك حتى الآن 😊'
+                      : 'You haven’t added any places, stays or tours yet 😊',
+                  style: const TextStyle(fontFamily: 'Tajawal'),
+                ),
+              ),
+            );
+
+            return;
+          }
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => YourTripScreen(plans: kTripPlans),
+            ),
+          );
         }
       },
       borderRadius: BorderRadius.circular(18),
@@ -752,6 +793,8 @@ class _UserHomeState extends State<UserHome> {
   }
 
   // ✅ الكروت السريعة (Flights / Stays / Tours / ...)
+  // ✅ الكروت السريعة (Flights / Stays / Tours / ...)
+
   Widget _buildQuickCategories() {
     return GridView.count(
       crossAxisCount: 2,
@@ -762,8 +805,76 @@ class _UserHomeState extends State<UserHome> {
       childAspectRatio: 3.2,
       children: _categories.map((cat) {
         final label = _isArabic ? cat.titleAr : cat.titleEn;
+
         return InkWell(
           onTap: () {
+            // ✈️ Flights
+
+            if (cat.titleEn == 'Flights') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => FlightServicesScreen(isArabic: _isArabic),
+                ),
+              );
+
+              return;
+            }
+
+            // 🏨 Stays
+
+            if (cat.titleEn == 'Stays') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => HotelServicesScreen(isArabic: _isArabic),
+                ),
+              );
+
+              return;
+            }
+
+            // 🚌 Tours
+
+            if (cat.titleEn == 'Tours') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => TourServicesScreen(isArabic: _isArabic),
+                ),
+              );
+
+              return;
+            }
+
+            // ⭐ المعالم السياحية
+
+            if (cat.titleEn == 'Attractions') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AttractionsScreen(isArabic: _isArabic),
+                ),
+              );
+
+              return;
+            }
+
+            // 🍽️ الطعام (Dining)
+
+            if (cat.titleEn == 'Food & Dining') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DiningServicesScreen(isArabic: _isArabic),
+                ),
+              );
+
+              return;
+            }
+
+            // باقي الخدمات = قريباً
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(

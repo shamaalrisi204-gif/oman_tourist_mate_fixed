@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:oman_tourist_mate_fixed/models/trip_plan.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/gov_places.dart';
 import 'governorate_places_screen.dart';
@@ -150,8 +149,13 @@ class OmanGMapsScreen extends StatefulWidget {
   @override
   State<OmanGMapsScreen> createState() => _OmanGMapsScreenState();
 }
+// قائمة الخطط المشتركة لكل التطبيق
+
+final List<MapTripPlan> kTripPlans = [];
 
 class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
+  final List<MapTripPlan> _savedPlans = [];
+
   bool _showQuickQuestions = true;
   GoogleMapController? _map;
 
@@ -195,6 +199,18 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
   // نوع المكان المحدد (بحري / جبلي / صناعي / تاريخي)
   PlaceType? _selectedType;
 
+  /// فلترة الأماكن حسب المحافظة المختارة + نوع المكان (لو موجود)
+
+  List<Place> _filteredPlaces() {
+    return _allPlaces.where((p) {
+      if (p.govKey != _selectedGovKey) return false;
+
+      if (_selectedType != null && p.type != _selectedType) return false;
+
+      return true;
+    }).toList();
+  }
+
   // حدود عُمان (حبس الكاميرا)
   static final LatLngBounds _omanBounds = LatLngBounds(
     southwest: LatLng(16.8, 51.5),
@@ -210,13 +226,11 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
   /// true  = وضع الاستكشاف الحر
   bool _freeExploreMode = false;
 
-  /// خطط زيارات محفوظة (في الذاكرة فقط)
-  final List<MapTripPlan> _savedPlans = [];
-
   /// هذا يقرأ قيمة البارامتر من الـ Widget
   bool get _planningEnabled => widget.enablePlanning;
 
   /// قائمة المحافظات للخيارات اللي تحت
+
   static const List<GovInfo> _governorates = [
     GovInfo(key: 'muscat', nameAr: 'مسقط', nameEn: 'Muscat'),
     GovInfo(key: 'dhofar', nameAr: 'ظفار', nameEn: 'Dhofar'),
@@ -258,6 +272,8 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
       nameEn: 'Al Wusta',
     ),
   ];
+
+  // ✅ كل الأماكن اللي نستخدمها في الأسئلة (بحري / جبلي / صناعي / تاريخي)
 
   final List<Place> _allPlaces = const [
     Place(
@@ -343,24 +359,65 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
     ),
   ];
 
-  List<GovPlace> _placesForGov(String govKey) {
-    return kGovPlaces.where((p) => p.govKey == govKey).toList();
-  }
+  // 🌟 الأماكن المختارة ضمن "رحلتي"
 
-  void _openGovernoratePlaces(String govKey) {
-    final gov = _governorates.firstWhere((g) => g.key == govKey);
-    final places = _placesForGov(govKey);
-    final center = _govCenters[govKey];
+  final Set<String> _tripPlaceIds = {};
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => GovernoratePlacesScreen(
-          govKey: govKey,
-          titleAr: gov.nameAr,
-          titleEn: gov.nameEn,
-          center: center,
-          places: places,
+  bool _isInTrip(Place p) => _tripPlaceIds.contains(p.id);
+
+// الأماكن نفسها كـ Place (نستخدمها لو احتجنا)
+
+  List<Place> get _tripPlaces =>
+      _allPlaces.where((p) => _tripPlaceIds.contains(p.id)).toList();
+
+// إضافة مكان إلى الرحلة كخطة MapTripPlan
+
+  void _addPlaceToTrip(Place p) {
+    // لو المكان مضاف من قبل لا نكرر
+
+    if (_tripPlaceIds.contains(p.id)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'هذا المكان مضاف مسبقًا إلى رحلتك ✅',
+            style: TextStyle(fontFamily: 'Tajawal'),
+          ),
+          backgroundColor: Colors.green,
         ),
+      );
+
+      return;
+    }
+
+    final plan = MapTripPlan(
+      place: p,
+
+      durationHours: 2, // تقدير مبدئي
+
+      durationText: 'حوالي ساعتين مقترحة',
+
+      wantHotels: true,
+
+      wantRestaurants: true,
+
+      wantSittings: false,
+
+      createdAt: DateTime.now(),
+    );
+
+    setState(() {
+      _tripPlaceIds.add(p.id); // نعلّم إنه مضاف
+
+      kTripPlans.add(plan); // نخزن الخطة في الليست المشتركة
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'تمت إضافة المكان إلى رحلتك ✅',
+          style: TextStyle(fontFamily: 'Tajawal'),
+        ),
+        backgroundColor: Colors.green,
       ),
     );
   }
@@ -536,13 +593,6 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
 
   /// فلترة الأماكن حسب نوع المكان + المحافظة الحالية
   /// فلترة الأماكن حسب نوع المكان + المحافظة الحالية
-  List<Place> _filteredPlaces() {
-    return _allPlaces.where((p) {
-      final sameGov = p.govKey == _selectedGovKey;
-      final sameType = _selectedType == null ? true : p.type == _selectedType;
-      return sameGov && sameType;
-    }).toList();
-  }
 
   // =====================================================
   // 🔍 البحث في الخريطة
@@ -952,6 +1002,8 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
 
   /// لما نختار محافظة
 
+  /// لما نختار محافظة من التبويبات أو من الخريطة
+
   void _onGovernorateSelected(String govKey) {
     // ✋ لو الخريطة مقفولة (كرت الأسئلة ظاهر) → لا نسمح بالتغيير
 
@@ -993,10 +1045,33 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
       );
     }
 
-// ⭐ إذا التخطيط مفعّل → افتح شاشة المحافظة (مطاعم + فنادق + أماكن سياحية)
+    // ⭐ إذا التخطيط مفعّل → افتح شاشة المحافظة (مطاعم + فنادق + أماكن سياحية)
+
     if (_planningEnabled) {
       _openGovernoratePlaces(govKey);
     }
+  }
+
+  /// فتح شاشة المحافظة (GovernoratePlacesScreen)
+
+  void _openGovernoratePlaces(String govKey) {
+    final gov = _governorates.firstWhere((g) => g.key == govKey);
+
+    // ✅ نجيب الأماكن من kGovPlaces (نوعها GovPlace)
+
+    final govPlaces = kGovPlaces.where((p) => p.govKey == govKey).toList();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => GovernoratePlacesScreen(
+          govKey: govKey,
+          titleAr: gov.nameAr,
+          titleEn: gov.nameEn,
+          places: govPlaces,
+        ),
+      ),
+    );
   }
 
   /// مسافة مركز المحافظة من موقعي (لنص قصير يظهر على التبويب)
@@ -1252,314 +1327,350 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
   }
 
   /// شاشة اختيار نوع المكان + الوجهات (مع معالجة الـ overflow + زر رجوع)
+  // دالة فتح ورقة الأسئلة + قائمة الأماكن
+
   Future<void> _openPlacesSheet() async {
-    if (!mounted) return;
+    if (_mapLocked) {
+      _showLockedSnack();
 
-    // لو التخطيط مقفول (زائر) لا تفتحي الشيت نهائياً
-    if (!_planningEnabled) return;
-
-    // نحاول نحدد موقعي بهدوء
-    await _ensureMyLocation(quietOnError: true);
+      return;
+    }
 
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.6,
-          minChildSize: 0.35,
-          maxChildSize: 0.95,
-          builder: (context, scrollCtrl) {
-            final filtered = _filteredPlaces();
+        // نستخدم StatefulBuilder علشان نقدر نحدّث محتوى البوتوم شيت
 
-            return Container(
-              decoration: BoxDecoration(
-                color: kBeige, // بيج فاتح
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(24),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.18),
-                    blurRadius: 16,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-              ),
-              child: SafeArea(
-                top: false,
-                child: SingleChildScrollView(
-                  controller: scrollCtrl,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            // الأماكن حسب المحافظة + نوع المكان المختار
+
+            final placesToShow = _filteredPlaces();
+
+            return DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.8,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
+              builder: (context, scrollController) {
+                return SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // شريط السحب + زر الرجوع
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.arrow_back_ios_new,
-                              size: 18,
-                            ),
-                            onPressed: () => Navigator.of(ctx).pop(),
+                      // الخط الصغير فوق (handle)
+
+                      Center(
+                        child: Container(
+                          width: 42,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(999),
                           ),
-                          const Spacer(),
-                          Container(
-                            width: 40,
-                            height: 4,
-                            margin: const EdgeInsets.only(bottom: 8, right: 40),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade400,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                      const SizedBox(height: 4),
+
                       const Text(
-                        'خريطة عُمان السياحية / Oman Tourist Map',
+                        'Map',
                         style: TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(Icons.place,
-                              size: 18, color: Colors.green),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              _myLocation == null
-                                  ? 'لم يتم تحديد موقعك بعد، يمكنك المتابعة واختيار الوجهة.\nYour location is not set yet, you can still continue and pick a destination.'
-                                  : 'تم تحديد موقعك، سنعرض المسافة والوقت لكل وجهة.\nYour location is set, we will show distance and time for each destination.',
-                              style: const TextStyle(
-                                fontFamily: 'Tajawal',
-                                fontSize: 12,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
 
-                      // ---------------- Q1 ----------------
+                      const SizedBox(height: 4),
+
                       const Text(
-                        'السؤال ١: ما نوع الأماكن التي تحب تزورها الآن؟\n'
-                        'Q1: Which type of places would you like to visit?',
+                        'تم تحديد موقعك، سيتم عرض المسافة والوقت لكل وجهة.',
+                        style: TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontSize: 13,
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // =======================
+
+                      //  سؤال ١: نوع المكان
+
+                      // =======================
+
+                      const Text(
+                        'السؤال ١: ما نوع الأماكن التي تحب تزورها أولاً؟',
                         style: TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
+
                       const SizedBox(height: 8),
 
-                      /// Chips أنواع الأماكن
                       Wrap(
                         spacing: 10,
                         runSpacing: 10,
                         children: [
-                          // خيار "أماكن سياحية عامة"
-                          GestureDetector(
+                          // عام
+
+                          _buildTypeChip(
+                            titleAr: 'أماكن سياحية عامة',
+                            titleEn: 'General tourist places',
+                            selected: _selectedType == null,
                             onTap: () {
-                              setState(() => _selectedType = null);
+                              setModalState(() {
+                                _selectedType = null;
+                              });
                             },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 14),
-                              decoration: BoxDecoration(
-                                color: _selectedType == null
-                                    ? kDarkBeige
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: _selectedType == null
-                                      ? kDarkBeige
-                                      : Colors.grey.shade300,
-                                  width: 2,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.08),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                'أماكن سياحية عامة / General tourist places',
-                                style: TextStyle(
-                                  fontFamily: 'Tajawal',
-                                  color: _selectedType == null
-                                      ? Colors.white
-                                      : Colors.black87,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
                           ),
 
-                          // باقي الأنواع من enum PlaceType
-                          for (final t in PlaceType.values)
-                            GestureDetector(
-                              onTap: () {
-                                setState(() => _selectedType = t);
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 14),
-                                decoration: BoxDecoration(
-                                  color: _selectedType == t
-                                      ? kDarkBeige
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: _selectedType == t
-                                        ? kDarkBeige
-                                        : Colors.grey.shade300,
-                                    width: 2,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.08),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ],
-                                ),
-                                child: Text(
-                                  _placeTypeLabel(t),
-                                  style: TextStyle(
-                                    fontFamily: 'Tajawal',
-                                    color: _selectedType == t
-                                        ? Colors.white
-                                        : Colors.black87,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ),
+                          // بحري
+
+                          _buildTypeChip(
+                            titleAr: 'أماكن بحرية',
+                            titleEn: 'Beach spots',
+                            selected: _selectedType == PlaceType.beach,
+                            onTap: () {
+                              setModalState(() {
+                                _selectedType = PlaceType.beach;
+                              });
+                            },
+                          ),
+
+                          // جبلي
+
+                          _buildTypeChip(
+                            titleAr: 'أماكن جبلية',
+                            titleEn: 'Mountain spots',
+                            selected: _selectedType == PlaceType.mountain,
+                            onTap: () {
+                              setModalState(() {
+                                _selectedType = PlaceType.mountain;
+                              });
+                            },
+                          ),
+
+                          // صناعي
+
+                          _buildTypeChip(
+                            titleAr: 'أماكن صناعية',
+                            titleEn: 'Industrial spots',
+                            selected: _selectedType == PlaceType.industrial,
+                            onTap: () {
+                              setModalState(() {
+                                _selectedType = PlaceType.industrial;
+                              });
+                            },
+                          ),
+
+                          // تاريخي
+
+                          _buildTypeChip(
+                            titleAr: 'أماكن تاريخية',
+                            titleEn: 'Historic spots',
+                            selected: _selectedType == PlaceType.historic,
+                            onTap: () {
+                              setModalState(() {
+                                _selectedType = PlaceType.historic;
+                              });
+                            },
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 12),
 
-                      // ---------------- Q2 ----------------
-                      if (filtered.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 32),
-                          child: const Center(
+                      const SizedBox(height: 20),
+
+                      // =======================
+
+                      //  سؤال ٢: قائمة الأماكن
+
+                      // =======================
+
+                      const Text(
+                        'السؤال ٢: اختر المكان الذي يناسبك:',
+                        style: TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      if (placesToShow.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 32),
+                          child: Center(
                             child: Text(
-                              'لا توجد أماكن من هذا النوع في هذه المحافظة حالياً.\n'
-                              'No places of this type in this governorate yet.',
+                              'لا توجد أماكن لهذا النوع في هذه المحافظة حاليًا.',
                               style: TextStyle(
                                 fontFamily: 'Tajawal',
                                 fontSize: 13,
+                                color: Colors.grey,
                               ),
-                              textAlign: TextAlign.center,
                             ),
                           ),
                         )
-                      else ...[
-                        const Text(
-                          'السؤال ٢: اختر المكان الذي يناسبك:\n'
-                          'Q2: Choose the destination you prefer:',
-                          style: TextStyle(
-                            fontFamily: 'Tajawal',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
+                      else
                         ListView.builder(
-                          itemCount: filtered.length,
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
+                          itemCount: placesToShow.length,
                           itemBuilder: (context, index) {
-                            final p = filtered[index];
-                            return InkWell(
-                              onTap: () async {
-                                Navigator.of(context).pop();
-                                await _handlePlaceSelection(p);
-                              },
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(vertical: 6),
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.06),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: Image.asset(
-                                        p.imageAsset,
-                                        width: 70,
-                                        height: 70,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            '${p.nameAr} / ${p.nameEn}',
-                                            style: const TextStyle(
-                                              fontFamily: 'Tajawal',
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            _distanceText(p.position),
-                                            style: TextStyle(
-                                              fontFamily: 'Tajawal',
-                                              fontSize: 11,
-                                              color: Colors.grey.shade700,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const Icon(Icons.chevron_right),
-                                  ],
-                                ),
-                              ),
-                            );
+                            final p = placesToShow[index];
+
+                            return _buildQuestionPlaceCard(p);
                           },
                         ),
-                      ],
-
-                      const SizedBox(height: 12),
                     ],
                   ),
-                ),
-              ),
+                );
+              },
             );
           },
         );
       },
+    );
+  }
+  // زر نوع المكان في سؤال ١
+
+  Widget _buildTypeChip({
+    required String titleAr,
+    required String titleEn,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? kDarkBeige : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: selected ? kDarkBeige : Colors.grey.shade300,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          '$titleEn / $titleAr',
+          style: TextStyle(
+            fontFamily: 'Tajawal',
+            fontSize: 13,
+            color: selected ? Colors.white : Colors.black87,
+          ),
+        ),
+      ),
+    );
+  }
+
+// كرت المكان في سؤال ٢
+
+  Widget _buildQuestionPlaceCard(Place p) {
+    final alreadyInTrip = _isInTrip(p);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          // لما تختار المكان يروح له على الخريطة
+
+          _map?.animateCamera(
+            CameraUpdate.newLatLngZoom(p.position, 14),
+          );
+
+          Navigator.pop(context);
+        },
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.horizontal(
+                left: Radius.circular(16),
+                right: Radius.circular(0),
+              ),
+              child: Image.asset(
+                p.imageAsset,
+                width: 90,
+                height: 90,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${p.nameAr} / ${p.nameEn}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '~ يبعد كم من موقعك (تقدير المسافة)',
+                      style: TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontSize: 11,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: () => _addPlaceToTrip(p),
+                        icon: Icon(
+                          alreadyInTrip ? Icons.check : Icons.add,
+                        ),
+                        label: Text(
+                          alreadyInTrip ? 'مضاف إلى رحلتي' : 'إضافة إلى رحلتي',
+                          style: const TextStyle(fontFamily: 'Tajawal'),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -2419,19 +2530,46 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
     super.dispose();
   }
 
-  // ---------------- build ----------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'خريطة عُمان السياحية / Oman Tourist Map',
-          style: TextStyle(fontFamily: 'Tajawal'),
-        ),
+        title: const Text("خريطة عُمان السياحية"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.list_alt),
+            tooltip: 'رحلتي',
+            onPressed: () {
+              // لو ما في ولا خطة
+
+              if (kTripPlans.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'ما أضفتِ أي أماكن إلى رحلتك حتى الآن 😊',
+                      style: TextStyle(fontFamily: 'Tajawal'),
+                    ),
+                  ),
+                );
+
+                return;
+              }
+
+              // إذا في خطط → افتح صفحة رحلتي
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => YourTripScreen(plans: kTripPlans),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Stack(
         children: [
-          // ===== الخريطة =====
+// ===== الخريطة =====
 
           GoogleMap(
             initialCameraPosition: CameraPosition(target: _center, zoom: 7.0),

@@ -1,10 +1,11 @@
 // lib/screens/ai_concierge_screen.dart
 
 import 'package:flutter/material.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../core/ai_services.dart';
 import '../data/tourism_repository.dart';
+
 import '../models/ai_place_suggestion.dart';
 
 class AiConciergeScreen extends StatefulWidget {
@@ -15,24 +16,28 @@ class AiConciergeScreen extends StatefulWidget {
 }
 
 class _AiConciergeScreenState extends State<AiConciergeScreen> {
-  final _ai = AiService();
   final _repo = TourismRepository.I;
 
   final TextEditingController _searchController = TextEditingController();
+
   final ScrollController _scrollController = ScrollController();
 
   bool _isArabic = true;
+
   bool _loading = false;
 
   String? _aiText;
+
   List<AiPlaceSuggestion> _results = [];
 
   static const _favoritesKey = 'favorites_list_v1';
+
   final Set<String> _favoriteNames = {};
 
   @override
   void initState() {
     super.initState();
+
     _loadFavorites();
   }
 
@@ -40,7 +45,9 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
 
   Future<void> _loadFavorites() async {
     final prefs = await SharedPreferences.getInstance();
+
     final list = prefs.getStringList(_favoritesKey) ?? const [];
+
     setState(() {
       _favoriteNames
         ..clear()
@@ -50,6 +57,7 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
 
   Future<void> _saveFavorites() async {
     final prefs = await SharedPreferences.getInstance();
+
     await prefs.setStringList(_favoritesKey, _favoriteNames.toList());
   }
 
@@ -58,6 +66,7 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
 
   Future<void> _toggleFavorite(AiPlaceSuggestion p) async {
     final name = p.displayName;
+
     setState(() {
       if (_favoriteNames.contains(name)) {
         _favoriteNames.remove(name);
@@ -65,6 +74,7 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
         _favoriteNames.add(name);
       }
     });
+
     await _saveFavorites();
 
     if (!mounted) return;
@@ -81,15 +91,33 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
     );
   }
 
+  // نوع المكان: فنادق / مطاعم / أماكن سياحية
+
   String _detectPlaceType(String text) {
     final l = text.toLowerCase();
+
     if (l.contains("فندق") || l.contains("hotel")) return "lodging";
+
     if (l.contains("مطعم") || l.contains("restaurant")) return "restaurant";
+
     return "tourist_attraction";
+  }
+
+  // نوع السكن داخل الفنادق: hotel أو resort
+
+  String? _detectLodgingCategory(String text) {
+    final l = text.toLowerCase();
+
+    if (l.contains("منتجع") || l.contains("resort")) return "resort";
+
+    if (l.contains("فندق") || l.contains("hotel")) return "hotel";
+
+    return null; // يرجّع كل شيء (فنادق + منتجعات)
   }
 
   String? _detectCity(String text) {
     final l = text.toLowerCase();
+
     final mapping = {
       "Muscat": ["muscat", "مسقط"],
       "Salalah": ["salalah", "صلالة", "صلاله"],
@@ -104,42 +132,82 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
         if (l.contains(kw)) return entry.key;
       }
     }
+
     return null;
   }
 
+  // البحث الفعلي
+
   Future<void> _onSearch() async {
     final query = _searchController.text.trim();
+
     if (query.isEmpty) return;
 
     setState(() {
       _loading = true;
+
       _aiText = null;
+
       _results = [];
     });
 
     try {
       final type = _detectPlaceType(query);
+
       final city = _detectCity(query);
 
-      final aiText = await _ai.sendMessage(query);
-      final realPlaces = await _repo.conciergeSearchPlaces(
-        placeType: type,
-        city: city,
-      );
+      List<AiPlaceSuggestion> places = [];
+
+      if (type == 'lodging') {
+        // 🏨 فنادق / منتجعات من accommodations.csv
+
+        final category = _detectLodgingCategory(query); // hotel أو resort
+
+        places = await _repo.searchAccommodations(
+          city: city,
+          category: category,
+        );
+      } else if (type == 'tourist_attraction') {
+        // 📍 أماكن سياحية من attractions.csv
+
+        places = await _repo.searchAttractions(city: city);
+      } else {
+        // مطاعم (ما عندنا لها CSV للحين)
+
+        places = [];
+      }
 
       setState(() {
-        _aiText = aiText;
-        _results = realPlaces;
+        _aiText = "هذه نتائج حقيقية من ملف البيانات ✅";
+
+        _results = places;
+
         _loading = false;
       });
-    } catch (e) {
+    } catch (e, st) {
+      // ignore: avoid_print
+
+      print('ERROR in _onSearch: $e\n$st');
+
+      if (!mounted) return;
+
       setState(() => _loading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'صار خطأ أثناء جلب البيانات: $e',
+            style: const TextStyle(fontFamily: 'Tajawal'),
+          ),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     const bg = Color(0xFFF6F2E7);
+
     const accent = Color(0xFF006766);
 
     return Directionality(
@@ -275,14 +343,15 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
   }
 }
 
-//
 // ---------- الكرت ----------
-//
 
 class _PlaceCard extends StatelessWidget {
   final AiPlaceSuggestion place;
+
   final bool isFavorite;
+
   final VoidCallback onFavoriteTap;
+
   final VoidCallback onTap;
 
   const _PlaceCard({
@@ -292,7 +361,8 @@ class _PlaceCard extends StatelessWidget {
     required this.onTap,
   });
 
-  // ⭐ دالة جديدة لعرض الصورة من assets أو من النت
+  // عرض الصورة من assets أو من النت
+
   Widget _buildPlaceImage(String url) {
     if (url.startsWith("assets/")) {
       return Image.asset(
@@ -403,7 +473,7 @@ class _PlaceCard extends StatelessWidget {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           child: AspectRatio(
             aspectRatio: 4 / 3,
-            child: _buildPlaceImage(place.imageUrl), // ⭐ تم التعديل
+            child: _buildPlaceImage(place.imageUrl),
           ),
         ),
         Positioned(
