@@ -1,0 +1,24 @@
+id,nameAr,nameEn,category,governorate,city,tags,imageUrl,descriptionAr,descriptionEn,rating
+
+1,مطعم كارافان,Caravan Restaurant,Restaurant,مسقط,مسقط,"عائلي, شرقي","assets/restaurants/muscat/caravan.jpg","مطعم يقدم مأكولات شرقية وخليجية.","Restaurant offering Middle Eastern and Gulf dishes.",4.5
+
+2,مطعم ذا بيتش,The Beach Restaurant,Restaurant,مسقط,مسقط,"بحري, فاخر","assets/restaurants/muscat/thebeach.jpg","مطعم فاخر بإطلالة بحرية.","Luxury beachfront dining.",4.7
+
+3,مطعم بابليون,Babylon Restaurant,Restaurant,مسقط,مسقط,"عراقي, شرقي","assets/restaurants/muscat/babylon.jpg","مطعم شرقي بتصميم مميز.","Eastern restaurant with unique design.",4.4
+
+4,مطعم بريس Bait Al Luban,Bait Al Luban Restaurant,Restaurant,مسقط,مسقط,"عماني, شعبي","assets/restaurants/muscat/luban.jpg","مطعم عماني مشهور بالأكلات الشعبية.","Omani traditional dishes.",4.6
+
+5,مطعم صلالة جاردنز,Salalah Gardens Restaurant,Restaurant,ظفار,صلالة,"عائلي","assets/restaurants/salalah/gardens.jpg","مطعم متنوع داخل مول صلالة جاردنز.","International dishes in Salalah Gardens Mall.",4.3
+
+6,مطعم اللبان,Al Luban,Restaurant,ظفار,صلالة,"عماني","assets/restaurants/salalah/luban.jpg","يقدم مأكولات عمانية فاخرة.","Premium Omani dishes.",4.7
+
+7,مطعم الكورنيش,Al Corniche Restaurant,Restaurant,شمال الباطنة,صحار,"عائلي","assets/restaurants/sohar/corniche.jpg","مطعم على البحر يقدم وجبات متنوعة.","Sea-view restaurant with mixed dishes.",4.4
+
+8,مطعم صحار بيتزا,Sohar Pizza,Restaurant,شمال الباطنة,صحار,"إيطالي","assets/restaurants/sohar/pizza.jpg","مطعم يقدم البيتزا والمعجنات.","Pizza and Italian dishes.",4.2
+
+9,مطعم نزوى القديم,Nizwa Old Restaurant,Restaurant,الداخلية,نزوى,"تراثي","assets/restaurants/nizwa/old.jpg","مطعم تراثي في قلب نزوى.","Traditional Nizwa restaurant.",4.5
+
+10,مطعم القلعة,Al Qala'a Restaurant,Restaurant,الداخلية,نزوى,"شرقي","assets/restaurants/nizwa/qalaa.jpg","مطعم يقدم أطباق شرقية مميزة.","Eastern food near Nizwa Fort.",4.4
+
+11,مطعم السفير,Al Safeer Restaurant,Restaurant,الداخلية,نزوى,"عائلي","assets/restaurants/nizwa/safeer.jpg","مطعم عائلي مشهور.","Popular family restaurant.",4.3
+ 

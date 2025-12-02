@@ -1,0 +1,20 @@
+id,nameAr,nameEn,category,governorate,city,tags,imageUrl,descriptionAr,descriptionEn,rating
+
+1,كوفي شمس النهضة,Shams Al Nahdha Cafe,Cafe,مسقط,مسقط,"قهوة, هادئ","assets/cafes/muscat/shams.jpg","كوفي هادئ يقدم قهوة مختصة.","Quiet cafe with specialty coffee.",4.6
+
+2,كوفي كاف بوينت,Cafe Point,Cafe,مسقط,مسقط,"عائلي","assets/cafes/muscat/cafepoint.jpg","كوفي مميز ومناسب للعائلات.","Family-friendly cafe.",4.4
+
+3,كوفي الفلك,Al Falak Cafe,Cafe,مسقط,مسقط,"راقي","assets/cafes/muscat/falak.jpg","كوفي راقي بإطلالة.","Premium cafe with nice view.",4.7
+
+4,كوفي صلالة بارك,Salalah Park Cafe,Cafe,ظفار,صلالة,"عائلي","assets/cafes/salalah/park.jpg","كوفي داخل صلالة جاردنز.","Cafe inside Salalah Gardens.",4.3
+
+5,كوفي أطياف,Atyaf Cafe,Cafe,ظفار,صلالة,"قهوة","assets/cafes/salalah/atyaf.jpg","كوفي يقدم قهوة مختصة.","Specialty coffee.",4.5
+
+6,كوفي البحر,Sea Cafe,Cafe,شمال الباطنة,صحار,"بحري","assets/cafes/sohar/sea.jpg","كوفي على البحر.","Sea-view cafe.",4.6
+
+7,كوفي تايم,Time Cafe,Cafe,شمال الباطنة,صحار,"عصري","assets/cafes/sohar/time.jpg","كوفي شبابي عصري.","Modern youth cafe.",4.4
+
+8,كوفي النجوم,Stars Cafe,Cafe,الداخلية,نزوى,"عائلي","assets/cafes/nizwa/stars.jpg","كوفي جميل في وسط نزوى.","Nice family cafe.",4.3
+
+9,كوفي دار القهوة,House of Coffee,Cafe,الداخلية,نزوى,"مختصة","assets/cafes/nizwa/house.jpg","قهوة مختصة قريبة من القلعة.","Specialty coffee near Nizwa Fort.",4.6
+ 

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/ai_services.dart';
+
 import '../data/tourism_repository.dart';
 
 import '../models/ai_place_suggestion.dart';
@@ -16,6 +18,8 @@ class AiConciergeScreen extends StatefulWidget {
 }
 
 class _AiConciergeScreenState extends State<AiConciergeScreen> {
+  final _ai = AiService();
+
   final _repo = TourismRepository.I;
 
   final TextEditingController _searchController = TextEditingController();
@@ -91,7 +95,7 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
     );
   }
 
-  // نوع المكان: فنادق / مطاعم / أماكن سياحية
+  // يحدد نوع المكان من النص
 
   String _detectPlaceType(String text) {
     final l = text.toLowerCase();
@@ -103,40 +107,28 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
     return "tourist_attraction";
   }
 
-  // نوع السكن داخل الفنادق: hotel أو resort
-
-  String? _detectLodgingCategory(String text) {
-    final l = text.toLowerCase();
-
-    if (l.contains("منتجع") || l.contains("resort")) return "resort";
-
-    if (l.contains("فندق") || l.contains("hotel")) return "hotel";
-
-    return null; // يرجّع كل شيء (فنادق + منتجعات)
-  }
+  // يحدد المدينة من النص
 
   String? _detectCity(String text) {
     final l = text.toLowerCase();
 
-    final mapping = {
-      "Muscat": ["muscat", "مسقط"],
-      "Salalah": ["salalah", "صلالة", "صلاله"],
-      "Nizwa": ["nizwa", "نزوى"],
-      "Sohar": ["sohar", "صحار"],
-      "Sur": ["sur", "صور"],
-      "Dhofar": ["dhofar", "ظفار"],
-    };
+    if (l.contains('muscat') || l.contains('مسقط')) return 'مسقط';
 
-    for (final entry in mapping.entries) {
-      for (final kw in entry.value) {
-        if (l.contains(kw)) return entry.key;
-      }
-    }
+    if (l.contains('sohar') || l.contains('صحار')) return 'صحار';
+
+    if (l.contains('salalah') || l.contains('صلالة') || l.contains('صلاله'))
+      return 'صلالة';
+
+    if (l.contains('nizwa') || l.contains('نزوى')) return 'نزوى';
+
+    if (l.contains('sur') || l.contains('صور')) return 'صور';
+
+    if (l.contains('dhofar') || l.contains('ظفار')) return 'ظفار';
 
     return null;
   }
 
-  // البحث الفعلي
+  // --------- البحث (AI + CSV) ----------
 
   Future<void> _onSearch() async {
     final query = _searchController.text.trim();
@@ -152,33 +144,23 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
     });
 
     try {
-      final type = _detectPlaceType(query);
+      final type = _detectPlaceType(query); // lodging / restaurant / ...
 
-      final city = _detectCity(query);
+      final city = _detectCity(query); // Muscat / Salalah / ...
 
-      List<AiPlaceSuggestion> places = [];
+      // (1) رد الذكاء الاصطناعي كنص – بنعرضه في مربع فوق
 
-      if (type == 'lodging') {
-        // 🏨 فنادق / منتجعات من accommodations.csv
+      final aiAnswer = await _ai.sendMessage(query);
 
-        final category = _detectLodgingCategory(query); // hotel أو resort
+      // (2) نجيب بيانات حقيقية من CSV عبر conciergeSearchPlaces
 
-        places = await _repo.searchAccommodations(
-          city: city,
-          category: category,
-        );
-      } else if (type == 'tourist_attraction') {
-        // 📍 أماكن سياحية من attractions.csv
-
-        places = await _repo.searchAttractions(city: city);
-      } else {
-        // مطاعم (ما عندنا لها CSV للحين)
-
-        places = [];
-      }
+      final places = await _repo.conciergeSearchPlaces(
+        placeType: type,
+        city: city,
+      );
 
       setState(() {
-        _aiText = "هذه نتائج حقيقية من ملف البيانات ✅";
+        _aiText = aiAnswer;
 
         _results = places;
 
@@ -307,7 +289,7 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
             ),
             child: Text(
               _aiText!,
-              style: const TextStyle(fontFamily: 'Tajawal'),
+              style: const TextStyle(fontFamily: 'Tajawal', height: 1.5),
             ),
           ),
         const SizedBox(height: 12),
@@ -343,7 +325,11 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
   }
 }
 
-// ---------- الكرت ----------
+//
+
+// ---------- كرت المكان ----------
+
+//
 
 class _PlaceCard extends StatelessWidget {
   final AiPlaceSuggestion place;
@@ -360,8 +346,6 @@ class _PlaceCard extends StatelessWidget {
     required this.onFavoriteTap,
     required this.onTap,
   });
-
-  // عرض الصورة من assets أو من النت
 
   Widget _buildPlaceImage(String url) {
     if (url.startsWith("assets/")) {

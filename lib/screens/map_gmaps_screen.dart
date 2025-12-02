@@ -198,6 +198,35 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
 
   // نوع المكان المحدد (بحري / جبلي / صناعي / تاريخي)
   PlaceType? _selectedType;
+  void _goToTripPlannerAfterTypeSelected(PlaceType? type) {
+    // نسكّر البوتوم شيت
+    Navigator.pop(context);
+    // نحول الـ enum لنص بسيط
+    String category;
+    if (type == null) {
+      category = 'general';
+    } else if (type == PlaceType.beach) {
+      category = 'beach';
+    } else if (type == PlaceType.mountain) {
+      category = 'mountain';
+    } else if (type == PlaceType.industrial) {
+      category = 'industrial';
+    } else if (type == PlaceType.historic) {
+      category = 'historic';
+    } else {
+      category = 'general';
+    }
+    // افتح شاشة الـ Trip Planner (أو AiChat لو تبين)
+    Navigator.pushNamed(
+      context,
+      '/trip_planner', // غيّريها لـ '/ai_chat' لو تبين الشات
+      arguments: {
+        'category': category,
+        'governorate': _selectedGovKey,
+        // 👈 استبدلي _selectedGovKey باسم المتغير اللي عندك للمحافظة
+      },
+    );
+  }
 
   /// فلترة الأماكن حسب المحافظة المختارة + نوع المكان (لو موجود)
 
@@ -1430,6 +1459,8 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                               setModalState(() {
                                 _selectedType = null;
                               });
+
+                              _goToTripPlannerAfterTypeSelected(null);
                             },
                           ),
 
@@ -1443,6 +1474,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                               setModalState(() {
                                 _selectedType = PlaceType.beach;
                               });
+
+                              _goToTripPlannerAfterTypeSelected(
+                                  PlaceType.beach);
                             },
                           ),
 
@@ -1456,6 +1490,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                               setModalState(() {
                                 _selectedType = PlaceType.mountain;
                               });
+
+                              _goToTripPlannerAfterTypeSelected(
+                                  PlaceType.mountain);
                             },
                           ),
 
@@ -1469,6 +1506,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                               setModalState(() {
                                 _selectedType = PlaceType.industrial;
                               });
+
+                              _goToTripPlannerAfterTypeSelected(
+                                  PlaceType.industrial);
                             },
                           ),
 
@@ -1482,6 +1522,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                               setModalState(() {
                                 _selectedType = PlaceType.historic;
                               });
+
+                              _goToTripPlannerAfterTypeSelected(
+                                  PlaceType.historic);
                             },
                           ),
                         ],
@@ -1541,6 +1584,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
       },
     );
   }
+
   // زر نوع المكان في سؤال ١
 
   Widget _buildTypeChip({

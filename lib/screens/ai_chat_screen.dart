@@ -51,6 +51,12 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
   bool _isArabicUi = true;
 
+  // 👇 كاش للفنادق + عدد الفنادق المعروضة عشان أمر "more / أكثر"
+
+  List<AiPlaceSuggestion> _cachedHotels = [];
+
+  int _shownHotels = 0;
+
   @override
   void dispose() {
     _textController.dispose();
@@ -75,64 +81,82 @@ class _AiChatScreenState extends State<AiChatScreen> {
   // ------------ كشف نوع المكان من نص المستخدم ------------
 
   String _detectPlaceType(String text) {
-    final lower = text.toLowerCase();
+    final l = text.toLowerCase();
 
-    if (lower.contains('hotel') ||
-        lower.contains('فنادق') ||
-        lower.contains('فندق')) {
+    // 🏝 طلب أماكن سياحية
+
+    if (l.contains('place') ||
+        l.contains('places') ||
+        l.contains('مكان') ||
+        l.contains('اماكن') ||
+        l.contains('أماكن') ||
+        l.contains('سياحي') ||
+        l.contains('سياحية')) {
+      return 'tourist_attraction';
+    }
+
+    // 🏨 طلب فنادق
+
+    if (l.contains('hotel') || l.contains('فندق') || l.contains('فنادق')) {
       return 'lodging';
     }
 
-    if (lower.contains('restaurant') ||
-        lower.contains('مطعم') ||
-        lower.contains('أكل') ||
-        lower.contains('اكل')) {
+    // 🍽 (لو حبيتي مطاعم)
+
+    if (l.contains('restaurant') || l.contains('مطعم') || l.contains('مطاعم')) {
       return 'restaurant';
     }
+
+    // الافتراضي: أماكن سياحية
 
     return 'tourist_attraction';
   }
 
-  // نوع السكن داخل الفنادق: hotel أو resort (اختياري)
+  // ------------ كشف إذا الرسالة طلب "more" ------------
 
-  String? _detectLodgingCategory(String text) {
-    final lower = text.toLowerCase();
+  bool _isMoreRequest(String text) {
+    final l = text.trim().toLowerCase();
 
-    if (lower.contains('منتجع') || lower.contains('resort')) return 'resort';
-
-    if (lower.contains('فندق') || lower.contains('hotel')) return 'hotel';
-
-    return null;
+    return l == 'more' ||
+        l == 'more hotels' ||
+        l == 'more hotel' ||
+        l == 'اكثر' ||
+        l == 'أكثر';
   }
 
-  // ------------ كشف المدينة ------------
+  // ------------ كشف المدينة (نعيدها بالعربي مثل اللي في CSV) ------------
 
   String? _detectCity(String text) {
     final lower = text.toLowerCase();
 
-    final Map<String, List<String>> cityKeywords = {
-      'Muscat': ['muscat', 'مسقط'],
-      'Sohar': ['sohar', 'صحار'],
-      'Salalah': ['salalah', 'صلالة', 'صلاله'],
-      'Nizwa': ['nizwa', 'نزوى'],
-      'Sur': ['sur', 'صور'],
-      'Rustaq': ['rustaq', 'الرستاق'],
-      'Barka': ['barka', 'بركاء', 'بركا'],
-      'Ibri': ['ibri', 'عبري'],
-      'Buraimi': ['buraimi', 'البريمي'],
-      'Khasab': ['khasab', 'خصب'],
-      'Masirah': ['masirah', 'مصيرة'],
-    };
+    if (lower.contains('muscat') || lower.contains('مسقط')) return 'مسقط';
 
-    for (final entry in cityKeywords.entries) {
-      for (final kw in entry.value) {
-        if (lower.contains(kw)) {
-          return entry.key; // نرجّع اسم المدينة بالإنجليزي
-        }
-      }
-    }
+    if (lower.contains('sohar') || lower.contains('صحار')) return 'صحار';
 
-    return null; // ما لقينا مدينة
+    if (lower.contains('salalah') ||
+        lower.contains('صلالة') ||
+        lower.contains('صلاله')) return 'صلالة';
+
+    if (lower.contains('nizwa') || lower.contains('نزوى')) return 'نزوى';
+
+    if (lower.contains('sur') || lower.contains('صور')) return 'صور';
+
+    if (lower.contains('rustaq') || lower.contains('الرستاق')) return 'الرستاق';
+
+    if (lower.contains('barka') ||
+        lower.contains('بركاء') ||
+        lower.contains('بركا')) return 'بركاء';
+
+    if (lower.contains('ibri') || lower.contains('عبري')) return 'عبري';
+
+    if (lower.contains('buraimi') || lower.contains('البريمي'))
+      return 'البريمي';
+
+    if (lower.contains('khasab') || lower.contains('خصب')) return 'خصب';
+
+    if (lower.contains('masirah') || lower.contains('مصيرة')) return 'مصيرة';
+
+    return null;
   }
 
   // ------------ عرض صورة (assets أو Network) ------------
@@ -143,7 +167,10 @@ class _AiChatScreenState extends State<AiChatScreen> {
         url,
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) => Container(
-            color: Colors.grey.shade300, child: const Icon(Icons.broken_image)),
+          color: Colors.grey.shade300,
+          alignment: Alignment.center,
+          child: const Icon(Icons.broken_image),
+        ),
       );
     }
 
@@ -151,7 +178,10 @@ class _AiChatScreenState extends State<AiChatScreen> {
       url,
       fit: BoxFit.cover,
       errorBuilder: (_, __, ___) => Container(
-          color: Colors.grey.shade300, child: const Icon(Icons.broken_image)),
+        color: Colors.grey.shade300,
+        alignment: Alignment.center,
+        child: const Icon(Icons.broken_image),
+      ),
     );
   }
 
@@ -161,6 +191,8 @@ class _AiChatScreenState extends State<AiChatScreen> {
     final text = _textController.text.trim();
 
     if (text.isEmpty || _sending) return;
+
+    final isMore = _isMoreRequest(text);
 
     setState(() {
       _sending = true;
@@ -176,65 +208,125 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
     _scrollToBottom();
 
-    try {
-      // 1) رد الذكاء الاصطناعي (النص)
+    // 1) لو الرسالة "more / أكثر" وفيه فنادق محفوظة
 
+    if (isMore && _cachedHotels.isNotEmpty) {
+      final nextBatch = _cachedHotels.skip(_shownHotels).take(7).toList();
+
+      if (nextBatch.isEmpty) {
+        setState(() {
+          _messages.add(ChatMessage(
+            text: 'عرضنا كل الفنادق المتاحة 👍 ما في أكثر.',
+            isUser: false,
+            time: DateTime.now(),
+          ));
+
+          _sending = false;
+        });
+
+        _scrollToBottom();
+
+        return;
+      }
+
+      _shownHotels += nextBatch.length;
+
+      final imageUrls = nextBatch
+          .map((p) => p.imageUrl)
+          .where((url) => url.isNotEmpty)
+          .toList();
+
+      final reply =
+          'هذي فنادق إضافية لك (${_shownHotels}/${_cachedHotels.length}).';
+
+      setState(() {
+        _messages.add(ChatMessage(
+          text: reply,
+          isUser: false,
+          time: DateTime.now(),
+          imageUrls: imageUrls,
+        ));
+
+        _sending = false;
+      });
+
+      _scrollToBottom();
+
+      return;
+    }
+
+    // 2) باقي الرسائل: AI + CSV
+
+    try {
       final aiResponse = await _ai.sendMessage(text);
 
-      // 2) نحدد نوع المكان والمدينة
+      final placeType = _detectPlaceType(text); // lodging / tourist_attraction
 
-      final placeType = _detectPlaceType(text);
-
-      final city = _detectCity(text);
-
-      final category =
-          placeType == 'lodging' ? _detectLodgingCategory(text) : null;
-
-      // 3) نجيب بيانات حقيقية من CSV عبر TourismRepository
-
-      List<String> imageUrls = [];
+      final city = _detectCity(text); // مسقط / صلالة / ...
 
       List<AiPlaceSuggestion> places = [];
 
-      if (placeType == 'lodging') {
-        // فنادق / منتجعات من accommodations.csv فقط
+      List<String> imageUrls = [];
 
-        places = await _repo.searchAccommodations(
-          city: city,
-          category: category,
-        );
+      if (placeType == 'lodging') {
+        // 🏨 فنادق من accommodations.csv
+
+        places = await _repo.searchAccommodations(city: city);
+
+        // نخزن كل الفنادق لاستخدام أمر "more"
+
+        _cachedHotels = places;
+
+        _shownHotels = 0;
+
+        final firstBatch = places.take(7).toList();
+
+        _shownHotels = firstBatch.length;
+
+        imageUrls = firstBatch
+            .map((p) => p.imageUrl)
+            .where((url) => url.isNotEmpty)
+            .toList();
       } else if (placeType == 'tourist_attraction') {
-        // أماكن سياحية من attractions.csv
+        // 🏝 أماكن سياحية من attractions.csv
 
         places = await _repo.searchAttractions(city: city);
+
+        final firstBatch = places.take(7).toList();
+
+        imageUrls = firstBatch
+            .map((p) => p.imageUrl)
+            .where((url) => url.isNotEmpty)
+            .toList();
       } else {
-        // مطاعم (ما عندنا CSV حالياً) -> نخلي places فاضية
+        // مطاعم (ما عندنا CSV حالياً)
 
         places = [];
       }
 
-      imageUrls =
-          places.map((p) => p.imageUrl).where((url) => url.isNotEmpty).toList();
+      String finalText = aiResponse;
 
-      // 4) لو ما حصلنا صور من CSV نستخدم ImageService
+      if (places.isNotEmpty) {
+        final firstBatchNames = places
+            .take(7)
+            .map((p) => "• ${p.displayName} (${p.city})")
+            .join("\n");
+
+        finalText +=
+            "\n\nهذه بعض الاقتراحات الحقيقية من قاعدة البيانات لدينا:\n$firstBatchNames";
+
+        if (placeType == 'lodging' && _cachedHotels.length > _shownHotels) {
+          finalText +=
+              "\n\nعرضت لك أول ${_shownHotels} فندق. لو تبي المزيد اكتب: more أو أكثر.";
+        }
+      }
+
+      // لو ما فيه صور من CSV نستخدم ImageService
 
       if (imageUrls.isEmpty) {
         final imgQuery = ImageService.queryFromUserText(text);
 
         imageUrls = await ImageService.searchImages(imgQuery);
-      }
-
-      // 5) نص نضيفه تحت رد الـ AI (اختياري)
-
-      String finalText = aiResponse;
-
-      if (places.isNotEmpty) {
-        finalText +=
-            "\n\nهذه بعض الاقتراحات الحقيقية من قاعدة البيانات لدينا:\n" +
-                places
-                    .take(3)
-                    .map((p) => "• ${p.displayName} (${p.city})")
-                    .join("\n");
       }
 
       setState(() {

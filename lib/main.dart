@@ -67,6 +67,7 @@ import 'screens/ai_concierge_screen.dart';
 import 'screens/main_nav_screen.dart';
 
 import 'screens/essentials_screen.dart';
+import 'screens/trip_planner_screen.dart';
 
 // الإذن للموقع
 
@@ -161,6 +162,7 @@ class OmanTouristMateApp extends StatelessWidget {
             '/main': (_) => const MainMenuScreen(),
             '/user_home': (_) => const UserHome(),
             '/currency': (_) => const CurrencyConverterScreen(),
+            '/trip_planner': (context) => const TripPlannerScreen(),
             '/my_trip': (ctx) {
               final args = ModalRoute.of(ctx)?.settings.arguments;
               final plans = args is List<MapTripPlan> ? args : <MapTripPlan>[];

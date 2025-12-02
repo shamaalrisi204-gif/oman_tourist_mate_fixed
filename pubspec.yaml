@@ -167,6 +167,65 @@ flutter:
    - assets/images/accommodations/movenpick.jpg
    - assets/images/accommodations/avani.jpg
    - assets/images/accommodations/wyndham.jpg
+   - assets/images/accommodations/radisson.jpg
+   - assets/images/accommodations/sheraton.jpg
+   - assets/images/accommodations/shangrila.jpg
+   -  assets/hotels/sohar/crowne_plaza_sohar.jpg
+   - assets/hotels/sohar/sohar_beach_hotel.jpg
+   - assets/hotels/sohar/radisson_blu_sohar.jpg
+   - assets/hotels/sohar/mercure_sohar.jpg
+   - assets/hotels/salalah/salalah_rotana.jpg
+   - assets/hotels/salalah/crowne_plaza_salalah.jpg
+   - assets/hotels/salalah/millennium_salalah.jpg
+   - assets/hotels/salalah/fanar_salalah.jpg
+   - assets/hotels/nizwa/golden_tulip_nizwa.jpg
+   - assets/hotels/nizwa/intercity_nizwa.jpg
+   - assets/hotels/nizwa/falaj_daris.jpg
+   - assets/hotels/nizwa/al_diyar_nizwa.jpg
+   - assets/hotels/nizwa/antique_inn_nizwa.jpg
+   - assets/images/accommodations/antique_inn_nizwa.jpg
+   - assets/images/accommodations/al_diyar_nizwa.jpg
+   - assets/images/accommodations/falaj_daris.jpg
+   - assets/images/accommodations/intercity_nizwa.jpg
+   - assets/images/accommodations/golden_tulip_nizwa.jpg
+   - assets/images/accommodations/fanar_salalah.jpg
+   - assets/images/accommodations/millennium_salalah.jpg
+   - assets/images/accommodations/crowne_plaza_salalah.jpg
+   - assets/images/accommodations/salalah_rotana.jpg
+   - assets/images/accommodations/mercure_sohar.jpg
+   - assets/images/accommodations/radisson_blu_sohar.jpg
+   - assets/images/accommodations/sohar_beach_hotel.jpg
+   - assets/images/accommodations/crowne_plaza_sohar.jpg
+   - assets/images/attractions/qurm_park.jpg
+   - assets/images/attractions/al_hoota.jpg
+   - assets/images/attractions/bait_al_zubair.jpg
+   - assets/images/attractions/tiwi_beach.jpg
+   - assets/images/attractions/wadi_bani_khalid.jpg
+   - assets/images/attractions/jebel_shams.jpg
+   - assets/images/attractions/muttrah_souk.jpg
+   - assets/images/attractions/grand_mosque.jpg
+   - assets/images/attractions/nizwa_fort.jpg
+   - assets/images/attractions/mughsail.jpg
+   - assets/restaurants/muscat/caravan.jpg
+   - assets/images/restaurants/caravan.jpg
+   - assets/restaurants/muscat/thebeach.jpg
+   - assets/images/restaurants/thebeach.jpg
+   - assets/restaurants/muscat/babylon.jpg
+   - assets/images/restaurants/babylon.jpg
+   - assets/restaurants/muscat/luban.jpg
+   - assets/images/restaurants/luban.jpg
+   - assets/restaurants/salalah/gardens.jpg
+   - assets/images/restaurants/gardens.jpg
+   - assets/restaurants/nizwa/safeer.jpg
+   - assets/images/restaurants/safeer.jpg
+   - assets/restaurants/nizwa/qalaa.jpg
+   - assets/images/restaurants/qalaa.jpg
+   - assets/restaurants/nizwa/old.jpg
+   - assets/images/restaurants/old.jpg
+   - assets/restaurants/sohar/pizza.jpg
+   - assets/images/restaurants/pizza.jpg
+   - assets/data/restaurants.csv
+
    #tours
    - assets/tours/nature.jpg
    - assets/tours/hero_tours.jpg

@@ -20,4 +20,31 @@ id,nameAr,nameEn,category,stars,governorate,city,tags,imageUrl,descriptionArShor
  
 10,ويندهام جاردن مسقط,Wyndham Garden Muscat,Hotel,4,مسقط,مسقط,"اقتصادي, مناسب للأعمال","assets/hotels/muscat/wyndham.jpg","فندق اقتصادي ومناسب لرجال الأعمال.","Budget-friendly business hotel.",4.4
  
+11,فندق كراون بلازا صحار,Crowne Plaza Sohar,Hotel,4,الباطنة شمال,صحار,"مناسب للأعمال, عائلي","assets/hotels/sohar/crowne_plaza_sohar.jpg","فندق مريح على الطريق السريع، مناسب لرجال الأعمال والعائلات.","Business-friendly hotel on the main highway in Sohar.",4.4
+
+12,فندق شاطئ صحار,Sohar Beach Hotel,Hotel,4,الباطنة شمال,صحار,"على البحر, هادئ","assets/hotels/sohar/sohar_beach_hotel.jpg","فندق بإطلالة مباشرة على شاطئ صحار مع أجواء هادئة.","Beachfront hotel in Sohar with a calm atmosphere.",4.2
+
+13,فندق راديسون بلو صحار,Radisson Blu Hotel Sohar,Hotel,4,الباطنة شمال,صحار,"شاطئي, عصري","assets/hotels/sohar/radisson_blu_sohar.jpg","فندق عصري على الشاطئ مع مسبح وإطلالات جميلة.","Modern beachfront hotel with pool and sea views.",4.5
+
+14,فندق ميركيور صحار,Mercure Sohar,Hotel,4,الباطنة شمال,صحار,"مركزي, مناسب للعائلات","assets/hotels/sohar/mercure_sohar.jpg","فندق يقع بالقرب من وسط المدينة ومراكز التسوق.","Hotel near Sohar city center and shopping areas.",4.3
+
+15,منتجع البليد صلالة بإدارة أنانتارا,Al Baleed Resort Salalah by Anantara,Resort,5,ظفار,صلالة,"شاطئي, فاخر, رومانسي","assets/hotels/salalah/anantara_al_baleed.jpg","منتجع فاخر مطل على البحر والمزارات الأثرية.","Luxury beachfront resort close to archaeological sites.",4.8
+
+16,منتجع صلالة روتانا,Salalah Rotana Resort,Resort,5,ظفار,صلالة,"مناسب للعائلات, على البحر","assets/hotels/salalah/salalah_rotana.jpg","منتجع متكامل الخدمات مناسب للعائلات على شاطئ صلالة.","Family-friendly resort on Salalah’s beach.",4.6
+
+17,فندق كراون بلازا صلالة,Crowne Plaza Salalah,Hotel,4,ظفار,صلالة,"إطلالة بحر, حدائق","assets/hotels/salalah/crowne_plaza_salalah.jpg","فندق يطل على البحر وحدائق خضراء واسعة.","Hotel overlooking the sea and lush gardens.",4.5
+
+18,منتجع ميلينيوم صلالة,Millennium Resort Salalah,Resort,4,ظفار,صلالة,"منتجع, هادئ","assets/hotels/salalah/millennium_salalah.jpg","منتجع هادئ مع مسابح وخيارات ترفيه متعددة.","Quiet resort with pools and leisure facilities.",4.4
+
+19,فندق فنان صلالة,Fanar Hotel & Residences,Resort,4,ظفار,صلالة,"شاطئي, مناسب للعائلات","assets/hotels/salalah/fanar_salalah.jpg","منتجع عائلي على الواجهة البحرية في صلالة.","Family-friendly beachfront resort in Salalah.",4.4
+
+20,فندق جولدن توليب نزوى,Golden Tulip Nizwa Hotel,Hotel,4,الداخلية,نزوى,"تقليدي, هادئ","assets/hotels/nizwa/golden_tulip_nizwa.jpg","فندق بتصميم تقليدي قريب من معالم نزوى التاريخية.","Traditional-style hotel close to Nizwa’s historic sites.",4.3
+
+21,فندق إنترسيتي نزوى,IntercityHotel Nizwa,Hotel,4,الداخلية,نزوى,"حديث, مناسب للأعمال","assets/hotels/nizwa/intercity_nizwa.jpg","فندق حديث بالقرب من الأسواق والمطاعم.","Modern business-friendly hotel near markets and restaurants.",4.4
+
+22,فندق فلج دارس,Falaj Daris Hotel,Hotel,3,الداخلية,نزوى,"عائلي, هادئ","assets/hotels/nizwa/falaj_daris.jpg","فندق هادئ مع مسبح وخيار جيد للعائلات.","Quiet hotel with pool, good for families.",4.1
+
+23,فندق الديار نزوى,Al Diyar Hotel Nizwa,Hotel,3,الداخلية,نزوى,"اقتصادي, قريب من الخدمات","assets/hotels/nizwa/al_diyar_nizwa.jpg","فندق اقتصادي بالقرب من طريق نزوى الرئيسي.","Budget hotel near Nizwa’s main road.",4.0
+
+24,إن نِزوى التراثي,Antique Inn Nizwa,Hotel,3,الداخلية,نزوى,"تراثي, داخل السوق القديم","assets/hotels/nizwa/antique_inn_nizwa.jpg","نُزل تراثي داخل أزقة سوق نزوى القديم.","Heritage inn located inside the old Nizwa souq.",4.2
  

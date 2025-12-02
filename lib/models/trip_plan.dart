@@ -11,11 +11,11 @@ class MapTripPlan {
 
   final bool willBookHere;
 
-  final int days; // <-- تمت إضافتها
+  final int days; // كم يوم مخصص له
 
-  final int hours; // <-- ساعات داخل المكان
+  final int hours; // كم ساعة في هذا المكان
 
-  final int etaMinutes;
+  final int etaMinutes; // زمن الوصول التقريبي
 
   final String suggestedHotel;
 
@@ -27,8 +27,7 @@ class MapTripPlan {
     required this.placeCity,
     required this.stayCity,
     required this.willBookHere,
-    required this.days, // <-- مهم
-
+    required this.days,
     required this.hours,
     required this.etaMinutes,
     required this.suggestedHotel,
@@ -60,4 +59,50 @@ class MapTripPlan {
         suggestedHotel: j['suggestedHotel'] ?? '',
         suggestedRestaurant: j['suggestedRestaurant'] ?? '',
       );
+}
+
+/// عنصر واحد داخل يوم (مكان معيّن في اليوم)
+
+class TripPlanItem {
+  final MapTripPlan mapPlan;
+
+  TripPlanItem({required this.mapPlan});
+
+  Map<String, dynamic> toJson() => {
+        'mapPlan': mapPlan.toJson(),
+      };
+}
+
+/// يوم واحد من الرحلة (Day 1, Day 2, ...)
+
+class TripPlanDay {
+  final int dayNumber;
+
+  final List<TripPlanItem> items;
+
+  TripPlanDay({
+    required this.dayNumber,
+    required this.items,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'dayNumber': dayNumber,
+        'items': items.map((e) => e.toJson()).toList(),
+      };
+}
+
+/// الخطة الكاملة
+
+class TripPlan {
+  final String city; // المدينة الأساسية (مسقط، صلالة...)
+
+  final int totalDays; // عدد الأيام
+
+  final List<TripPlanDay> days;
+
+  TripPlan({
+    required this.city,
+    required this.totalDays,
+    required this.days,
+  });
 }
