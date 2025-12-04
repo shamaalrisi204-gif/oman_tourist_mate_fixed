@@ -7,9 +7,12 @@ import 'package:url_launcher/url_launcher.dart';
 class TransportServicesScreen extends StatelessWidget {
   final bool isArabic;
 
+  final bool isGuest; // 👈 جديد
+
   const TransportServicesScreen({
     super.key,
     required this.isArabic,
+    this.isGuest = false,
   });
 
   static const Color _background = Color(0xFFF3EED9);
@@ -137,15 +140,23 @@ class TransportServicesScreen extends StatelessWidget {
 
           _TaxiCard(
             isArabic: isArabic,
+
+            isGuest: isGuest, // 👈
+
             titleAr: 'OmanTaxi',
+
             titleEn: 'OmanTaxi',
+
             link: 'https://apps.apple.com/us/app/omantaxi/id1117668380',
+
             descriptionAr: 'تطبيق محلي لحجز تاكسي مرخّص داخل المدن أو للمطار.',
+
             descriptionEn: 'Local taxi booking app for city and airport rides.',
           ),
 
           _TaxiCard(
             isArabic: isArabic,
+            isGuest: isGuest,
             titleAr: 'Otaxi',
             titleEn: 'Otaxi',
             link: 'https://play.google.com/store/apps/details?id=com.otaxi',
@@ -155,6 +166,7 @@ class TransportServicesScreen extends StatelessWidget {
 
           _TaxiCard(
             isArabic: isArabic,
+            isGuest: isGuest,
             titleAr: 'TaxiF',
             titleEn: 'TaxiF',
             link: 'https://taxif.com',
@@ -164,6 +176,7 @@ class TransportServicesScreen extends StatelessWidget {
 
           _TaxiCard(
             isArabic: isArabic,
+            isGuest: isGuest,
             titleAr: 'HalaTaxi',
             titleEn: 'HalaTaxi',
             link: 'https://htaxi.app',
@@ -187,6 +200,7 @@ class TransportServicesScreen extends StatelessWidget {
 
           _TaxiCard(
             isArabic: isArabic,
+            isGuest: isGuest,
             titleAr: 'TaxiMatcher',
             titleEn: 'TaxiMatcher',
             link: 'https://www.taximatcher.com',
@@ -196,6 +210,7 @@ class TransportServicesScreen extends StatelessWidget {
 
           _TaxiCard(
             isArabic: isArabic,
+            isGuest: isGuest,
             titleAr: 'Tasleem Taxi',
             titleEn: 'Tasleem Taxi',
             link: 'tel:90610066',
@@ -233,6 +248,8 @@ class TransportServicesScreen extends StatelessWidget {
 class _TaxiCard extends StatelessWidget {
   final bool isArabic;
 
+  final bool isGuest; // 👈 جديد
+
   final String titleAr;
 
   final String titleEn;
@@ -245,6 +262,7 @@ class _TaxiCard extends StatelessWidget {
 
   const _TaxiCard({
     required this.isArabic,
+    required this.isGuest,
     required this.titleAr,
     required this.titleEn,
     required this.descriptionAr,
@@ -260,6 +278,56 @@ class _TaxiCard extends StatelessWidget {
     if (link.contains('apple.com')) return Icons.phone_iphone;
 
     return Icons.language;
+  }
+
+  // 🔒 دايلوج للضيف
+
+  void _showGuestDialog(BuildContext context) {
+    final isAr = isArabic;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          isAr ? 'تسجيل الدخول مطلوب' : 'Login required',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontFamily: 'Tajawal'),
+        ),
+        content: Text(
+          isAr
+              ? 'لاستخدام روابط النقل وفتح تطبيقات التاكسي، الرجاء تسجيل الدخول أو إنشاء حساب جديد.'
+              : 'To use transport links and open taxi apps, please sign in or create an account.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+
+              Navigator.pushNamed(context, '/login');
+            },
+            child: Text(
+              isAr ? 'تسجيل الدخول' : 'Sign in',
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+
+              Navigator.pushNamed(context, '/signup');
+            },
+            child: Text(
+              isAr ? 'إنشاء حساب' : 'Create account',
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _openLink() async {
@@ -292,7 +360,7 @@ class _TaxiCard extends StatelessWidget {
       child: ListTile(
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        leading: Icon(Icons.local_taxi, size: 30, color: Colors.black87),
+        leading: const Icon(Icons.local_taxi, size: 30, color: Colors.black87),
         title: Text(
           title,
           style: const TextStyle(
@@ -310,7 +378,13 @@ class _TaxiCard extends StatelessWidget {
         ),
         trailing: IconButton(
           icon: Icon(_detectIcon(), color: Colors.blue),
-          onPressed: _openLink,
+          onPressed: () {
+            if (isGuest) {
+              _showGuestDialog(context); // 🔒 يمنع الضيف
+            } else {
+              _openLink();
+            }
+          },
         ),
       ),
     );

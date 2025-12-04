@@ -148,31 +148,70 @@ class OmanTouristMateApp extends StatelessWidget {
 
           routes: {
             '/welcome': (_) => const WelcomeScreen(),
+
             '/login': (_) => const LoginScreen(),
+
             '/forgot_password': (_) => const ForgotPasswordScreen(),
+
             '/signup': (_) => const SignUpScreen(),
+
             '/user': (_) => const UserHome(),
+
             '/map': (_) => const OmanGMapsScreen(),
+
             '/favorites': (_) => const FavoritesScreen(),
+
             '/ai_chat': (_) => const AiConciergeScreen(),
+
             '/preferences': (_) => const PreferencesScreen(),
+
             '/guest': (_) => const GuestHomeScreen(),
+
             '/about': (_) => const AboutUsScreen(),
+
             '/contact': (_) => const ContactUsScreen(),
+
             '/main': (_) => const MainMenuScreen(),
+
             '/user_home': (_) => const UserHome(),
+
             '/currency': (_) => const CurrencyConverterScreen(),
-            '/trip_planner': (context) => const TripPlannerScreen(),
+
+            '/trip_planner': (_) => const TripPlannerScreen(),
+
             '/my_trip': (ctx) {
               final args = ModalRoute.of(ctx)?.settings.arguments;
+
               final plans = args is List<MapTripPlan> ? args : <MapTripPlan>[];
+
               return YourTripScreen(plans: plans);
             },
+
             '/map_guest': (_) => const OmanGMapsScreen(enablePlanning: false),
+
             '/info': (_) => const InfoScreen(),
+
             '/tips': (_) => const TravelTipsScreen(),
+
             '/main_nav': (_) => const MainNavScreen(),
+
             '/essentials': (_) => const EssentialsScreen(),
+
+            // ✅ شاشة إدخال كود التحقق
+
+            '/verify_otp': (context) {
+              final args = ModalRoute.of(context)!.settings.arguments
+                  as Map<String, dynamic>;
+
+              return VerifyOtpScreen(
+                email: args['email'] as String,
+                username: args['username'] as String,
+                firstName: args['firstName'] as String,
+                lastName: args['lastName'] as String,
+                phone: args['phone'] as String,
+                password: args['password'] as String,
+              );
+            },
           },
         );
       },

@@ -85,20 +85,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _updateUsernameValidation(suggestion);
   }
 
+  String _capitalizeFirst(String s) {
+    s = s.trim();
+    if (s.isEmpty) return s;
+    return s[0].toUpperCase() + s.substring(1).toLowerCase();
+  }
+
   String _buildUsernameSuggestion(String f, String l) {
     f = f.trim();
+
     l = l.trim();
 
     if (f.isEmpty && l.isEmpty) return '';
 
-    f = f.toLowerCase();
-    l = l.toLowerCase();
+    // نخلي أول حرف Capital والباقي small
+
+    f = _capitalizeFirst(f);
+
+    l = _capitalizeFirst(l);
 
     if (f.isEmpty) return l;
+
     if (l.isEmpty) return f;
 
     final base = '${f}_${l}';
+
     final suffixNumber = DateTime.now().millisecond % 100; // 0–99
+
     return '$base#${suffixNumber.toString().padLeft(2, '0')}';
   }
 

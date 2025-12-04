@@ -16,6 +16,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // النصوص حسب اللغة
+
     final title = isArabic ? 'خطط لرحلتك' : 'Plan Your Trip';
 
     final subtitle = isArabic
@@ -72,9 +74,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               'assets/images/oman_background.jpg',
               fit: BoxFit.cover,
             ),
-            Container(
-              color: Colors.black.withOpacity(0.38),
-            ),
+            Container(color: Colors.black.withOpacity(0.38)),
             SafeArea(
               child: Padding(
                 padding:
@@ -82,6 +82,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 child: Column(
                   children: [
                     const Spacer(),
+
+                    // العنوان
+
                     Text(
                       title,
                       textAlign: TextAlign.center,
@@ -91,7 +94,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         fontSize: 34,
                       ),
                     ),
+
                     const SizedBox(height: 18),
+
                     Text(
                       subtitle,
                       textAlign: TextAlign.center,
@@ -102,7 +107,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+
                     const SizedBox(height: 10),
+
                     Text(
                       slogan,
                       textAlign: TextAlign.center,
@@ -112,7 +119,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     const SizedBox(height: 10),
+
                     Text(
                       tourismDesc,
                       textAlign: TextAlign.center,
@@ -123,7 +132,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
+
                     const SizedBox(height: 28),
+
+                    // زر تسجيل الدخول
+
                     ElevatedButton(
                       onPressed: () => Navigator.pushNamed(context, '/login'),
                       style: ElevatedButton.styleFrom(
@@ -142,7 +155,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                       ),
                     ),
+
                     const SizedBox(height: 14),
+
+                    // زر إنشاء حساب
+
                     ElevatedButton(
                       onPressed: () => Navigator.pushNamed(context, '/signup'),
                       style: ElevatedButton.styleFrom(
@@ -161,12 +178,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                       ),
                     ),
+
                     const SizedBox(height: 20),
+
+                    // 🔥 زر المتابعة كزائر (بدون const)
+
                     TextButton(
                       onPressed: () => Navigator.pushNamed(context, '/guest'),
-                      child: const Text(
-                        'المتابعة كزائر',
-                        style: TextStyle(
+                      child: Text(
+                        guest,
+                        style: const TextStyle(
                           color: Colors.black,
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -174,6 +195,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                       ),
                     ),
+
                     const SizedBox(height: 16),
                   ],
                 ),

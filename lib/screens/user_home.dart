@@ -311,13 +311,15 @@ class _UserHomeState extends State<UserHome> {
     }
 
     final title = _isArabic ? 'الصفحة الرئيسية' : 'Home Page';
-    final welcome = _isArabic
-        ? 'مرحبًا بك في ${_userData!['city']}'
-        : 'Welcome to ${_userData!['city']}';
+
+    final welcome = _isArabic ? 'مرحبًا بك في عُمان' : 'Welcome to Oman';
+
     final coords =
         '📍 ${_userData!['city']} – ${_userData!['lat']}, ${_userData!['lng']}';
+
     final interestsTitle =
         _isArabic ? 'اهتماماتك المفضلة:' : 'Your favorite interests:';
+
     final interestsText = _buildInterestsText();
 
     return Scaffold(
@@ -810,11 +812,16 @@ class _UserHomeState extends State<UserHome> {
           onTap: () {
             // ✈️ Flights
 
+            // ✈️ Flights
+
             if (cat.titleEn == 'Flights') {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => FlightServicesScreen(isArabic: _isArabic),
+                  builder: (_) => FlightServicesScreen(
+                    isArabic: _isArabic,
+                    isGuest: widget.isGuest,
+                  ),
                 ),
               );
 
@@ -827,7 +834,10 @@ class _UserHomeState extends State<UserHome> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => HotelServicesScreen(isArabic: _isArabic),
+                  builder: (_) => HotelServicesScreen(
+                    isArabic: _isArabic,
+                    isGuest: widget.isGuest,
+                  ),
                 ),
               );
 
@@ -836,37 +846,74 @@ class _UserHomeState extends State<UserHome> {
 
             // 🚌 Tours
 
+            // 🚌 Tours
+
             if (cat.titleEn == 'Tours') {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => TourServicesScreen(isArabic: _isArabic),
+                  builder: (_) => TourServicesScreen(
+                    isArabic: _isArabic,
+
+                    isGuest: widget.isGuest, // 👈 مهم
+                  ),
                 ),
               );
 
               return;
             }
 
-            // ⭐ المعالم السياحية
+            // ⭐ Attractions
+
+            // 🏰 Attractions
 
             if (cat.titleEn == 'Attractions') {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => AttractionsScreen(isArabic: _isArabic),
+                  builder: (_) => AttractionsScreen(
+                    isArabic: _isArabic,
+
+                    isGuest: widget.isGuest, // 👈 مهم
+                  ),
                 ),
               );
 
               return;
             }
 
-            // 🍽️ الطعام (Dining)
+            // 🚕 Transport  👈新增 هني
+
+            // 🚌 Transport
+
+            if (cat.titleEn == 'Transport') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => TransportServicesScreen(
+                    isArabic: _isArabic,
+
+                    isGuest: widget.isGuest, // 👈 مهم عشان نعرف إنه ضيف
+                  ),
+                ),
+              );
+
+              return;
+            }
+
+            // 🍽️ Food & Dining
+
+            // مثال داخل onTap في UserHome
 
             if (cat.titleEn == 'Food & Dining') {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => DiningServicesScreen(isArabic: _isArabic),
+                  builder: (_) => DiningServicesScreen(
+                    isArabic: _isArabic,
+
+                    isGuest: widget.isGuest, // 👈 مهم
+                  ),
                 ),
               );
 

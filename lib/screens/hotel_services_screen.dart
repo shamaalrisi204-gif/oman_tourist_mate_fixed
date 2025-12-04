@@ -1,20 +1,27 @@
-// lib/screens/hotel_services_screen.dart
-
 import 'package:flutter/material.dart';
 
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import '../models/trip_hotel_item.dart'; // ← موديل الفندق + القائمة
+import '../models/trip_hotel_item.dart';
 
-import 'your_trip_screen.dart'; // ← عشان نفتح رحلتي
+import 'your_trip_screen.dart';
+
 import 'map_gmaps_screen.dart' show kTripPlans;
+
+/// شاشة الفنادق
 
 class HotelServicesScreen extends StatefulWidget {
   final bool isArabic;
 
-  const HotelServicesScreen({super.key, required this.isArabic});
+  final bool isGuest; // 👈 هل المستخدم ضيف؟
+
+  const HotelServicesScreen({
+    super.key,
+    required this.isArabic,
+    this.isGuest = false, // الافتراضي: مو ضيف
+  });
 
   @override
   State<HotelServicesScreen> createState() => _HotelServicesScreenState();
@@ -23,8 +30,6 @@ class HotelServicesScreen extends StatefulWidget {
 class _HotelServicesScreenState extends State<HotelServicesScreen> {
   String selectedCity = "all";
 
-  // قائمة المحافظات
-
   final cities = {
     "all": {"ar": "كل المحافظات", "en": "All Regions"},
     "Muscat": {"ar": "مسقط", "en": "Muscat"},
@@ -32,12 +37,60 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
     "SouthSharqiyah": {"ar": "الشرقية الجنوبية", "en": "South Sharqiyah"},
   };
 
-  // تطبيق الفلترة
-
   List<TripHotelItem> get filteredHotels {
     if (selectedCity == "all") return kHotelsList;
 
     return kHotelsList.where((h) => h.cityKey == selectedCity).toList();
+  }
+
+  // 🔒 دايلوج يمنع الضيف
+
+  void _showGuestDialog() {
+    final isAr = widget.isArabic;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          isAr ? 'تسجيل الدخول مطلوب' : 'Login required',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontFamily: 'Tajawal'),
+        ),
+        content: Text(
+          isAr
+              ? 'لإضافة الفنادق إلى رحلتك أو المفضلة أو فتح الموقع، الرجاء تسجيل الدخول أو إنشاء حساب جديد.'
+              : 'To add hotels to your trip or favorites, or open location, please sign in or create an account.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+
+              Navigator.pushNamed(context, '/login');
+            },
+            child: Text(
+              isAr ? 'تسجيل الدخول' : 'Sign in',
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+
+              Navigator.pushNamed(context, '/signup');
+            },
+            child: Text(
+              isAr ? 'إنشاء حساب' : 'Create account',
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -64,12 +117,14 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
 
           const SizedBox(height: 20),
 
-          // ░░ FILTER ░░
+          // FILTER
 
           Text(
             isAr ? "الفلترة حسب المحافظة:" : "Filter by region:",
             style: const TextStyle(
-                fontFamily: "Tajawal", fontWeight: FontWeight.bold),
+              fontFamily: "Tajawal",
+              fontWeight: FontWeight.bold,
+            ),
           ),
 
           const SizedBox(height: 8),
@@ -91,29 +146,24 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
 
           const SizedBox(height: 20),
 
-          // ░░ الفندقـــــــــــات ░░
-
           Text(
             isAr ? "أفضل الخيارات" : "Top stays",
             style: const TextStyle(
-                fontFamily: "Tajawal",
-                fontWeight: FontWeight.bold,
-                fontSize: 18),
+              fontFamily: "Tajawal",
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
           ),
 
           const SizedBox(height: 10),
 
-          ...filteredHotels.map((h) => _hotelCard(h)).toList(),
+          ...filteredHotels.map((h) => _hotelCard(context, h)).toList(),
         ],
       ),
     );
   }
 
-  //----------------------------------------------------------
-
-  //                      W I D G E T S
-
-  //----------------------------------------------------------
+  // HERO
 
   Widget _buildHero(String title, String sub) {
     return SizedBox(
@@ -149,18 +199,20 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
                   Text(
                     title,
                     style: const TextStyle(
-                        fontFamily: "Tajawal",
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: Colors.white),
+                      fontFamily: "Tajawal",
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     sub,
                     style: const TextStyle(
-                        fontFamily: "Tajawal",
-                        fontSize: 12,
-                        color: Colors.white70),
+                      fontFamily: "Tajawal",
+                      fontSize: 12,
+                      color: Colors.white70,
+                    ),
                   ),
                 ],
               ),
@@ -171,13 +223,9 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
     );
   }
 
-  //----------------------------------------------------------
+  // HOTEL CARD
 
-  //                      HOTEL CARD
-
-  //----------------------------------------------------------
-
-  Widget _hotelCard(TripHotelItem h) {
+  Widget _hotelCard(BuildContext context, TripHotelItem h) {
     final isAr = widget.isArabic;
 
     return Card(
@@ -229,7 +277,7 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    // ❤️ المفضلة → يفتح شاشة المفضلة
+                    // ❤️ المفضلة
 
                     IconButton(
                       icon: Icon(
@@ -237,24 +285,36 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
                         color: Colors.red,
                       ),
                       onPressed: () {
+                        if (widget.isGuest) {
+                          _showGuestDialog(); // 🔒 منع الضيف
+
+                          return;
+                        }
+
                         setState(() => h.isFav = !h.isFav);
-                        // يفتح شاشة المفضلة
+
                         Navigator.pushNamed(context, '/favorites');
                       },
                     ),
 
-                    // 📍 افتح في الخريطة
+                    // 📍 الموقع
 
                     IconButton(
                       icon: const Icon(Icons.location_pin, color: Colors.blue),
                       onPressed: () {
+                        if (widget.isGuest) {
+                          _showGuestDialog(); // 🔒 منع الضيف
+
+                          return;
+                        }
+
                         _openInMaps(h.lat, h.lng);
                       },
                     ),
 
                     const Spacer(),
 
-                    // ➕ Add to trip → يضيف الفندق ويفتح My Trip
+                    // ➕ Add to trip
 
                     TextButton.icon(
                       icon: const Icon(Icons.add, size: 18),
@@ -263,13 +323,15 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
                         style: const TextStyle(fontFamily: "Tajawal"),
                       ),
                       onPressed: () {
-                        // ما نكرر نفس الفندق مرتين
+                        if (widget.isGuest) {
+                          _showGuestDialog(); // 🔒 منع الضيف
+
+                          return;
+                        }
 
                         if (!kTripHotels.contains(h)) {
                           kTripHotels.add(h);
                         }
-
-                        // نروح مباشرة لصفحة رحلتي
 
                         Navigator.push(
                           context,
@@ -289,11 +351,7 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
     );
   }
 
-  //----------------------------------------------------------
-
-  //                   OPEN MAPS
-
-  //----------------------------------------------------------
+  // OPEN MAPS
 
   Future<void> _openInMaps(double lat, double lng) async {
     final url =

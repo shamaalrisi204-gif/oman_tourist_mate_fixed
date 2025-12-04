@@ -7,7 +7,13 @@ import 'package:url_launcher/url_launcher.dart';
 class DiningServicesScreen extends StatelessWidget {
   final bool isArabic;
 
-  const DiningServicesScreen({super.key, required this.isArabic});
+  final bool isGuest; // 👈 جديد
+
+  const DiningServicesScreen({
+    super.key,
+    required this.isArabic,
+    this.isGuest = false,
+  });
 
   static const Color _background = Color(0xFFF3EED9);
 
@@ -19,14 +25,14 @@ class DiningServicesScreen extends StatelessWidget {
         isArabic ? 'مأكولات جديرة بالتجربة' : 'A Worthy Dining Experience';
 
     final introBody = isArabic
-        ? '''عُمان هي أرض الأحلام لعشّاق الطعام وذوّاقة المأكولات، 
+        ? '''عُمان هي أرض الأحلام لعشّاق الطعام وذوّاقة المأكولات،
 
-حيث أمام الزائر مجموعة متنوعة من خيارات تناول الطعام؛ 
+حيث أمام الزائر مجموعة متنوعة من خيارات تناول الطعام؛
 
 بدءاً من المطاعم الفاخرة إلى الأكلات الشعبية العمانية الأصيلة.'''
-        : '''Oman is a wonderful place for food lovers, 
+        : '''Oman is a wonderful place for food lovers,
 
-offering a wide range of dining options from luxury restaurants 
+offering a wide range of dining options from luxury restaurants
 
 to traditional Omani dishes.''';
 
@@ -140,19 +146,17 @@ to traditional Omani dishes.''';
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           childAspectRatio: 2.1,
-          children: [
+          children: const [
             _CategoryCard(
-              title: isArabic ? 'المطاعم الفاخرة' : 'Luxury Dining',
+              title: 'Luxury Dining',
               image: 'assets/dining/luxury.jpg',
             ),
             _CategoryCard(
-              title: isArabic ? 'نكهات عالمية' : 'Global Flavors',
+              title: 'Global Flavors',
               image: 'assets/dining/global.jpg',
             ),
             _CategoryCard(
-              title: isArabic
-                  ? 'الأطباق العمانية التقليدية'
-                  : 'Traditional Omani Dishes',
+              title: 'Traditional Omani Dishes',
               image: 'assets/dining/oman_food.jpg',
             ),
           ],
@@ -178,13 +182,21 @@ to traditional Omani dishes.''';
         const SizedBox(height: 14),
         _RestaurantCard(
           isArabic: isArabic,
+
+          isGuest: isGuest, // 👈 نمرر إذا هو ضيف
+
           titleAr: 'مطعم العقر',
+
           titleEn: 'Alaqur Restaurant',
+
           descAr:
               'واحد من أشهر المطاعم التي تقدم الأكلات الشعبية العمانية الأصيلة، مع فرعين في نزوى وصلالة.',
+
           descEn:
               'One of the most popular Omani traditional restaurants with branches in Nizwa and Salalah.',
+
           image: 'assets/dining/alaqr.jpg',
+
           branches: [
             RestaurantBranch(
               nameAr: 'فرع نزوى',
@@ -221,6 +233,54 @@ class RestaurantBranch {
     required this.nameEn,
     required this.mapsUrl,
   });
+}
+
+// 🔒 دالة عامة لدايلوج الضيف
+
+void _showGuestDialog(BuildContext context, bool isArabic) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text(
+        isArabic ? 'تسجيل الدخول مطلوب' : 'Login required',
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontFamily: 'Tajawal'),
+      ),
+      content: Text(
+        isArabic
+            ? 'لفتح موقع المطعم على الخريطة، الرجاء تسجيل الدخول أو إنشاء حساب جديد.'
+            : 'To open the restaurant location in Maps, please sign in or create an account.',
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14),
+      ),
+      actionsAlignment: MainAxisAlignment.center,
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(ctx);
+
+            Navigator.pushNamed(context, '/login');
+          },
+          child: Text(
+            isArabic ? 'تسجيل الدخول' : 'Sign in',
+            style: const TextStyle(fontFamily: 'Tajawal'),
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.pop(ctx);
+
+            Navigator.pushNamed(context, '/signup');
+          },
+          child: Text(
+            isArabic ? 'إنشاء حساب' : 'Create account',
+            style: const TextStyle(fontFamily: 'Tajawal'),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 // ---------------- بطاقة القسم ----------------
@@ -271,6 +331,8 @@ class _CategoryCard extends StatelessWidget {
 class _RestaurantCard extends StatelessWidget {
   final bool isArabic;
 
+  final bool isGuest; // 👈 جديد
+
   final String titleAr;
 
   final String titleEn;
@@ -285,6 +347,7 @@ class _RestaurantCard extends StatelessWidget {
 
   const _RestaurantCard({
     required this.isArabic,
+    required this.isGuest,
     required this.titleAr,
     required this.titleEn,
     required this.descAr,
@@ -316,8 +379,12 @@ class _RestaurantCard extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-            child: Image.asset(image,
-                height: 180, width: double.infinity, fit: BoxFit.cover),
+            child: Image.asset(
+              image,
+              height: 180,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(14),
@@ -362,7 +429,33 @@ class _RestaurantCard extends StatelessWidget {
                           ),
                         ),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                        onTap: () => launchUrl(Uri.parse(b.mapsUrl)),
+                        onTap: () async {
+                          if (isGuest) {
+                            _showGuestDialog(context, isArabic); // 🔒
+
+                            return;
+                          }
+
+                          final uri = Uri.parse(b.mapsUrl);
+
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(
+                              uri,
+                              mode: LaunchMode.externalApplication,
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  isArabic
+                                      ? 'تعذّر فتح الرابط'
+                                      : 'Could not open link',
+                                  style: const TextStyle(fontFamily: 'Tajawal'),
+                                ),
+                              ),
+                            );
+                          }
+                        },
                       ),
                       const Divider(height: 0),
                     ],

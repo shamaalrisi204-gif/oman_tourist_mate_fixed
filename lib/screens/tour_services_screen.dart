@@ -6,14 +6,20 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../models/trip_tour_item.dart';
 
-import 'map_gmaps_screen.dart' show kTripPlans; // عشان نرسل الخطط
+import 'map_gmaps_screen.dart' show kTripPlans;
 
 import 'your_trip_screen.dart';
 
 class TourServicesScreen extends StatefulWidget {
   final bool isArabic;
 
-  const TourServicesScreen({super.key, required this.isArabic});
+  final bool isGuest; // 👈 جديد
+
+  const TourServicesScreen({
+    super.key,
+    required this.isArabic,
+    this.isGuest = false,
+  });
 
   @override
   State<TourServicesScreen> createState() => _TourServicesScreenState();
@@ -34,6 +40,56 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
     if (selectedCategory == 'all') return kToursList;
 
     return kToursList.where((t) => t.categoryKey == selectedCategory).toList();
+  }
+
+  // 🔒 دايلوج منع الضيف
+
+  void _showGuestDialog() {
+    final isAr = widget.isArabic;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          isAr ? 'تسجيل الدخول مطلوب' : 'Login required',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontFamily: 'Tajawal'),
+        ),
+        content: Text(
+          isAr
+              ? 'لإضافة الرحلات إلى رحلتك أو المفضلة أو فتح الروابط، الرجاء تسجيل الدخول أو إنشاء حساب جديد.'
+              : 'To add tours to your trip or favorites, or open links, please sign in or create an account.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+
+              Navigator.pushNamed(context, '/login');
+            },
+            child: Text(
+              isAr ? 'تسجيل الدخول' : 'Sign in',
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+
+              Navigator.pushNamed(context, '/signup');
+            },
+            child: Text(
+              isAr ? 'إنشاء حساب' : 'Create account',
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -62,7 +118,7 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
 
           const SizedBox(height: 20),
 
-          // ░░ الفلترة ░░
+          // الفلترة
 
           Text(
             isAr ? 'الفلترة حسب النوع:' : 'Filter by type:',
@@ -109,7 +165,7 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
     );
   }
 
-  // ---------------- HERO ----------------
+  // HERO
 
   Widget _buildHero(String title, String sub) {
     return SizedBox(
@@ -172,7 +228,7 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
     );
   }
 
-  // --------------- CARD ------------------
+  // CARD
 
   Widget _tourCard(TripTourItem t) {
     final isAr = widget.isArabic;
@@ -239,6 +295,12 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
                         color: Colors.red,
                       ),
                       onPressed: () {
+                        if (widget.isGuest) {
+                          _showGuestDialog(); // 🔒 منع الضيف
+
+                          return;
+                        }
+
                         setState(() => t.isFav = !t.isFav);
 
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -258,18 +320,34 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
                       },
                     ),
 
-                    // 🌍 معلومات (صفحة VisitOman)
+                    // 🌍 معلومات (Visit Oman)
 
                     IconButton(
                       icon: const Icon(Icons.info_outline, color: Colors.blue),
-                      onPressed: () => _openUrl(t.infoUrl),
+                      onPressed: () {
+                        if (widget.isGuest) {
+                          _showGuestDialog();
+
+                          return;
+                        }
+
+                        _openUrl(t.infoUrl);
+                      },
                     ),
 
                     // 🎫 الحجز
 
                     IconButton(
                       icon: const Icon(Icons.airplane_ticket_outlined),
-                      onPressed: () => _openUrl(t.bookingUrl),
+                      onPressed: () {
+                        if (widget.isGuest) {
+                          _showGuestDialog();
+
+                          return;
+                        }
+
+                        _openUrl(t.bookingUrl);
+                      },
                     ),
 
                     const Spacer(),
@@ -283,7 +361,11 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
                         style: const TextStyle(fontFamily: 'Tajawal'),
                       ),
                       onPressed: () {
-                        // لو نفس الرحلة مكررة لا تضيفيها مرة ثانية
+                        if (widget.isGuest) {
+                          _showGuestDialog();
+
+                          return;
+                        }
 
                         final exists = kTripTours.any((x) => x.id == t.id);
 
@@ -301,8 +383,6 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
                             ),
                           ),
                         );
-
-                        // افتحي شاشة My Trip بعد الإضافة
 
                         Navigator.push(
                           context,
@@ -322,14 +402,12 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
     );
   }
 
-  // --------------- URL launcher --------------
+  // فتح الروابط
 
   Future<void> _openUrl(String url) async {
     final uri = Uri.parse(url);
 
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      // لو صار خطأ بسيط
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(

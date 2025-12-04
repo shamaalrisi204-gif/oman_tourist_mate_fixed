@@ -251,15 +251,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             onPressed: () => Navigator.pop(context),
           ),
-          title: Text(
-            _tr('إنشاء حساب جديد', 'Create a new account'),
-            style: const TextStyle(
-              fontFamily: 'Tajawal',
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
           centerTitle: true,
           actions: [
             Padding(

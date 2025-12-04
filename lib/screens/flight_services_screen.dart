@@ -1,20 +1,91 @@
 // lib/screens/flight_services_screen.dart
+
 import 'package:flutter/material.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 
 class FlightServicesScreen extends StatelessWidget {
   const FlightServicesScreen({
     super.key,
     required this.isArabic,
+    required this.isGuest,
   });
 
   final bool isArabic;
 
+  final bool isGuest;
+
+  // دالة لو المستخدم Guest نطلّع له تنبيه بدال ما نفتح الرابط
+
+  Future<void> _handleLinkTap(BuildContext context, String url) async {
+    if (isGuest) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            isArabic ? 'تسجيل الدخول مطلوب' : 'Login required',
+            style: const TextStyle(fontFamily: 'Tajawal'),
+          ),
+          content: Text(
+            isArabic
+                ? 'لحجز الرحلات أو استخدام الروابط الخارجية، يجب إنشاء حساب أو تسجيل الدخول أولاً.'
+                : 'To book flights or open external links, please create an account or sign in first.',
+            style: const TextStyle(fontFamily: 'Tajawal'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+
+                Navigator.pushNamed(context, '/login');
+              },
+              child: Text(
+                isArabic ? 'تسجيل الدخول' : 'Sign In',
+                style: const TextStyle(fontFamily: 'Tajawal'),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+
+                Navigator.pushNamed(context, '/signup');
+              },
+              child: Text(
+                isArabic ? 'إنشاء حساب' : 'Create account',
+                style: const TextStyle(fontFamily: 'Tajawal'),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                isArabic ? 'إلغاء' : 'Cancel',
+                style: const TextStyle(fontFamily: 'Tajawal'),
+              ),
+            ),
+          ],
+        ),
+      );
+
+      return;
+    }
+
+    // لو مو Guest نفتح الرابط عادي
+
+    final uri = Uri.parse(url);
+
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
   @override
   Widget build(BuildContext context) {
     final tTitle = isArabic ? 'رحلات الطيران' : 'Flights';
+
     final tHeroTitle =
         isArabic ? 'اكتشفي عُمان من السماء' : 'Discover Oman from the sky';
+
     final tHeroSub = isArabic
         ? 'احجزي رحلتك مباشرة من المواقع الرسمية لشركات الطيران أو استمتعي بالخدمات المقدمة في مطار مسقط.'
         : 'Book directly from official airline websites and enjoy Muscat airport services.';
@@ -31,11 +102,14 @@ class FlightServicesScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           _buildHero(tHeroTitle, tHeroSub),
+
           const SizedBox(height: 20),
 
           // -------- Airlines --------
+
           _sectionTitle(
               isArabic ? 'شركاؤنا في الطيران' : 'Our Airline Partners'),
+
           const SizedBox(height: 8),
 
           SizedBox(
@@ -44,6 +118,7 @@ class FlightServicesScreen extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               children: [
                 _airlineCard(
+                  context: context,
                   isArabic: isArabic,
                   nameAr: 'الطيران العُماني',
                   nameEn: 'Oman Air',
@@ -55,6 +130,7 @@ class FlightServicesScreen extends StatelessWidget {
                   url: 'https://www.omanair.com',
                 ),
                 _airlineCard(
+                  context: context,
                   isArabic: isArabic,
                   nameAr: 'طيران السلام',
                   nameEn: 'Salam Air',
@@ -72,11 +148,14 @@ class FlightServicesScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           // -------- Airport services --------
+
           _sectionTitle(
               isArabic ? 'الخدمات في مطار مسقط' : 'Muscat Airport Services'),
+
           const SizedBox(height: 8),
 
           _serviceCard(
+            context: context,
             isArabic: isArabic,
             titleAr: 'صالة المطار (Lounge)',
             titleEn: 'Airport Lounge Access',
@@ -89,6 +168,7 @@ class FlightServicesScreen extends StatelessWidget {
           ),
 
           _serviceCard(
+            context: context,
             isArabic: isArabic,
             titleAr: 'خدمة الاستقبال والمساعدة',
             titleEn: 'Meet & Assist Service',
@@ -102,6 +182,7 @@ class FlightServicesScreen extends StatelessWidget {
           ),
 
           _serviceCard(
+            context: context,
             isArabic: isArabic,
             titleAr: 'تسجيل الوصول من المنزل',
             titleEn: 'Home Check-in Service',
@@ -207,7 +288,9 @@ class FlightServicesScreen extends StatelessWidget {
   }
 
   // -------- Airline card --------
-  static Widget _airlineCard({
+
+  Widget _airlineCard({
+    required BuildContext context,
     required bool isArabic,
     required String nameAr,
     required String nameEn,
@@ -217,6 +300,7 @@ class FlightServicesScreen extends StatelessWidget {
     required String url,
   }) {
     final name = isArabic ? nameAr : nameEn;
+
     final desc = isArabic ? descriptionAr : descriptionEn;
 
     return Container(
@@ -226,7 +310,7 @@ class FlightServicesScreen extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         child: InkWell(
           borderRadius: BorderRadius.circular(18),
-          onTap: () => _launchUrl(url),
+          onTap: () => _handleLinkTap(context, url),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -286,7 +370,9 @@ class FlightServicesScreen extends StatelessWidget {
   }
 
   // -------- Airport service card --------
-  static Widget _serviceCard({
+
+  Widget _serviceCard({
+    required BuildContext context,
     required bool isArabic,
     required String titleAr,
     required String titleEn,
@@ -298,7 +384,9 @@ class FlightServicesScreen extends StatelessWidget {
     required String url,
   }) {
     final title = isArabic ? titleAr : titleEn;
+
     final price = isArabic ? priceAr : priceEn;
+
     final desc = isArabic ? descriptionAr : descriptionEn;
 
     return Card(
@@ -306,7 +394,7 @@ class FlightServicesScreen extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () => _launchUrl(url),
+        onTap: () => _handleLinkTap(context, url),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -357,10 +445,5 @@ class FlightServicesScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }

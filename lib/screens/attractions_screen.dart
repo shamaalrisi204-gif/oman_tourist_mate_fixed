@@ -15,7 +15,13 @@ import 'map_gmaps_screen.dart' show kTripPlans;
 class AttractionsScreen extends StatefulWidget {
   final bool isArabic;
 
-  const AttractionsScreen({super.key, required this.isArabic});
+  final bool isGuest; // 👈 جديد
+
+  const AttractionsScreen({
+    super.key,
+    required this.isArabic,
+    this.isGuest = false,
+  });
 
   @override
   State<AttractionsScreen> createState() => _AttractionsScreenState();
@@ -93,6 +99,56 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
     return isAr ? labels.join('، ') : labels.join(', ');
   }
 
+  // 🔒 دايلوج للضيف
+
+  void _showGuestDialog() {
+    final isAr = widget.isArabic;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          isAr ? 'تسجيل الدخول مطلوب' : 'Login required',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontFamily: 'Tajawal'),
+        ),
+        content: Text(
+          isAr
+              ? 'لحفظ المعالم في المفضلة أو إضافتها إلى رحلتك أو فتح الروابط، الرجاء تسجيل الدخول أو إنشاء حساب جديد.'
+              : 'To add attractions to favorites / trip or open links, please sign in or create an account.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+
+              Navigator.pushNamed(context, '/login');
+            },
+            child: Text(
+              isAr ? 'تسجيل الدخول' : 'Sign in',
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+
+              Navigator.pushNamed(context, '/signup');
+            },
+            child: Text(
+              isAr ? 'إنشاء حساب' : 'Create account',
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isAr = widget.isArabic;
@@ -118,7 +174,7 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
 
             const SizedBox(height: 16),
 
-            // بطاقة معلومات المستخدم (من UserHome)
+            // بطاقة معلومات المستخدم
 
             _buildUserSummaryCard(
               isAr: isAr,
@@ -352,6 +408,12 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
                         color: Colors.red,
                       ),
                       onPressed: () {
+                        if (widget.isGuest) {
+                          _showGuestDialog(); // 🔒
+
+                          return;
+                        }
+
                         setState(() => item.isFav = !item.isFav);
 
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -375,7 +437,13 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
 
                     IconButton(
                       icon: const Icon(Icons.open_in_new, color: Colors.blue),
-                      onPressed: () => _openMore(item.moreUrl),
+                      onPressed: () {
+                        if (widget.isGuest) {
+                          _showGuestDialog(); // 🔒
+                        } else {
+                          _openMore(item.moreUrl);
+                        }
+                      },
                     ),
 
                     const Spacer(),
@@ -389,6 +457,12 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
                         style: const TextStyle(fontFamily: 'Tajawal'),
                       ),
                       onPressed: () {
+                        if (widget.isGuest) {
+                          _showGuestDialog(); // 🔒
+
+                          return;
+                        }
+
                         if (!kTripAttractions.contains(item)) {
                           kTripAttractions.add(item);
                         }
@@ -410,12 +484,18 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
 
                 const SizedBox(height: 6),
 
-                // زر اختياري لعرض "رحلتي" مباشرة
+                // زر عرض "رحلتي"
 
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {
+                      if (widget.isGuest) {
+                        _showGuestDialog(); // 🔒
+
+                        return;
+                      }
+
                       Navigator.push(
                         context,
                         MaterialPageRoute(
