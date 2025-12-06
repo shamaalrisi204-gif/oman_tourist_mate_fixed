@@ -75,7 +75,9 @@ flutter:
    # أيقونات
    - assets/icons/marker_city.png
    - assets/icons/sea.png
+   - assets/icons/plane_marker.png
    - assets/icons/desert.png
+   - assets/icons/plane_pin.png
    - assets/icons/pin.png
    - assets/icons/historic.png
    - assets/geo/oman_outline.geojson
@@ -102,6 +104,7 @@ flutter:
    - assets/web/img/nizwa.jpg
    - assets/web/img/nizwa_1.jpg
    - assets/web/img/adakhliyah_hero.jpg
+   - assets/places/my_trip_empty.jpg
    # Sohar
    - assets/places/sohar/beach_1.jpg
    - assets/places/sohar/beach_2.jpg

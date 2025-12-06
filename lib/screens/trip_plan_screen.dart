@@ -1,16 +1,27 @@
+// lib/screens/trip_plan_screen.dart
+
 import 'package:flutter/material.dart';
 import '../models/trip_plan.dart';
 import '../services/trip_storage.dart';
 
 class TripPlanScreen extends StatelessWidget {
-  final MapTripPlan plan;
+  final TripPlanModel plan;
   final bool isArabic;
-  const TripPlanScreen({super.key, required this.plan, required this.isArabic});
+
+  const TripPlanScreen({
+    super.key,
+    required this.plan,
+    required this.isArabic,
+  });
+
   @override
   Widget build(BuildContext context) {
     final t = (String k) => isArabic ? _ar[k]! : _en[k]!;
+
     return Scaffold(
-      appBar: AppBar(title: Text(isArabic ? 'تفاصيل الخطة' : 'Trip plan')),
+      appBar: AppBar(
+        title: Text(isArabic ? 'تفاصيل الخطة' : 'Trip plan'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -63,17 +74,26 @@ class TripPlanScreen extends StatelessWidget {
   Widget _row(String title, String value) => Row(
         children: [
           Expanded(
-              flex: 3,
-              child: Text(title,
-                  style: const TextStyle(fontWeight: FontWeight.w600))),
+            flex: 3,
+            child: Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
           const SizedBox(width: 8),
-          Expanded(flex: 5, child: Text(value)),
+          Expanded(
+            flex: 5,
+            child: Text(value),
+          ),
         ],
       );
+
   String _catName(String c, bool ar) {
     if (c == 'sea') return ar ? 'البحر' : 'Sea';
     if (c == 'desert') return ar ? 'البر/الصحاري' : 'Desert';
-    return ar ? 'تاريخي' : 'Historic';
+    if (c == 'mountain') return ar ? 'الجبل' : 'Mountain';
+    if (c == 'historic') return ar ? 'تاريخي' : 'Historic';
+    return ar ? 'عام' : 'General';
   }
 }
 
@@ -91,6 +111,7 @@ const _ar = {
   'yes': 'نعم',
   'no': 'لا',
 };
+
 const _en = {
   'category': 'Category',
   'place': 'Place',

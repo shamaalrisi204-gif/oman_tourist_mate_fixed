@@ -69,8 +69,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         'Password reset link has been sent to your email ✅',
       );
 
-      // نرجع لصفحة تسجيل الدخول بعد ثواني (اختياري)
-
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) Navigator.of(context).pop();
       });
@@ -162,15 +160,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         body: Stack(
           fit: StackFit.expand,
           children: [
-            // الخلفية
-
             Image.asset(
               'assets/images/oman_background.jpg',
               fit: BoxFit.cover,
             ),
-
             Container(color: Colors.black.withOpacity(0.45)),
-
             SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 120, 20, 30),
               child: Column(
@@ -185,9 +179,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
                   Text(
                     _tr(
                       'أدخلي البريد الإلكتروني المسجّل وسنرسل لك رابط لإعادة تعيين كلمة المرور.',
@@ -200,11 +192,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       fontSize: 14,
                     ),
                   ),
-
                   const SizedBox(height: 30),
-
-                  // حقل الإيميل
-
                   TextField(
                     controller: _emailCtrl,
                     keyboardType: TextInputType.emailAddress,
@@ -218,9 +206,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
                   SizedBox(
                     width: double.infinity,
                     height: 48,
@@ -249,9 +235,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             ),
                     ),
                   ),
-
                   const SizedBox(height: 16),
-
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: Text(

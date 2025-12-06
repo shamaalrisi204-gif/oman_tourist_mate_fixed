@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
+
 import '../core/prefs.dart';
+
 import '../core/app_state.dart';
 
 class PreferencesScreen extends StatefulWidget {
-  const PreferencesScreen({super.key});
+  /// 👈 جديد: نعرف إذا اللي داخل الشاشة ضيف أو لا
+
+  final bool isGuest;
+
+  const PreferencesScreen({
+    super.key,
+    this.isGuest = false, // القيمة الافتراضية: مستخدم عادي
+  });
 
   @override
   State<PreferencesScreen> createState() => _PreferencesScreenState();
@@ -11,8 +20,11 @@ class PreferencesScreen extends StatefulWidget {
 
 class _Interest {
   final String id;
+
   final String titleAr;
+
   final String titleEn;
+
   final String imageAsset;
 
   const _Interest({
@@ -25,9 +37,11 @@ class _Interest {
 
 class _PreferencesScreenState extends State<PreferencesScreen> {
   bool _isArabic = true;
+
   bool _useCurrentLocation = true;
 
   static const Color _primary = Color(0xFF5E2BFF);
+
   static const Color _background = Color(0xFFF3EED9);
 
   static const List<_Interest> _allInterests = [
@@ -70,56 +84,77 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
   ];
 
   // المختار حالياً
+
   final Set<String> _selectedIds = {};
 
   @override
   void initState() {
     super.initState();
+
     _loadLangAndPrefs();
   }
 
   Future<void> _loadLangAndPrefs() async {
     final ar = await Prefs.isArabic;
+
     final sp = await Prefs.raw;
+
     final list = sp.getStringList('user_interests') ?? [];
 
     if (!mounted) return;
 
     setState(() {
       _isArabic = ar;
+
       _selectedIds.addAll(list);
     });
   }
 
   Future<void> _toggleLanguage() async {
     final app = AppStateProvider.of(context);
+
     final newCode = _isArabic ? 'en' : 'ar';
+
     await app.setLanguage(newCode);
 
     if (!mounted) return;
+
     setState(() => _isArabic = !_isArabic);
   }
 
-  /// حفظ التفضيلات ثم الذهاب مباشرة لصفحة المستخدم الرئيسية
+  /// حفظ التفضيلات ثم الرجوع حسب نوع المستخدم
+
   Future<void> _saveAndClose() async {
     final sp = await Prefs.raw;
+
     await sp.setStringList('user_interests', _selectedIds.toList());
 
     // TODO: هنا لو حابة تحفظين الإحداثيات بناءً على _useCurrentLocation
 
     if (!mounted) return;
 
-    // بدال Navigator.pop(context);
-    Navigator.pushReplacementNamed(context, '/user_home');
+    if (widget.isGuest) {
+      // 👈 لو ضيف: نرجع للشاشة اللي فتحت التفضيلات (UserHome isGuest/GuestHome)
+
+      Navigator.pop(context);
+    } else {
+      // 👈 مستخدم عادي: نرجعه للهوم الرئيسية للمستخدم
+
+      Navigator.pushReplacementNamed(context, '/user_home');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final title = _isArabic ? 'اختيار تفضيلاتك' : 'Choose your preferences';
+
     final useLocationLabel =
         _isArabic ? 'استخدم موقعي الحالي' : 'Use my current location';
+
     final interestsLabel = _isArabic ? 'اهتماماتك' : 'Your interests';
+
     final startBtn = _isArabic ? 'ابدأ - تم' : 'Done – Start';
+
     final langBtn = _isArabic ? 'English' : 'العربية';
 
     return Scaffold(
@@ -155,6 +190,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // سويتش الموقع
+
               Row(
                 children: [
                   Switch(
@@ -162,6 +198,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                     activeColor: _primary,
                     onChanged: (v) {
                       setState(() => _useCurrentLocation = v);
+
                       // هنا تقدري تنادي دالة تجيب الإحداثيات وتحفظها في Prefs
                     },
                   ),
@@ -177,6 +214,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   ),
                 ],
               ),
+
               const SizedBox(height: 16),
 
               Text(
@@ -187,9 +225,11 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+
               const SizedBox(height: 8),
 
               // ===== GRID الكروت بالصور =====
+
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -202,6 +242,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                 ),
                 itemBuilder: (context, index) {
                   final interest = _allInterests[index];
+
                   final selected = _selectedIds.contains(interest.id);
 
                   return InkWell(

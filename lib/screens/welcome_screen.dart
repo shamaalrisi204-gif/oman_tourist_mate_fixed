@@ -16,8 +16,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // النصوص حسب اللغة
-
     final title = isArabic ? 'خطط لرحلتك' : 'Plan Your Trip';
 
     final subtitle = isArabic
@@ -82,9 +80,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 child: Column(
                   children: [
                     const Spacer(),
-
-                    // العنوان
-
                     Text(
                       title,
                       textAlign: TextAlign.center,
@@ -94,9 +89,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         fontSize: 34,
                       ),
                     ),
-
                     const SizedBox(height: 18),
-
                     Text(
                       subtitle,
                       textAlign: TextAlign.center,
@@ -107,9 +100,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-
                     const SizedBox(height: 10),
-
                     Text(
                       slogan,
                       textAlign: TextAlign.center,
@@ -119,9 +110,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     const SizedBox(height: 10),
-
                     Text(
                       tourismDesc,
                       textAlign: TextAlign.center,
@@ -132,11 +121,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-
                     const SizedBox(height: 28),
-
-                    // زر تسجيل الدخول
-
                     ElevatedButton(
                       onPressed: () => Navigator.pushNamed(context, '/login'),
                       style: ElevatedButton.styleFrom(
@@ -155,11 +140,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 14),
-
-                    // زر إنشاء حساب
-
                     ElevatedButton(
                       onPressed: () => Navigator.pushNamed(context, '/signup'),
                       style: ElevatedButton.styleFrom(
@@ -178,11 +159,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
-                    // 🔥 زر المتابعة كزائر (بدون const)
-
                     TextButton(
                       onPressed: () => Navigator.pushNamed(context, '/guest'),
                       child: Text(
@@ -195,7 +172,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 16),
                   ],
                 ),

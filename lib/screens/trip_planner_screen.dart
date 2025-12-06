@@ -3,10 +3,8 @@
 import 'package:flutter/material.dart';
 
 import '../data/tourism_repository.dart';
-
 import '../models/ai_place_suggestion.dart';
-
-import '../models/trip_plan.dart'; // فيه MapTripPlan
+import '../models/trip_plan.dart'; // فيه TripPlanModel
 
 class TripPlannerScreen extends StatefulWidget {
   const TripPlannerScreen({super.key});
@@ -21,20 +19,16 @@ class _TripPlannerScreenState extends State<TripPlannerScreen> {
   int _days = 5;
 
   // المدينة الأساسية (بالعربي عشان تمشي مع CSV)
-
   String _selectedCity = 'مسقط';
 
   // نوع الأماكن: general / beach / historic / nature / shopping / adventure
-
   String _selectedCategoryKey = 'beach';
 
   bool _loading = false;
-
   bool _initFromArgs = false;
 
-  List<MapTripPlan> _plan = [];
-
-  // نستقبل قيم من الخريطة (اختياري)
+  // ✅ صارت TripPlanModel بدل MapTripPlan
+  List<TripPlanModel> _plan = [];
 
   @override
   void didChangeDependencies() {
@@ -47,12 +41,10 @@ class _TripPlannerScreenState extends State<TripPlannerScreen> {
 
     if (args != null) {
       final cat = args['category'] as String?;
-
       final gov = args['governorate'] as String?;
 
       if (cat != null) {
         // general / beach / mountain / industrial / historic
-
         if (cat == 'beach') {
           _selectedCategoryKey = 'beach';
         } else if (cat == 'historic') {
@@ -65,8 +57,6 @@ class _TripPlannerScreenState extends State<TripPlannerScreen> {
       }
 
       if (gov != null) {
-        // نحاول نحول المحافظة/الولاية إلى نفس اسم المدينة في CSV
-
         if (gov.toLowerCase().contains('muscat')) {
           _selectedCity = 'مسقط';
         } else if (gov.toLowerCase().contains('sohar')) {
@@ -87,13 +77,11 @@ class _TripPlannerScreenState extends State<TripPlannerScreen> {
   Future<void> _generateTripPlan() async {
     setState(() {
       _loading = true;
-
       _plan = [];
     });
 
     try {
       // 1) الأماكن السياحية في المدينة
-
       final allAttractions = await _repo.searchAttractions(city: _selectedCity);
 
       List<AiPlaceSuggestion> attractions = allAttractions;
@@ -138,16 +126,13 @@ class _TripPlannerScreenState extends State<TripPlannerScreen> {
       }
 
       // لو ما لقينا شي في التصنيف نرجّع كل الأماكن
-
       if (attractions.isEmpty) attractions = allAttractions;
 
       // 2) فنادق المدينة
-
       final hotels = await _repo.searchAccommodations(city: _selectedCity);
 
-      // 3) مطاعم/كوفيهات (لو سويتي CSV لها لاحقاً بدلي هذي)
-
-      final restaurants = <AiPlaceSuggestion>[]; // مؤقتاً فاضي
+      // 3) مطاعم/كوفيهات (مؤقتاً فاضي)
+      final restaurants = <AiPlaceSuggestion>[];
 
       if (attractions.isEmpty || hotels.isEmpty) {
         setState(() {
@@ -164,60 +149,43 @@ class _TripPlannerScreenState extends State<TripPlannerScreen> {
       }
 
       // 4) نبني خطة بسيطة: لكل يوم 2 أماكن + فندق + (مطعم إذا فيه)
-
-      final List<MapTripPlan> plan = [];
+      final List<TripPlanModel> plan = [];
 
       int attrIndex = 0;
-
       int hotelIndex = 0;
-
       int restIndex = 0;
 
       for (int day = 1; day <= _days; day++) {
         for (int i = 0; i < 2; i++) {
           final place = attractions[attrIndex % attractions.length];
-
           final hotel = hotels[hotelIndex % hotels.length];
-
           final restaurant = restaurants.isNotEmpty
               ? restaurants[restIndex % restaurants.length]
               : null;
 
           plan.add(
-            MapTripPlan(
+            TripPlanModel(
               category: key,
-
               placeName: place.displayName,
-
               placeCity: place.city,
-
               stayCity: _selectedCity,
-
               willBookHere: true,
-
               days: day,
-
-              hours: 3, // تقدير: 3 ساعات في كل مكان
-
+              hours: 3, // تقدير: 3 ساعات
               etaMinutes: 25, // تقدير وقت الطريق
-
               suggestedHotel: hotel.displayName,
-
               suggestedRestaurant: restaurant?.displayName ?? '',
             ),
           );
 
           attrIndex++;
-
           hotelIndex++;
-
           restIndex++;
         }
       }
 
       setState(() {
         _plan = plan;
-
         _loading = false;
       });
     } catch (e) {
@@ -270,7 +238,6 @@ class _TripPlannerScreenState extends State<TripPlannerScreen> {
   }
 
   // كرت المقدمة الأخضر
-
   Widget _buildIntroCard() {
     return Container(
       width: double.infinity,
@@ -309,7 +276,6 @@ class _TripPlannerScreenState extends State<TripPlannerScreen> {
   }
 
   // عدد الأيام
-
   Widget _buildDaysPicker() {
     return Row(
       children: [
@@ -349,7 +315,6 @@ class _TripPlannerScreenState extends State<TripPlannerScreen> {
   }
 
   // اختيار المدينة
-
   Widget _buildCityDropdown() {
     final cities = ['مسقط', 'صحار', 'صلالة', 'نزوى'];
 
@@ -388,7 +353,6 @@ class _TripPlannerScreenState extends State<TripPlannerScreen> {
                   .toList(),
               onChanged: (v) {
                 if (v == null) return;
-
                 setState(() => _selectedCity = v);
               },
             ),
@@ -399,7 +363,6 @@ class _TripPlannerScreenState extends State<TripPlannerScreen> {
   }
 
   // أزرار أنواع الأماكن
-
   Widget _buildCategoryChips() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -456,7 +419,6 @@ class _TripPlannerScreenState extends State<TripPlannerScreen> {
   }
 
   // زر إنشاء الخطة
-
   Widget _buildGenerateButton() {
     return SizedBox(
       width: double.infinity,
@@ -478,7 +440,6 @@ class _TripPlannerScreenState extends State<TripPlannerScreen> {
   }
 
   // عرض الخطة
-
   Widget _buildPlanSection() {
     if (_loading) {
       return const Padding(

@@ -1,27 +1,20 @@
 // lib/models/trip_plan.dart
 
-class MapTripPlan {
+class TripPlanModel {
   final String category;
-
   final String placeName;
-
   final String placeCity;
-
   final String stayCity;
-
   final bool willBookHere;
 
-  final int days; // كم يوم مخصص له
-
-  final int hours; // كم ساعة في هذا المكان
-
-  final int etaMinutes; // زمن الوصول التقريبي
+  final int days;
+  final int hours;
+  final int etaMinutes;
 
   final String suggestedHotel;
-
   final String suggestedRestaurant;
 
-  MapTripPlan({
+  TripPlanModel({
     required this.category,
     required this.placeName,
     required this.placeCity,
@@ -47,7 +40,7 @@ class MapTripPlan {
         'suggestedRestaurant': suggestedRestaurant,
       };
 
-  factory MapTripPlan.fromJson(Map<String, dynamic> j) => MapTripPlan(
+  factory TripPlanModel.fromJson(Map<String, dynamic> j) => TripPlanModel(
         category: j['category'] ?? '',
         placeName: j['placeName'] ?? '',
         placeCity: j['placeCity'] ?? '',
@@ -61,23 +54,19 @@ class MapTripPlan {
       );
 }
 
-/// عنصر واحد داخل يوم (مكان معيّن في اليوم)
-
+/// عنصر داخل اليوم
 class TripPlanItem {
-  final MapTripPlan mapPlan;
-
-  TripPlanItem({required this.mapPlan});
+  final TripPlanModel plan;
+  TripPlanItem({required this.plan});
 
   Map<String, dynamic> toJson() => {
-        'mapPlan': mapPlan.toJson(),
+        'plan': plan.toJson(),
       };
 }
 
-/// يوم واحد من الرحلة (Day 1, Day 2, ...)
-
+/// يوم داخل الخطة
 class TripPlanDay {
   final int dayNumber;
-
   final List<TripPlanItem> items;
 
   TripPlanDay({
@@ -91,13 +80,10 @@ class TripPlanDay {
       };
 }
 
-/// الخطة الكاملة
-
+/// خطة كاملة
 class TripPlan {
-  final String city; // المدينة الأساسية (مسقط، صلالة...)
-
-  final int totalDays; // عدد الأيام
-
+  final String city;
+  final int totalDays;
   final List<TripPlanDay> days;
 
   TripPlan({

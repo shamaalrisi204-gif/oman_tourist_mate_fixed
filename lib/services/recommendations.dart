@@ -3,32 +3,27 @@
 import '../models/trip_plan.dart';
 
 /// يبني خطة جاهزة من بيانات المستخدم.
-
-/// مخلي أغلب الأشياء اختيارية عشان ما يعطيك Missing required argument
-
+///
+/// مخلّي أغلب الباراميترات اختيارية مع قيم افتراضية عشان ما يعطيك Missing required argument.
 class Recommendations {
-  static MapTripPlan buildTrip({
+  static TripPlanModel buildTrip({
     // ✨ هذا الوحيد الإجباري (مدينة الإقامة)
-
     required String stayCity,
 
     // ✨ الباقي اختياري مع قيم افتراضية مريحة
-
     String category = 'sea', // sea | desert | historic | mountain | ...
 
     String placeName = '',
     String placeCity = '',
     bool willBookHere = false,
     int days = 1, // عدد الأيام الافتراضي
-
     int hours = 0, // عدد الساعات في المكان
-
     int etaMinutes = 0, // مدة القيادة بالدقائق
 
     String suggestedHotel = '',
     String suggestedRestaurant = '',
   }) {
-    return MapTripPlan(
+    return TripPlanModel(
       category: category,
       placeName: placeName,
       placeCity: placeCity,

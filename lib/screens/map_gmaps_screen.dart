@@ -3,74 +3,172 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+
 import 'package:flutter/services.dart';
+
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import 'package:geolocator/geolocator.dart';
+
 import 'package:url_launcher/url_launcher.dart';
+
 import '../models/gov_places.dart';
+
 import 'governorate_places_screen.dart';
+
 import 'package:geocoding/geocoding.dart' as geocoding;
+
 import 'your_trip_screen.dart';
+import '../models/trip_plan.dart'
+    show MapTripPlan, kTripPlans, kTripName, kTripDays, kTripStartDate;
 
-const Color kBeige = Color(0xFFF6EFE4); // خلفيات
-const Color kDarkBeige = Color(0xFFB68A53); // أزرار / عناصر مميزة
+import 'flight_services_screen.dart';
+import '../models/place_data.dart' show PlaceType;
+import '../widgets/create_trip_sheet.dart';
 
-const String _kMapStyle = '''
-[
-  {
-    "featureType": "administrative",
-    "elementType": "labels",
-    "stylers": [
-      { "visibility": "off" }
-    ]
-  },
-  {
-    "featureType": "poi",
-    "elementType": "labels",
-    "stylers": [
-      { "visibility": "off" }
-    ]
-  },
-  {
-    "featureType": "road",
-    "elementType": "labels",
-    "stylers": [
-      { "visibility": "off" }
-    ]
-  },
-  {
-    "featureType": "transit",
-    "elementType": "labels",
-    "stylers": [
-      { "visibility": "off" }
-    ]
-  },
-  {
-    "featureType": "water",
-    "elementType": "labels",
-    "stylers": [
-      { "visibility": "off" }
-    ]
-  }
-]
-''';
+String? kTripName;
 
-/// نوع المكان (بحري / جبلي / صناعي / تاريخي)
-enum PlaceType {
-  beach, // أماكن بحرية
-  mountain, // أماكن جبلية
-  industrial, // أماكن صناعية
-  historic, // أماكن تاريخية
+int kTripDays = 1;
+
+DateTime? kTripStartDate;
+Future<void> showCreateTripSheet(BuildContext context) async {
+  final nameController = TextEditingController();
+
+  int days = 3;
+
+  await showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (ctx) {
+      return Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+        ),
+        child: StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade400,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const Text(
+                  'إنشاء رحلة',
+                  style: TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'اسم الرحلة',
+                    labelStyle: TextStyle(fontFamily: 'Tajawal'),
+                    border: OutlineInputBorder(),
+                  ),
+                  style: const TextStyle(fontFamily: 'Tajawal'),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'عدد الأيام',
+                  style: TextStyle(fontFamily: 'Tajawal'),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        if (days > 1) {
+                          setSheetState(() => days--);
+                        }
+                      },
+                      icon: const Icon(Icons.remove_circle_outline),
+                    ),
+                    Text(
+                      '$days',
+                      style: const TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        setSheetState(() => days++);
+                      },
+                      icon: const Icon(Icons.add_circle_outline),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kDarkBeige,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () {
+                      kTripName = nameController.text.trim().isEmpty
+                          ? 'رحلتي'
+                          : nameController.text.trim();
+
+                      kTripDays = days;
+
+                      Navigator.of(ctx).pop();
+                    },
+                    child: const Text(
+                      'إنشاء رحلة',
+                      style: TextStyle(fontFamily: 'Tajawal'),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    },
+  );
 }
 
-/// =====================
-/// موديلات بسيطة
+const Color kBeige = Color(0xFFF6EFE4); // خلفيات
+
+const Color kDarkBeige = Color(0xFFB68A53); // أزرار / عناصر مميزة
+
+/// نوع المكان (بحري / جبلي / صناعي / تاريخي)
+
 /// =====================
 
 class GovInfo {
   final String key; // مفتاح داخلي
+
   final String nameAr;
+
   final String nameEn;
+
   const GovInfo({
     required this.key,
     required this.nameAr,
@@ -80,12 +178,19 @@ class GovInfo {
 
 class Place {
   final String id;
+
   final String govKey;
+
   final String nameAr;
+
   final String nameEn;
+
   final String imageAsset;
+
   final LatLng position;
-  final PlaceType type;
+
+  final PlaceType type; // 👈 هذا الآن من place_data.dart
+
   const Place({
     required this.id,
     required this.govKey,
@@ -98,11 +203,16 @@ class Place {
 }
 
 /// مكان واحد للبحث (اسم عربي/إنجليزي + إحداثيات)
+
 class SearchPlace {
   final String nameAr;
+
   final String nameEn;
+
   final double lat;
+
   final double lon;
+
   SearchPlace({
     required this.nameAr,
     required this.nameEn,
@@ -112,14 +222,26 @@ class SearchPlace {
 }
 
 /// خطة بسيطة للزيارة (للتخطيط)
+
 class MapTripPlan {
   final Place place;
+
   final double durationHours;
+
   final String durationText;
+
   final bool wantHotels;
+
   final bool wantRestaurants;
+
   final bool wantSittings;
+
   final DateTime createdAt;
+
+  /// اليوم داخل الرحلة (1 = اليوم الأول)
+
+  final int day;
+
   const MapTripPlan({
     required this.place,
     required this.durationHours,
@@ -128,27 +250,37 @@ class MapTripPlan {
     required this.wantRestaurants,
     required this.wantSittings,
     required this.createdAt,
+    required this.day,
   });
 }
 
 /// نخزّن نقاط كل بوليغون لمحافظة معيّنة
+
 class _GovPolygonData {
   final String govKey;
+
   final List<LatLng> points;
+
   _GovPolygonData(this.govKey, this.points);
 }
 
 class OmanGMapsScreen extends StatefulWidget {
   final bool enablePlanning;
+
   final bool guestMode;
+  final bool isArabic;
+
   const OmanGMapsScreen({
     super.key,
     this.enablePlanning = true,
     this.guestMode = false,
+    required this.isArabic,
   });
+
   @override
   State<OmanGMapsScreen> createState() => _OmanGMapsScreenState();
 }
+
 // قائمة الخطط المشتركة لكل التطبيق
 
 final List<MapTripPlan> kTripPlans = [];
@@ -157,24 +289,83 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
   final List<MapTripPlan> _savedPlans = [];
 
   bool _showQuickQuestions = true;
+
   GoogleMapController? _map;
 
   final TextEditingController _searchController = TextEditingController();
 
   List<SearchPlace> _allSearchPlaces = []; // كل المناطق من ملف HOTOSM
+
   List<SearchPlace> _suggestions = []; // الاقتراحات اللي تحت مربّع البحث
 
   Set<Polygon> _polygons = {};
+
   final List<_GovPolygonData> _polyData = [];
+
   Set<Marker> _markers = {};
 
   LatLng _center = const LatLng(21.5, 56.0);
 
   bool _loading = true;
+
   bool _locating = false;
+
   // موقعي
+
   LatLng? _myLocation;
-// 🔐 لو الأسئلة ظاهرة والتخطيط مفعّل → نعتبر الخريطة "مقفولة"
+
+  static final LatLngBounds _omanBounds = LatLngBounds(
+    southwest: LatLng(16.40, 52.00),
+    northeast: LatLng(26.55, 60.30),
+  );
+// موقع مطار مسقط الدولي
+
+  static const LatLng _muscatAirport = LatLng(23.6008679, 58.2828023);
+
+  BitmapDescriptor? _flightIcon;
+
+  Future<void> _loadFlightIcon() async {
+    final icon = await BitmapDescriptor.fromAssetImage(
+      const ImageConfiguration(size: Size(32, 32)), // 👈 صغير
+
+      'assets/icons/plane_pin.png', // تأكدي من المسار
+    );
+
+    setState(() => _flightIcon = icon);
+
+    _addMuscatFlightMarker();
+  }
+
+  void _addMuscatFlightMarker() {
+    final marker = Marker(
+      markerId: const MarkerId('muscat_airport'),
+      position: _muscatAirport,
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+      infoWindow: InfoWindow(
+        title: widget.isArabic
+            ? 'مطار مسقط الدولي'
+            : 'Muscat International Airport',
+        snippet: widget.isArabic
+            ? 'اضغطي لعرض رحلات الطيران'
+            : 'Tap to view flight services',
+      ),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => FlightServicesScreen(
+              isArabic: widget.isArabic,
+              isGuest: widget.guestMode,
+            ),
+          ),
+        );
+      },
+    );
+
+    setState(() => _markers.add(marker));
+  }
+
+  // 🔐 لو الأسئلة ظاهرة والتخطيط مفعّل → نعتبر الخريطة "مقفولة"
 
   bool get _mapLocked => _planningEnabled && _showQuickQuestions;
 
@@ -191,18 +382,26 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
   }
 
   // مركز كل محافظة
+
   final Map<String, LatLng> _govCenters = {};
 
   // مفتاح المحافظة المحددة حالياً
+
   String _selectedGovKey = 'muscat';
 
   // نوع المكان المحدد (بحري / جبلي / صناعي / تاريخي)
+
   PlaceType? _selectedType;
+
   void _goToTripPlannerAfterTypeSelected(PlaceType? type) {
     // نسكّر البوتوم شيت
+
     Navigator.pop(context);
+
     // نحول الـ enum لنص بسيط
+
     String category;
+
     if (type == null) {
       category = 'general';
     } else if (type == PlaceType.beach) {
@@ -216,14 +415,17 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
     } else {
       category = 'general';
     }
+
     // افتح شاشة الـ Trip Planner (أو AiChat لو تبين)
+
     Navigator.pushNamed(
       context,
+
       '/trip_planner', // غيّريها لـ '/ai_chat' لو تبين الشات
+
       arguments: {
         'category': category,
         'governorate': _selectedGovKey,
-        // 👈 استبدلي _selectedGovKey باسم المتغير اللي عندك للمحافظة
       },
     );
   }
@@ -240,22 +442,20 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
     }).toList();
   }
 
-  // حدود عُمان (حبس الكاميرا)
-  static final LatLngBounds _omanBounds = LatLngBounds(
-    southwest: LatLng(16.8, 51.5),
-    northeast: LatLng(26.5, 60.0),
-  );
-
   double _currentZoom = 7.0;
 
   bool _welcomeShown = false;
 
   /// وضع الاستخدام:
+
   /// false = وضع التخطيط (الأسئلة والخطة)
+
   /// true  = وضع الاستكشاف الحر
+
   bool _freeExploreMode = false;
 
   /// هذا يقرأ قيمة البارامتر من الـ Widget
+
   bool get _planningEnabled => widget.enablePlanning;
 
   /// قائمة المحافظات للخيارات اللي تحت
@@ -432,6 +632,8 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
       wantSittings: false,
 
       createdAt: DateTime.now(),
+
+      day: 1, // 👈 حالياً نحطه في اليوم الأول
     );
 
     setState(() {
@@ -448,6 +650,213 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
         ),
         backgroundColor: Colors.green,
       ),
+    );
+  }
+
+  Future<void> _addPlaceToTripWithSheet(Place place) async {
+    if (kTripDays <= 0 || kTripName == null) {
+      await showCreateTripSheet(context);
+      if (kTripDays <= 0 || kTripName == null) return;
+    }
+
+    int selectedDay = 1;
+    int durationHours = 2;
+
+    final result = await showModalBottomSheet<Map<String, int>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return _buildAddPlaceSheet(ctx, place, selectedDay, durationHours);
+      },
+    );
+
+    if (result == null) return;
+
+    final day = result['day'] ?? 1;
+    final hours = result['durationHours'] ?? 2;
+
+    setState(() {
+      _tripPlaceIds.add(place.id);
+      kTripPlans.add(
+        MapTripPlan(
+          place: place,
+          day: day,
+          durationText: '$hours ساعة تقريباً',
+          durationHours: hours.toDouble(),
+          wantHotels: true,
+          wantRestaurants: true,
+          wantSittings: false,
+          createdAt: DateTime.now(),
+        ),
+      );
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'تمت إضافة المكان إلى رحلتك ✅',
+          style: TextStyle(fontFamily: 'Tajawal'),
+        ),
+      ),
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => YourTripScreen(plans: kTripPlans),
+      ),
+    );
+  }
+
+  Widget _buildAddPlaceSheet(
+    BuildContext ctx,
+    Place place,
+    int selectedDay,
+    int durationHours,
+  ) {
+    return StatefulBuilder(
+      builder: (context, setSheetState) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade400,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+
+              Text(
+                'إضافة هذا المكان إلى رحلتك',
+                style: const TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              Text(
+                place.nameAr,
+                style: const TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 15,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // اختيار اليوم
+              const Text(
+                'في أي يوم من الرحلة تبي تزور هذا المكان؟',
+                style: TextStyle(fontFamily: 'Tajawal', fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      if (selectedDay > 1) {
+                        setSheetState(() => selectedDay--);
+                      }
+                    },
+                    icon: const Icon(Icons.remove_circle_outline),
+                  ),
+                  Text(
+                    'اليوم $selectedDay من $kTripDays',
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      if (selectedDay < kTripDays) {
+                        setSheetState(() => selectedDay++);
+                      }
+                    },
+                    icon: const Icon(Icons.add_circle_outline),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // مدة الزيارة
+              const Text(
+                'مدة الزيارة (بالساعات تقريباً)',
+                style: TextStyle(fontFamily: 'Tajawal', fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      if (durationHours > 1) {
+                        setSheetState(() => durationHours--);
+                      }
+                    },
+                    icon: const Icon(Icons.remove_circle_outline),
+                  ),
+                  Text(
+                    '$durationHours ساعة',
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      setSheetState(() => durationHours++);
+                    },
+                    icon: const Icon(Icons.add_circle_outline),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              SizedBox(
+                width: double.infinity,
+                height: 46,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(ctx).pop({
+                      'day': selectedDay,
+                      'durationHours': durationHours,
+                    });
+                  },
+                  child: const Text(
+                    'إضافة للمخطط',
+                    style: TextStyle(fontFamily: 'Tajawal'),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -600,6 +1009,8 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
 
     _loadPlacesDb(); // ⬅⬅ جديد
 
+    _loadFlightIcon();
+
     // لو التخطيط مسموح (user) نعرض كرت الأسئلة فوق الخريطة
     _showQuickQuestions = _planningEnabled;
   }
@@ -611,12 +1022,31 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
     switch (t) {
       case PlaceType.beach:
         return 'أماكن بحرية / Beach spots';
+
       case PlaceType.mountain:
         return 'أماكن جبلية / Mountain spots';
-      case PlaceType.industrial:
-        return 'أماكن صناعية / Industrial spots';
+
       case PlaceType.historic:
         return 'أماكن تاريخية / Historic spots';
+
+      case PlaceType.desert:
+        return 'أماكن صحراوية / Desert spots';
+
+      case PlaceType.hotel:
+        return 'فنادق / Hotels';
+
+      case PlaceType.restaurant:
+        return 'مطاعم / Restaurants';
+
+      case PlaceType.cafe:
+        return 'كوفيهات / Cafés';
+
+      case PlaceType.industrial:
+        return 'أماكن صناعية / Industrial spots';
+
+      case PlaceType.general:
+      default:
+        return 'أماكن عامة / General spots';
     }
   }
 
@@ -1698,7 +2128,9 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: TextButton.icon(
-                        onPressed: () => _addPlaceToTrip(p),
+                        onPressed: () async {
+                          await _addPlaceToTripWithSheet(p);
+                        },
                         icon: Icon(
                           alreadyInTrip ? Icons.check : Icons.add,
                         ),
@@ -1937,6 +2369,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                             wantRestaurants: wantRestaurants,
                             wantSittings: wantSittings,
                             createdAt: DateTime.now(),
+                            day: 1,
                           );
 
                           // لو حابة تحتفظي بكل الخطط في الذاكرة برضه:
@@ -2421,6 +2854,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
                             wantRestaurants: wantRestaurants,
                             wantSittings: wantSittings,
                             createdAt: DateTime.now(),
+                            day: 1,
                           );
                           _savedPlans.add(plan);
 
@@ -2613,7 +3047,7 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
       ),
       body: Stack(
         children: [
-// ===== الخريطة =====
+          // ===== الخريطة =====
 
           GoogleMap(
             initialCameraPosition: CameraPosition(target: _center, zoom: 7.0),
@@ -2630,8 +3064,6 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
             onMapCreated: (c) {
               _map = c;
 
-              _map!.setMapStyle(_kMapStyle);
-
               Future.delayed(const Duration(milliseconds: 300), () {
                 _map!.animateCamera(
                   CameraUpdate.newLatLngBounds(_omanBounds, 32),
@@ -2640,6 +3072,12 @@ class _OmanGMapsScreenState extends State<OmanGMapsScreen> {
             },
             onCameraMove: (pos) {
               _currentZoom = pos.zoom;
+
+              if (!_omanBounds.contains(pos.target)) {
+                _map!.animateCamera(
+                  CameraUpdate.newLatLngBounds(_omanBounds, 10),
+                );
+              }
             },
           ),
 

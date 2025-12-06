@@ -17,6 +17,7 @@ import '../models/trip_hotel_item.dart' show kTripHotels;
 import 'tour_services_screen.dart'; // شاشة الرحلات السياحية
 import '../models/trip_tour_item.dart'
     show kTripTours; // قائمة التورز المضافة لرحلتي
+import 'preference_screen.dart';
 
 class UserHome extends StatefulWidget {
   const UserHome({
@@ -352,23 +353,29 @@ class _UserHomeState extends State<UserHome> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         children: [
-          // اسم المستخدم
-          if (_userName != null && _userName!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _isArabic ? 'مرحباً،' : 'Hello,',
-                    style: const TextStyle(
-                      fontFamily: 'Tajawal',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
+          // اسم المستخدم أو Guest
+
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _isArabic ? 'مرحباً،' : 'Hello,',
+                  style: const TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
                   ),
-                  const SizedBox(height: 3),
+                ),
+
+                const SizedBox(height: 3),
+
+                // إذا "مو" ضيف → نعرض الاسم
+                if (!widget.isGuest &&
+                    _userName != null &&
+                    _userName!.isNotEmpty)
                   Text(
                     _userName!,
                     style: const TextStyle(
@@ -378,9 +385,9 @@ class _UserHomeState extends State<UserHome> {
                       color: Colors.black,
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
+          ),
 
           // السلايدر
           _buildHeroSlider(),
@@ -431,6 +438,7 @@ class _UserHomeState extends State<UserHome> {
             style: const TextStyle(fontFamily: 'Tajawal'),
           ),
           const SizedBox(height: 20),
+
           SizedBox(
             height: 48,
             child: FilledButton(
@@ -441,7 +449,16 @@ class _UserHomeState extends State<UserHome> {
                   borderRadius: BorderRadius.circular(24),
                 ),
               ),
-              onPressed: () => Navigator.pushNamed(context, '/preferences'),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PreferencesScreen(
+                      isGuest: widget.isGuest, // 👈 لو guest بيرجع كـ guest
+                    ),
+                  ),
+                );
+              },
               child: Text(
                 _isArabic ? 'تعديل التفضيلات' : 'Edit Preferences',
                 style: const TextStyle(
@@ -509,28 +526,7 @@ class _UserHomeState extends State<UserHome> {
         if (widget.isGuest) {
           _showGuestDialog();
         } else {
-          // ✅ تحقق من: أماكن الخريطة + الفنادق + الرحلات السياحية
-
-          final hasPlaces = kTripPlans.isNotEmpty;
-
-          final hasHotels = kTripHotels.isNotEmpty;
-
-          final hasTours = kTripTours.isNotEmpty;
-
-          if (!hasPlaces && !hasHotels && !hasTours) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  _isArabic
-                      ? 'ما أضفتِ أي أماكن أو فنادق أو رحلات إلى رحلتك حتى الآن 😊'
-                      : 'You haven’t added any places, stays or tours yet 😊',
-                  style: const TextStyle(fontFamily: 'Tajawal'),
-                ),
-              ),
-            );
-
-            return;
-          }
+          // 🚀 افتح صفحة رحلاتي دايمًا
 
           Navigator.push(
             context,
@@ -600,11 +596,22 @@ class _UserHomeState extends State<UserHome> {
             }
             break;
           case 3: // Map
-            Navigator.pushNamed(
+
+            Navigator.push(
               context,
-              widget.isGuest ? '/map_guest' : '/map',
+              MaterialPageRoute(
+                builder: (_) => OmanGMapsScreen(
+                  enablePlanning: !widget.isGuest, // الضيف: خريطة بدون تخطيط
+
+                  guestMode: widget.isGuest, // نمرّر إنه ضيف أو لا
+
+                  isArabic: _isArabic, // على حسب اللغة في UserHome
+                ),
+              ),
             );
+
             break;
+
           case 4: // Essentials (بدون Useful Info الآن)
             showModalBottomSheet(
               context: context,

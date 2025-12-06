@@ -1,0 +1,1 @@
+bool kIsArabic = true;

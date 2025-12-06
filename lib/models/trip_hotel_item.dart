@@ -68,8 +68,8 @@ final List<TripHotelItem> kHotelsList = [
     priceEn: 'From OMR 60',
     imgAsset: 'assets/hotels/sheraton.jpg',
     cityKey: 'Muscat',
-    lat: 23.6135,
-    lng: 58.5440,
+    lat: 23.5973903,
+    lng: 58.5525343,
   ),
 
   TripHotelItem(
@@ -82,8 +82,8 @@ final List<TripHotelItem> kHotelsList = [
     priceEn: 'From OMR 75',
     imgAsset: 'assets/hotels/shangrila.jpg',
     cityKey: 'Muscat',
-    lat: 23.5329,
-    lng: 58.6607,
+    lat: 23.5507988,
+    lng: 58.6595936,
   ),
 
   TripHotelItem(
@@ -96,8 +96,8 @@ final List<TripHotelItem> kHotelsList = [
     priceEn: 'From OMR 55',
     imgAsset: 'assets/hotels/radisson.jpg',
     cityKey: 'Muscat',
-    lat: 23.5850,
-    lng: 58.4070,
+    lat: 23.5770933,
+    lng: 58.2920650,
   ),
 
   // تقدري تضيفي فنادق أخرى لنزوى / صلالة ... بنفس الشكل

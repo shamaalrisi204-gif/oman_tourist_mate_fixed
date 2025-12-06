@@ -157,7 +157,13 @@ class OmanTouristMateApp extends StatelessWidget {
 
             '/user': (_) => const UserHome(),
 
-            '/map': (_) => const OmanGMapsScreen(),
+            '/map': (_) => OmanGMapsScreen(
+                  enablePlanning: true,
+
+                  guestMode: false,
+
+                  isArabic: true, // أو false حسب لغة التطبيق
+                ),
 
             '/favorites': (_) => const FavoritesScreen(),
 
@@ -187,7 +193,13 @@ class OmanTouristMateApp extends StatelessWidget {
               return YourTripScreen(plans: plans);
             },
 
-            '/map_guest': (_) => const OmanGMapsScreen(enablePlanning: false),
+            '/map_guest': (_) => OmanGMapsScreen(
+                  enablePlanning: false,
+
+                  guestMode: true,
+
+                  isArabic: true, // نفس الشي هنا
+                ),
 
             '/info': (_) => const InfoScreen(),
 

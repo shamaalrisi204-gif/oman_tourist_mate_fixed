@@ -79,8 +79,6 @@ class _LoginScreenState extends State<LoginScreen> {
     FocusScope.of(context).unfocus();
 
     try {
-      // 1) نجيب المستند عن طريق usernameLower
-
       final snap = await FirebaseFirestore.instance
           .collection('users')
           .where('usernameLower', isEqualTo: uname.toLowerCase())
@@ -106,14 +104,10 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // 2) تسجيل الدخول بالإيميل + الباسوورد
-
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: pass,
       );
-
-      // 3) بعد ما نسجّل دخول، نقرأ username من Firestore مرة ثانية بالـ uid
 
       final uid = FirebaseAuth.instance.currentUser!.uid;
 
@@ -122,13 +116,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final unameFromDb = doc.data()?['username']?.toString() ?? '';
 
-      // 4) نحفظ الاسم في SharedPreferences
-
       if (unameFromDb.isNotEmpty) {
         await Prefs.setUserName(unameFromDb);
       }
-
-      // 5) نحدّث حالة التطبيق
 
       await Prefs.setLoggedIn(true);
 
@@ -137,8 +127,6 @@ class _LoginScreenState extends State<LoginScreen> {
       _snack('تم تسجيل الدخول بنجاح ✅', 'Logged in successfully ✅');
 
       if (!mounted) return;
-
-      // 6) الانتقال للصفحة الرئيسية (UserHome)
 
       Navigator.pushReplacement(
         context,
@@ -246,7 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
           leading: IconButton(
             icon: const Icon(
               Icons.arrow_back_ios_new,
-              color: Colors.white, // 🎨 ← هنا صار أبيض
+              color: Colors.white,
               size: 22,
             ),
             onPressed: () => Navigator.pop(context),

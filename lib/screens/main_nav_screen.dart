@@ -28,8 +28,14 @@ class _MainNavScreenState extends State<MainNavScreen> {
     final pages = <Widget>[
       UserHome(isGuest: widget.isGuest),
       const AiConciergeScreen(),
-      const FavoritesScreen(), // لو ما عندك شاشة مفضلة حطي Placeholder
-      OmanGMapsScreen(enablePlanning: !widget.isGuest),
+      const FavoritesScreen(),
+      OmanGMapsScreen(
+        enablePlanning: !widget.isGuest,
+
+        guestMode: widget.isGuest,
+
+        isArabic: isArabic, // من Localizations
+      ),
       const EssentialsScreen(),
     ];
 

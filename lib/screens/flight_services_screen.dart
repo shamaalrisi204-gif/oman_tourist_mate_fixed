@@ -156,44 +156,78 @@ class FlightServicesScreen extends StatelessWidget {
 
           _serviceCard(
             context: context,
+
             isArabic: isArabic,
+
             titleAr: 'صالة المطار (Lounge)',
+
             titleEn: 'Airport Lounge Access',
+
             priceAr: 'الأسعار حسب نوع الصالة',
+
             priceEn: 'Prices vary by lounge type',
+
             descriptionAr: 'استمتعي بالراحة والهدوء قبل موعد الرحلة.',
+
             descriptionEn: 'Relax and refresh before your flight.',
+
             img: 'assets/airlines/lounge.jpg',
-            url: 'https://muscatairport.co.om/en/page/services',
+
+            // 👈 رابط صالة المطار (نسخة عربية)
+
+            url: 'https://www.muscatairport.co.om/ar/content/lounges',
           ),
 
           _serviceCard(
             context: context,
+
             isArabic: isArabic,
+
             titleAr: 'خدمة الاستقبال والمساعدة',
+
             titleEn: 'Meet & Assist Service',
+
             priceAr: 'الأسعار حسب الباقة المختارة',
+
             priceEn: 'Prices vary per package',
+
             descriptionAr:
                 'مساعدة في إجراءات السفر من لحظة الوصول حتى البوابة.',
+
             descriptionEn: 'Assistance from arrival until your boarding gate.',
+
             img: 'assets/airlines/meet_assist.jpg',
-            url: 'https://muscatairport.co.om/en/page/services',
+
+            // 👈 خدمة الاستقبال والمساعدة من موقع الطيران العماني
+
+            url: 'https://www.omanair.com/ar_om/meet-greet-services',
           ),
 
           _serviceCard(
             context: context,
+
             isArabic: isArabic,
+
             titleAr: 'تسجيل الوصول من المنزل',
+
             titleEn: 'Home Check-in Service',
+
             priceAr: 'قد تختلف حسب شركة الطيران',
+
             priceEn: 'May vary depending on airline',
+
             descriptionAr:
                 'استلام الحقائب من المنزل وإنهاء إجراءات السفر مسبقاً.',
+
             descriptionEn:
                 'Your bags are collected and check-in is completed from home.',
+
             img: 'assets/airlines/home_checkin.jpg',
-            url: 'https://muscatairport.co.om/en/page/services',
+
+            // 👈 رابط خدمة تسجيل الوصول من المنزل
+
+            url:
+                'https://linkbio.co/5080908F8x3hx?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAdGRleAOfeMpleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA8xMjQwMjQ1NzQyODc0MTQAAacu02XyQDpMYR1zIXEX5D6fAFWe6_OCmGLcfuKe5GUPvf3OuUbVAy2PKqCmtg_aem_NMQCw2mZuHneILtJ-KQblg',
           ),
 
           const SizedBox(height: 32),

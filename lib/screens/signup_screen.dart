@@ -1,5 +1,3 @@
-// lib/screens/signup_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -98,8 +96,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     if (f.isEmpty && l.isEmpty) return '';
 
-    // نخلي أول حرف Capital والباقي small
-
     f = _capitalizeFirst(f);
 
     l = _capitalizeFirst(l);
@@ -110,7 +106,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     final base = '${f}_${l}';
 
-    final suffixNumber = DateTime.now().millisecond % 100; // 0–99
+    final suffixNumber = DateTime.now().millisecond % 100;
 
     return '$base#${suffixNumber.toString().padLeft(2, '0')}';
   }
