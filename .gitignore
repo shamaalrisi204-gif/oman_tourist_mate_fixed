@@ -44,5 +44,27 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 # Secrets
+
 lib/core/secrets.dart
- *.env
+
+*.env
+
+**/*.env
+
+**/key.properties
+
+**/*.keystore
+
+**/*.jks
+
+# Generated files
+
+node_modules/
+
+**/node_modules/
+
+**/build/
+
+**/.gradle/
+
+**/.dart_tool/
