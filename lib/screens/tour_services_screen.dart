@@ -1,5 +1,3 @@
-// lib/screens/tour_services_screen.dart
-
 import 'package:flutter/material.dart';
 
 import 'package:url_launcher/url_launcher.dart';
@@ -13,7 +11,7 @@ import 'your_trip_screen.dart';
 class TourServicesScreen extends StatefulWidget {
   final bool isArabic;
 
-  final bool isGuest; // 👈 جديد
+  final bool isGuest;
 
   const TourServicesScreen({
     super.key,
@@ -41,8 +39,6 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
 
     return kToursList.where((t) => t.categoryKey == selectedCategory).toList();
   }
-
-  // 🔒 دايلوج منع الضيف
 
   void _showGuestDialog() {
     final isAr = widget.isArabic;
@@ -115,11 +111,7 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
                 ? 'اختاري نوع الرحلة التي تناسبك واحجزي بسهولة عبر Visit Oman.'
                 : 'Choose the tour that fits you and book easily via Visit Oman.',
           ),
-
           const SizedBox(height: 20),
-
-          // الفلترة
-
           Text(
             isAr ? 'الفلترة حسب النوع:' : 'Filter by type:',
             style: const TextStyle(
@@ -127,9 +119,7 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 8),
-
           DropdownButtonFormField<String>(
             value: selectedCategory,
             decoration: InputDecoration(
@@ -145,9 +135,7 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
             }).toList(),
             onChanged: (val) => setState(() => selectedCategory = val!),
           ),
-
           const SizedBox(height: 20),
-
           Text(
             isAr ? 'أفضل الرحلات' : 'Top tours',
             style: const TextStyle(
@@ -156,16 +144,12 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
               fontSize: 18,
             ),
           ),
-
           const SizedBox(height: 10),
-
           ...filteredTours.map(_tourCard).toList(),
         ],
       ),
     );
   }
-
-  // HERO
 
   Widget _buildHero(String title, String sub) {
     return SizedBox(
@@ -228,8 +212,6 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
     );
   }
 
-  // CARD
-
   Widget _tourCard(TripTourItem t) {
     final isAr = widget.isArabic;
 
@@ -287,8 +269,6 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    // ❤️ مفضلة
-
                     IconButton(
                       icon: Icon(
                         t.isFav ? Icons.favorite : Icons.favorite_border,
@@ -296,7 +276,7 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
                       ),
                       onPressed: () {
                         if (widget.isGuest) {
-                          _showGuestDialog(); // 🔒 منع الضيف
+                          _showGuestDialog();
 
                           return;
                         }
@@ -319,9 +299,6 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
                         );
                       },
                     ),
-
-                    // 🌍 معلومات (Visit Oman)
-
                     IconButton(
                       icon: const Icon(Icons.info_outline, color: Colors.blue),
                       onPressed: () {
@@ -334,9 +311,6 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
                         _openUrl(t.infoUrl);
                       },
                     ),
-
-                    // 🎫 الحجز
-
                     IconButton(
                       icon: const Icon(Icons.airplane_ticket_outlined),
                       onPressed: () {
@@ -349,11 +323,7 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
                         _openUrl(t.bookingUrl);
                       },
                     ),
-
                     const Spacer(),
-
-                    // ➕ أضف إلى رحلتي
-
                     TextButton.icon(
                       icon: const Icon(Icons.add, size: 18),
                       label: Text(
@@ -401,8 +371,6 @@ class _TourServicesScreenState extends State<TourServicesScreen> {
       ),
     );
   }
-
-  // فتح الروابط
 
   Future<void> _openUrl(String url) async {
     final uri = Uri.parse(url);

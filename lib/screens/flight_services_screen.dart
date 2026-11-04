@@ -1,5 +1,3 @@
-// lib/screens/flight_services_screen.dart
-
 import 'package:flutter/material.dart';
 
 import 'package:url_launcher/url_launcher.dart';
@@ -14,8 +12,6 @@ class FlightServicesScreen extends StatelessWidget {
   final bool isArabic;
 
   final bool isGuest;
-
-  // دالة لو المستخدم Guest نطلّع له تنبيه بدال ما نفتح الرابط
 
   Future<void> _handleLinkTap(BuildContext context, String url) async {
     if (isGuest) {
@@ -72,8 +68,6 @@ class FlightServicesScreen extends StatelessWidget {
       return;
     }
 
-    // لو مو Guest نفتح الرابط عادي
-
     final uri = Uri.parse(url);
 
     await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -102,16 +96,10 @@ class FlightServicesScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           _buildHero(tHeroTitle, tHeroSub),
-
           const SizedBox(height: 20),
-
-          // -------- Airlines --------
-
           _sectionTitle(
               isArabic ? 'شركاؤنا في الطيران' : 'Our Airline Partners'),
-
           const SizedBox(height: 8),
-
           SizedBox(
             height: 230,
             child: ListView(
@@ -144,94 +132,51 @@ class FlightServicesScreen extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
-          // -------- Airport services --------
-
           _sectionTitle(
               isArabic ? 'الخدمات في مطار مسقط' : 'Muscat Airport Services'),
-
           const SizedBox(height: 8),
-
           _serviceCard(
             context: context,
-
             isArabic: isArabic,
-
             titleAr: 'صالة المطار (Lounge)',
-
             titleEn: 'Airport Lounge Access',
-
             priceAr: 'الأسعار حسب نوع الصالة',
-
             priceEn: 'Prices vary by lounge type',
-
             descriptionAr: 'استمتعي بالراحة والهدوء قبل موعد الرحلة.',
-
             descriptionEn: 'Relax and refresh before your flight.',
-
             img: 'assets/airlines/lounge.jpg',
-
-            // 👈 رابط صالة المطار (نسخة عربية)
-
             url: 'https://www.muscatairport.co.om/ar/content/lounges',
           ),
-
           _serviceCard(
             context: context,
-
             isArabic: isArabic,
-
             titleAr: 'خدمة الاستقبال والمساعدة',
-
             titleEn: 'Meet & Assist Service',
-
             priceAr: 'الأسعار حسب الباقة المختارة',
-
             priceEn: 'Prices vary per package',
-
             descriptionAr:
                 'مساعدة في إجراءات السفر من لحظة الوصول حتى البوابة.',
-
             descriptionEn: 'Assistance from arrival until your boarding gate.',
-
             img: 'assets/airlines/meet_assist.jpg',
-
-            // 👈 خدمة الاستقبال والمساعدة من موقع الطيران العماني
-
             url: 'https://www.omanair.com/ar_om/meet-greet-services',
           ),
-
           _serviceCard(
             context: context,
-
             isArabic: isArabic,
-
             titleAr: 'تسجيل الوصول من المنزل',
-
             titleEn: 'Home Check-in Service',
-
             priceAr: 'قد تختلف حسب شركة الطيران',
-
             priceEn: 'May vary depending on airline',
-
             descriptionAr:
                 'استلام الحقائب من المنزل وإنهاء إجراءات السفر مسبقاً.',
-
             descriptionEn:
                 'Your bags are collected and check-in is completed from home.',
-
             img: 'assets/airlines/home_checkin.jpg',
-
-            // 👈 رابط خدمة تسجيل الوصول من المنزل
-
             url:
                 'https://linkbio.co/5080908F8x3hx?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAdGRleAOfeMpleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA8xMjQwMjQ1NzQyODc0MTQAAacu02XyQDpMYR1zIXEX5D6fAFWe6_OCmGLcfuKe5GUPvf3OuUbVAy2PKqCmtg_aem_NMQCw2mZuHneILtJ-KQblg',
           ),
-
           const SizedBox(height: 32),
-
           Text(
             isArabic
                 ? 'يتم الحجز والدفع عبر المواقع الرسمية فقط. تطبيقك يساعد في الوصول للمعلومات بسهولة.'
@@ -246,8 +191,6 @@ class FlightServicesScreen extends StatelessWidget {
       ),
     );
   }
-
-  // ---------------- Widgets ----------------
 
   Widget _buildHero(String title, String sub) {
     return SizedBox(
@@ -320,8 +263,6 @@ class FlightServicesScreen extends StatelessWidget {
       ),
     );
   }
-
-  // -------- Airline card --------
 
   Widget _airlineCard({
     required BuildContext context,
@@ -402,8 +343,6 @@ class FlightServicesScreen extends StatelessWidget {
       ),
     );
   }
-
-  // -------- Airport service card --------
 
   Widget _serviceCard({
     required BuildContext context,

@@ -1,5 +1,3 @@
-// lib/screens/attractions_screen.dart
-
 import 'package:flutter/material.dart';
 
 import 'package:url_launcher/url_launcher.dart';
@@ -15,7 +13,7 @@ import 'map_gmaps_screen.dart' show kTripPlans;
 class AttractionsScreen extends StatefulWidget {
   final bool isArabic;
 
-  final bool isGuest; // 👈 جديد
+  final bool isGuest;
 
   const AttractionsScreen({
     super.key,
@@ -99,8 +97,6 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
     return isAr ? labels.join('، ') : labels.join(', ');
   }
 
-  // 🔒 دايلوج للضيف
-
   void _showGuestDialog() {
     final isAr = widget.isArabic;
 
@@ -171,21 +167,13 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             _buildHeroHeader(isAr),
-
             const SizedBox(height: 16),
-
-            // بطاقة معلومات المستخدم
-
             _buildUserSummaryCard(
               isAr: isAr,
               city: savedCity,
               interestsText: interestsText,
             ),
-
             const SizedBox(height: 20),
-
-            // الفلترة
-
             Text(
               isAr ? 'الفلترة حسب المنطقة:' : 'Filter by region:',
               style: const TextStyle(
@@ -193,9 +181,7 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 8),
-
             DropdownButtonFormField<String>(
               value: selectedCity,
               items: cities.entries.map((c) {
@@ -211,9 +197,7 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
-
             Text(
               isAr ? 'أفضل المعالم لرحلتك' : 'Top attractions',
               style: const TextStyle(
@@ -222,19 +206,14 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
                 fontSize: 18,
               ),
             ),
-
             const SizedBox(height: 10),
-
             ...filteredAttractions.map(_buildAttractionCard),
-
             const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
-
-  // ----------------- HERO HEADER -----------------
 
   Widget _buildHeroHeader(bool isAr) {
     return SizedBox(
@@ -299,8 +278,6 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
     );
   }
 
-  // ----------------- USER SUMMARY CARD -----------------
-
   Widget _buildUserSummaryCard({
     required bool isAr,
     required String city,
@@ -346,8 +323,6 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
     );
   }
 
-  // ----------------- ATTRACTION CARD -----------------
-
   Widget _buildAttractionCard(TripAttractionItem item) {
     final isAr = widget.isArabic;
 
@@ -358,8 +333,6 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // صورة
-
           ClipRRect(
             borderRadius: const BorderRadius.vertical(
               top: Radius.circular(18),
@@ -371,7 +344,6 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
               fit: BoxFit.cover,
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -385,9 +357,7 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
                     fontSize: 16,
                   ),
                 ),
-
                 const SizedBox(height: 6),
-
                 Text(
                   isAr ? item.descAr : item.descEn,
                   style: const TextStyle(
@@ -395,13 +365,9 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
                     fontSize: 12,
                   ),
                 ),
-
                 const SizedBox(height: 10),
-
                 Row(
                   children: [
-                    // ❤️ مفضلة
-
                     IconButton(
                       icon: Icon(
                         item.isFav ? Icons.favorite : Icons.favorite_border,
@@ -409,7 +375,7 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
                       ),
                       onPressed: () {
                         if (widget.isGuest) {
-                          _showGuestDialog(); // 🔒
+                          _showGuestDialog();
 
                           return;
                         }
@@ -432,24 +398,17 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
                         );
                       },
                     ),
-
-                    // 🔗 المزيد
-
                     IconButton(
                       icon: const Icon(Icons.open_in_new, color: Colors.blue),
                       onPressed: () {
                         if (widget.isGuest) {
-                          _showGuestDialog(); // 🔒
+                          _showGuestDialog();
                         } else {
                           _openMore(item.moreUrl);
                         }
                       },
                     ),
-
                     const Spacer(),
-
-                    // ➕ أضف إلى رحلتي
-
                     TextButton.icon(
                       icon: const Icon(Icons.add, size: 18),
                       label: Text(
@@ -458,7 +417,7 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
                       ),
                       onPressed: () {
                         if (widget.isGuest) {
-                          _showGuestDialog(); // 🔒
+                          _showGuestDialog();
 
                           return;
                         }
@@ -481,17 +440,13 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 6),
-
-                // زر عرض "رحلتي"
-
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {
                       if (widget.isGuest) {
-                        _showGuestDialog(); // 🔒
+                        _showGuestDialog();
 
                         return;
                       }

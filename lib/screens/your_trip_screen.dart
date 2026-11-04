@@ -1,5 +1,3 @@
-// lib/screens/your_trip_screen.dart
-
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -7,8 +5,6 @@ import 'package:flutter/material.dart';
 import '../core/prefs.dart';
 
 import '../widgets/trip_summary_card.dart';
-
-// نستورد موديل الرحلة + قائمة الخطط + اسم الرحلة وعدد الأيام
 
 import 'map_gmaps_screen.dart'
     show MapTripPlan, kTripPlans, kTripName, kTripDays, kTripStartDate;
@@ -58,8 +54,6 @@ class _YourTripScreenState extends State<YourTripScreen> {
     });
   }
 
-  // حساب المسافة بالكيلومتر بين نقطتين (هفرسين)
-
   double _distanceKm(double lat1, double lon1, double lat2, double lon2) {
     const earthRadius = 6371.0; // km
 
@@ -85,8 +79,6 @@ class _YourTripScreenState extends State<YourTripScreen> {
     final isEmpty = !_hasPlaces && !_hasHotels && !_hasAttractions;
 
     if (isEmpty) {
-      // حالة ما فيه أي خطة – تصميم شبيه Visit Dubai
-
       return Scaffold(
         appBar: AppBar(
           title: const Text(
@@ -99,8 +91,6 @@ class _YourTripScreenState extends State<YourTripScreen> {
       );
     }
 
-    // تجميع الأماكن حسب اليوم
-
     final Map<int, List<MapTripPlan>> plansByDay = {};
 
     for (final p in widget.plans) {
@@ -110,8 +100,6 @@ class _YourTripScreenState extends State<YourTripScreen> {
     }
 
     final days = plansByDay.keys.toList()..sort();
-
-    // معلومات ملخص الرحلة
 
     final tripTitle = kTripName ?? 'رحلتي';
 
@@ -133,8 +121,6 @@ class _YourTripScreenState extends State<YourTripScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ====== كرت ملخص الرحلة (نفس فكرة Visit Dubai) ======
-
           TripSummaryCard(
             title: tripTitle,
             daysCount: daysCount,
@@ -142,20 +128,14 @@ class _YourTripScreenState extends State<YourTripScreen> {
             headerImageAsset:
                 headerImageAsset ?? 'assets/places/default_header.jpg',
           ),
-
           const SizedBox(height: 20),
-
-          // ====== الأيام والأماكن ======
-
           ...days.map(
             (d) => _buildDaySection(
               dayNumber: d,
               plans: plansByDay[d]!,
             ),
           ),
-
           const SizedBox(height: 24),
-
           if (_hasHotels) ...[
             const Text(
               '🏨 أماكن الإقامة في رحلتك',
@@ -169,7 +149,6 @@ class _YourTripScreenState extends State<YourTripScreen> {
             ...kTripHotels.map(_buildHotelCard),
             const SizedBox(height: 20),
           ],
-
           if (_hasAttractions) ...[
             const Text(
               '⭐ المعالم السياحية في خطتك',
@@ -186,8 +165,6 @@ class _YourTripScreenState extends State<YourTripScreen> {
       ),
     );
   }
-
-  // ---------- سيكشن اليوم ----------
 
   Widget _buildDaySection({
     required int dayNumber,
@@ -219,8 +196,6 @@ class _YourTripScreenState extends State<YourTripScreen> {
       ),
     );
   }
-
-  // ---------- كرت المكان ----------
 
   Widget _buildPlaceCard(MapTripPlan plan) {
     final place = plan.place;
@@ -282,8 +257,6 @@ class _YourTripScreenState extends State<YourTripScreen> {
     );
   }
 
-  // ---------- كرت الفندق ----------
-
   Widget _buildHotelCard(TripHotelItem h) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -327,8 +300,6 @@ class _YourTripScreenState extends State<YourTripScreen> {
       ),
     );
   }
-
-  // ---------- كرت المعلم السياحي ----------
 
   Widget _buildAttractionCard(TripAttractionItem a) {
     return Card(
@@ -375,8 +346,6 @@ class _YourTripScreenState extends State<YourTripScreen> {
   }
 }
 
-// ================== شاشة لو ما في خطط (تصميم شبيه Visit Dubai) ==================
-
 class _EmptyTripView extends StatelessWidget {
   const _EmptyTripView();
 
@@ -388,9 +357,6 @@ class _EmptyTripView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 12),
-
-          // الهيدر (العنوان + التبويبات)
-
           const Align(
             alignment: Alignment.centerRight,
             child: Text(
@@ -402,9 +368,7 @@ class _EmptyTripView extends StatelessWidget {
               ),
             ),
           ),
-
           const SizedBox(height: 12),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: const [
@@ -415,53 +379,34 @@ class _EmptyTripView extends StatelessWidget {
               _TripsTab(text: 'رحلاتي', selected: true),
             ],
           ),
-
           const SizedBox(height: 32),
-
-          // صورة توضيحية (حطي أي صورة تحبينها)
-
           SizedBox(
             height: 220,
             child: Image.asset(
-              'assets/places/my_trip_empty.jpg', // عدّلي المسار
-
+              'assets/places/my_trip_empty.jpg',
               fit: BoxFit.contain,
             ),
           ),
-
           const SizedBox(height: 24),
-
           const _FeatureRow(
             icon: Icons.add,
             text: 'حفظ الوجهات التي ترغب بزيارتها',
           ),
-
           const SizedBox(height: 12),
-
           const _FeatureRow(
             icon: Icons.date_range,
             text: 'خطط لرحلتك على مدار عدة أيام',
           ),
-
           const SizedBox(height: 12),
-
           const _FeatureRow(
             icon: Icons.work_outline,
             text: 'الوصول إلى الرحلات من أي مكان في التطبيق',
           ),
-
           const SizedBox(height: 32),
-
-          // زر إنشاء رحلة جديدة → يفتح الخريطة / المحافظات
-
           SizedBox(
             height: 48,
             child: ElevatedButton(
               onPressed: () {
-                // هنا افتحي شاشة الخريطة اللي فيها Add to trip
-
-                // غيّري '/map' لاسم الروت الصحيح عندك
-
                 Navigator.pushNamed(context, '/map');
               },
               style: ElevatedButton.styleFrom(
@@ -484,8 +429,6 @@ class _EmptyTripView extends StatelessWidget {
     );
   }
 }
-
-// تبويب بسيط (رحلاتي – الدليل – الرحلات الموصى بها)
 
 class _TripsTab extends StatelessWidget {
   final String text;
@@ -510,8 +453,6 @@ class _TripsTab extends StatelessWidget {
     );
   }
 }
-
-// سطر ميزة مع أيقونة
 
 class _FeatureRow extends StatelessWidget {
   final IconData icon;

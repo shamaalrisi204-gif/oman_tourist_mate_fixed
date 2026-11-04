@@ -1,5 +1,3 @@
-// lib/screens/verify_otp_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -62,8 +60,6 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
         setState(() => _busy = false);
         return;
       }
-
-      // إنشاء المستخدم في Firebase Auth
       UserCredential cred =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: widget.email,
@@ -72,7 +68,6 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
 
       final uid = cred.user!.uid;
 
-      // حفظ بياناته في Firestore
       await FirebaseFirestore.instance.collection('users').doc(uid).set({
         'email': widget.email,
         'username': widget.username,
@@ -83,16 +78,13 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      // ✅ حفظ حالة الدخول و الـ onboarding
       await Prefs.setLoggedIn(true);
       await Prefs.setOnboardingDone(true);
 
-      // ✅ أهم سطر: حفظ اسم المستخدم في SharedPreferences
       await Prefs.setUserName(widget.username);
 
       _snack('تم التحقق وإنشاء الحساب بنجاح ✅');
 
-      // الانتقال إلى شاشة التفضيلات
       Navigator.pushReplacementNamed(context, '/preferences');
     } on FirebaseAuthException catch (e) {
       String msg = 'حدث خطأ أثناء إنشاء الحساب';

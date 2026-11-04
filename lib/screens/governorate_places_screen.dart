@@ -232,7 +232,7 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
   // ======================= إضافة مكان للرحلة مع BottomSheet =======================
 
   Future<void> _addPlaceToTripWithSheet(GovPlace govPlace) async {
-    // 1) لو ما فيه رحلة أساساً
+    // لو ما فيه رحلة أساساً
     if (kTripDays <= 0 || kTripName == null) {
       await showCreateTripSheet(context);
       if (kTripDays <= 0 || kTripName == null) return;
@@ -241,7 +241,6 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
     int selectedDay = 1;
     int durationHours = 2;
 
-    // 2) bottomSheet لاختيار اليوم والمدة
     final result = await showModalBottomSheet<Map<String, int>>(
       context: context,
       isScrollControlled: true,
@@ -259,10 +258,13 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
     final day = result['day'] ?? 1;
     final hours = result['durationHours'] ?? 2;
 
-    // ✅ نحول GovPlace إلى Place اللي تستخدمه الخريطة
+    // 1) حوّل GovPlace إلى Place (حق الخريطة)
     final place = _toMapPlace(govPlace);
 
-    // 3) نضيف المكان فعلياً باستخدام MapTripPlan تبع الخريطة
+    // 2) هنا ما عندنا موقع المستخدم → نخليها 0 حالياً
+    final int driveMinutes = 0;
+
+    // 3) أضف المكان للخطة
     setState(() {
       _tripPlaceIds.add(govPlace.id);
 
@@ -276,6 +278,7 @@ class _GovernoratePlacesScreenState extends State<GovernoratePlacesScreen> {
           wantRestaurants: true,
           wantSittings: false,
           createdAt: DateTime.now(),
+          driveMinutes: driveMinutes, // 👈 مهم
         ),
       );
     });

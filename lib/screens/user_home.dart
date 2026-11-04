@@ -1,22 +1,19 @@
-// lib/screens/user_home.dart
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 import '../core/prefs.dart';
 import '../core/app_state.dart';
-import 'map_gmaps_screen.dart'; // فيه kTripPlans
+import 'map_gmaps_screen.dart';
 import '../screens/your_trip_screen.dart';
 import 'flight_services_screen.dart';
 import 'hotel_services_screen.dart';
-import 'transport_services_screen.dart'; // شاشة النقل الجديدة
+import 'transport_services_screen.dart';
 import 'dining_services_screen.dart';
 import 'attractions_screen.dart';
 import '../models/trip_hotel_item.dart' show kTripHotels;
-import 'tour_services_screen.dart'; // شاشة الرحلات السياحية
-import '../models/trip_tour_item.dart'
-    show kTripTours; // قائمة التورز المضافة لرحلتي
+import 'tour_services_screen.dart';
+import '../models/trip_tour_item.dart' show kTripTours;
 import 'preference_screen.dart';
 
 class UserHome extends StatefulWidget {
@@ -31,7 +28,6 @@ class UserHome extends StatefulWidget {
   State<UserHome> createState() => _UserHomeState();
 }
 
-/// موديل للسلايد (صورة أو فيديو + نص)
 class _HeroSlide {
   final String asset;
   final bool isVideo;
@@ -50,7 +46,6 @@ class _HeroSlide {
   });
 }
 
-/// موديل للكروت السريعة (رحلات الطيران، الإقامة، ...)
 class _CategoryItem {
   final IconData icon;
   final String titleAr;
@@ -74,10 +69,18 @@ class _UserHomeState extends State<UserHome> {
   Timer? _autoTimer;
   VideoPlayerController? _videoController;
 
-  static const Color _background = Color(0xFFF3EED9);
-  static const Color _prefButtonColor = Color(0xFFE0CDA0);
+  static const Color _background = Color(0xFFF3FAFA);
 
-  // أسماء الاهتمامات
+  static const Color _prefButtonColor = Color(0xFFBCE5E3);
+
+  static const Color _omaniGreen = Color(0xFF075C65);
+
+  static const Color _softGold = Color(0xFFD8ECEA);
+
+  static const Color _gold = Color(0xFF1B9AA3);
+
+  static const Color _cream = Color(0xFFFFFFFF);
+
   static const Map<String, Map<String, String>> _interestNames = {
     'shopping': {'ar': 'تسوّق', 'en': 'Shopping'},
     'heritage': {'ar': 'أماكن تراثية وتاريخية', 'en': 'Heritage & history'},
@@ -87,7 +90,6 @@ class _UserHomeState extends State<UserHome> {
     'food': {'ar': 'مقاهي ومطاعم', 'en': 'Cafés & restaurants'},
   };
 
-  // السلايدات
   late final List<_HeroSlide> _slides = [
     const _HeroSlide(
       asset: 'assets/hero/whales.jpg',
@@ -123,7 +125,6 @@ class _UserHomeState extends State<UserHome> {
     ),
   ];
 
-  // الكروت السريعة مثل Visit Qatar (Flights, Stays, ...)
   static const List<_CategoryItem> _categories = [
     _CategoryItem(
       icon: Icons.flight_takeoff,
@@ -329,7 +330,9 @@ class _UserHomeState extends State<UserHome> {
         backgroundColor: _background,
         elevation: 0,
         centerTitle: true,
+        toolbarHeight: 75,
         leadingWidth: 90,
+        // زر تغيير اللغة
         leading: TextButton(
           onPressed: _toggleLanguage,
           child: Text(
@@ -342,132 +345,281 @@ class _UserHomeState extends State<UserHome> {
             ),
           ),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontFamily: 'Tajawal',
-            fontWeight: FontWeight.w600,
-          ),
+        // عنوان الصفحة والزخرفة الذهبية
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontFamily: 'Tajawal',
+                fontSize: 19,
+                fontWeight: FontWeight.bold,
+                color: _omaniGreen,
+                letterSpacing: 0.2,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Image.asset(
+              'assets/images/home/gold_ornament.png',
+              width: 150,
+              height: 25,
+              fit: BoxFit.contain,
+            ),
+          ],
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      body: Stack(
         children: [
-          // اسم المستخدم أو Guest
-
-          Padding(
+          // الخلفية العُمانية
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/home/home_background 1.png',
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+            ),
+          ),
+          // محتويات الصفحة مع التمرير
+          ListView(
             padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _isArabic ? 'مرحباً،' : 'Hello,',
-                  style: const TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
+            children: [
+              // صورة القلعة العُمانية
+              ClipRRect(
+                borderRadius: BorderRadius.zero,
+                child: SizedBox(
+                  height: 135,
+                  width: double.infinity,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.asset(
+                        'assets/images/home/omani_header 1.png',
+                        fit: BoxFit.cover,
+                        alignment: Alignment.bottomCenter,
+                      ),
+                      Positioned(
+                        top: 25,
+                        left: 18,
+                        right: 18,
+                        child: Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _isArabic ? 'مرحباً،' : 'Hello,',
+                                textDirection: TextDirection.rtl,
+                                style: const TextStyle(
+                                  fontFamily: 'Tajawal',
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF5D5142),
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              if (!widget.isGuest &&
+                                  _userName != null &&
+                                  _userName!.isNotEmpty)
+                                Text(
+                                  _userName!,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontFamily: 'Tajawal',
+                                    fontSize: 21,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF263E35),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+              ),
 
-                const SizedBox(height: 3),
+              const SizedBox(height: 4),
 
-                // إذا "مو" ضيف → نعرض الاسم
-                if (!widget.isGuest &&
-                    _userName != null &&
-                    _userName!.isNotEmpty)
-                  Text(
-                    _userName!,
+              // السلايدر السياحي بإطار ذهبي
+
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                    color: const Color(0xFFD4A64F),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF8B7044).withValues(alpha: 0.15),
+                      blurRadius: 12,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: _buildHeroSlider(),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(40),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  textDirection: TextDirection.rtl,
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 1.5,
+                        color: const Color(0xFFD4A64F),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      flex: 4,
+                      child: Text(
+                        _isArabic ? 'مرحبًا بك' : 'Welcome',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: const TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF123F35),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Image.asset(
+                      'assets/images/home/omani_swords.png',
+                      width: 48,
+                      height: 58,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      flex: 3,
+                      child: Text(
+                        _isArabic ? 'في عُمان' : 'to Oman',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: const TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF123F35),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        height: 1.5,
+                        color: const Color(0xFFD4A64F),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+              _buildUsefulInfoCard(),
+
+              const SizedBox(height: 16),
+              _buildQuickCategories(),
+
+              const SizedBox(height: 16),
+              _buildMyTripCard(),
+
+              const SizedBox(height: 20),
+
+              Text(
+                _isArabic ? 'موقعك المحفوظ:' : 'Your saved location:',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontFamily: 'Tajawal',
+                    ),
+              ),
+
+              Text(
+                coords,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontFamily: 'Tajawal',
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                interestsTitle,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontFamily: 'Tajawal',
+                    ),
+              ),
+
+              Text(
+                interestsText,
+                style: const TextStyle(fontFamily: 'Tajawal'),
+              ),
+
+              const SizedBox(height: 20),
+
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFF4E9D8),
+                    foregroundColor: const Color(0xFF123F35),
+                    elevation: 0,
+                    side: const BorderSide(
+                      color: Color(0xFFD9BA7A),
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(26),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PreferencesScreen(
+                          isGuest: widget.isGuest,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.tune_rounded,
+                    size: 23,
+                    color: Color(0xFF123F35),
+                  ),
+                  label: Text(
+                    _isArabic ? 'تعديل التفضيلات' : 'Edit Preferences',
                     style: const TextStyle(
                       fontFamily: 'Tajawal',
-                      fontSize: 23,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: Color(0xFF123F35),
                     ),
                   ),
-              ],
-            ),
-          ),
-
-          // السلايدر
-          _buildHeroSlider(),
-          const SizedBox(height: 16),
-
-          Text(
-            welcome,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Tajawal',
-                ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // كرت Useful Info العريض
-          _buildUsefulInfoCard(),
-          const SizedBox(height: 16),
-
-          // الكروت السريعة Flights / Stays / ...
-          _buildQuickCategories(),
-          const SizedBox(height: 16),
-
-          // كرت My Trip العريض تحت الكروت
-          _buildMyTripCard(),
-          const SizedBox(height: 20),
-
-          // معلومات الموقع والاهتمامات
-          Text(
-            _isArabic ? 'موقعك المحفوظ:' : 'Your saved location:',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontFamily: 'Tajawal',
-                ),
-          ),
-          Text(
-            coords,
-            style: const TextStyle(fontSize: 16, fontFamily: 'Tajawal'),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            interestsTitle,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontFamily: 'Tajawal',
-                ),
-          ),
-          Text(
-            interestsText,
-            style: const TextStyle(fontFamily: 'Tajawal'),
-          ),
-          const SizedBox(height: 20),
-
-          SizedBox(
-            height: 48,
-            child: FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: _prefButtonColor,
-                foregroundColor: Colors.black87,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
                 ),
               ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PreferencesScreen(
-                      isGuest: widget.isGuest, // 👈 لو guest بيرجع كـ guest
-                    ),
-                  ),
-                );
-              },
-              child: Text(
-                _isArabic ? 'تعديل التفضيلات' : 'Edit Preferences',
-                style: const TextStyle(
-                  fontFamily: 'Tajawal',
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+            ],
           ),
         ],
       ),
@@ -475,48 +627,95 @@ class _UserHomeState extends State<UserHome> {
     );
   }
 
-  // ====== كرت Useful Info العريض في الهوم ======
   Widget _buildUsefulInfoCard() {
     final label = _isArabic ? 'معلومات قد تهمك' : 'Useful Info';
 
     return InkWell(
       onTap: () => Navigator.pushNamed(context, '/tips'),
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+        height: 65,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          color: const Color(0xFFFFFAF3),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFFD9BA7A),
+            width: 1.2,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 8,
+              color: const Color(0xFF8B7044).withValues(alpha: 0.10),
+              blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.info_outline, color: Colors.black87, size: 24),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: const TextStyle(
-                fontFamily: 'Tajawal',
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(19),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // الزخرفة العُمانية على يسار البطاقة
+
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: Opacity(
+                  opacity: 0.65,
+                  child: Image.asset(
+                    'assets/images/home/omani_pattern 1.png',
+                    width: 135,
+                    height: 65,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.centerLeft,
+                  ),
+                ),
               ),
-            ),
-          ],
+
+              // النص وأيقونة المعلومات في الوسط
+
+              Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  textDirection: TextDirection.rtl,
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      color: Color(0xFF123F35),
+                      size: 23,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17,
+                        color: Color(0xFF123F35),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // السهم على يمين البطاقة
+
+              const Positioned(
+                right: 12,
+                child: Icon(
+                  Icons.chevron_right,
+                  color: Color(0xFFB68A42),
+                  size: 25,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-
-  // ====== كرت My Trip العريض ======
-  // ====== كرت My Trip العريض ======
 
   Widget _buildMyTripCard() {
     final label = _isArabic ? 'رحلتي' : 'My Trip';
@@ -526,8 +725,6 @@ class _UserHomeState extends State<UserHome> {
         if (widget.isGuest) {
           _showGuestDialog();
         } else {
-          // 🚀 افتح صفحة رحلاتي دايمًا
-
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -536,33 +733,302 @@ class _UserHomeState extends State<UserHome> {
           );
         }
       },
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(22),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+        height: 70,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          gradient: const LinearGradient(
+            colors: [
+              Color(0xFF174D40),
+              Color(0xFF08362D),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: const Color(0xFFD9BA7A),
+            width: 1.5,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+              color: const Color(0xFF123F35).withValues(alpha: 0.20),
+              blurRadius: 12,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.flag_outlined, color: Colors.black87, size: 24),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: const TextStyle(
-                fontFamily: 'Tajawal',
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // صورة الجبال الذهبية على اليسار
+
+              Positioned(
+                left: 0,
+                bottom: 0,
+                child: Image.asset(
+                  'assets/images/home/oman_mountains.png',
+                  width: 165,
+                  height: 65,
+                  fit: BoxFit.contain,
+                  alignment: Alignment.bottomLeft,
+                ),
               ),
+
+              // كلمة رحلتي في منتصف الزر
+
+              Center(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+
+              // أيقونة العلم بجانب الكلمة
+
+              Positioned(
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Transform.translate(
+                    offset: const Offset(53, 0),
+                    child: const Icon(
+                      Icons.flag_outlined,
+                      color: Color(0xFFFFE5A8),
+                      size: 27,
+                    ),
+                  ),
+                ),
+              ),
+
+              // السهم على يمين الزر
+
+              const Positioned(
+                right: 12,
+                top: 0,
+                bottom: 0,
+                child: Icon(
+                  Icons.chevron_right,
+                  color: Color(0xFFFFE5A8),
+                  size: 25,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNav(BuildContext context) {
+    final isAr = _isArabic;
+
+    const navGreen = Color(0xFF123F35);
+
+    const selectedBg = Color(0xFFEDE1CD);
+
+    const gold = Color(0xFFC49A50);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFAF3),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(24),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: navGreen.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(24),
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: 0,
+          backgroundColor: const Color(0xFFFFFAF3),
+          selectedItemColor: navGreen,
+          unselectedItemColor: navGreen,
+          selectedFontSize: 12,
+          unselectedFontSize: 11,
+          selectedLabelStyle: const TextStyle(
+            fontFamily: 'Tajawal',
+            fontWeight: FontWeight.bold,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontFamily: 'Tajawal',
+            fontWeight: FontWeight.w500,
+          ),
+          elevation: 0,
+          onTap: (index) {
+            switch (index) {
+              case 0:
+                break;
+
+              case 1:
+                if (widget.isGuest) {
+                  _showGuestDialog();
+                } else {
+                  Navigator.pushNamed(context, '/ai_chat');
+                }
+
+                break;
+
+              case 2:
+                if (widget.isGuest) {
+                  _showGuestDialog();
+                } else {
+                  Navigator.pushNamed(context, '/favorites');
+                }
+
+                break;
+
+              case 3:
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => OmanGMapsScreen(
+                      enablePlanning: !widget.isGuest,
+                      guestMode: widget.isGuest,
+                      isArabic: _isArabic,
+                    ),
+                  ),
+                );
+
+                break;
+
+              case 4:
+                showModalBottomSheet(
+                  context: context,
+                  backgroundColor: const Color(0xFFFFFAF3),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
+                  ),
+                  builder: (_) {
+                    return SafeArea(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ListTile(
+                            leading: const Icon(
+                              Icons.group,
+                              color: navGreen,
+                            ),
+                            title: Text(
+                              isAr ? 'نبذة عنا' : 'About Us',
+                              style: const TextStyle(
+                                fontFamily: 'Tajawal',
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.pop(context);
+
+                              Navigator.pushNamed(context, '/about');
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(
+                              Icons.mail_outline,
+                              color: navGreen,
+                            ),
+                            title: Text(
+                              isAr ? 'تواصل معنا' : 'Contact Us',
+                              style: const TextStyle(
+                                fontFamily: 'Tajawal',
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.pop(context);
+
+                              Navigator.pushNamed(context, '/contact');
+                            },
+                          ),
+                          const Divider(height: 0),
+                          ListTile(
+                            leading: const Icon(
+                              Icons.currency_exchange,
+                              color: navGreen,
+                            ),
+                            title: Text(
+                              isAr ? 'محوّل العملات' : 'Currency Converter',
+                              style: const TextStyle(
+                                fontFamily: 'Tajawal',
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.pop(context);
+
+                              Navigator.pushNamed(context, '/currency');
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+
+                break;
+            }
+          },
+          items: [
+            BottomNavigationBarItem(
+              icon: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 17,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: selectedBg,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Icon(
+                  Icons.home_outlined,
+                  size: 28,
+                  color: navGreen,
+                ),
+              ),
+              label: isAr ? 'الرئيسية' : 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(
+                Icons.auto_awesome,
+                size: 26,
+                color: gold,
+              ),
+              label: isAr ? 'المساعد الذكي' : 'AI Assistant',
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(
+                Icons.favorite_border,
+                size: 27,
+              ),
+              label: isAr ? 'المفضلة' : 'Favorites',
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(
+                Icons.map_outlined,
+                size: 27,
+              ),
+              label: isAr ? 'الخريطة' : 'Map',
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(
+                Icons.grid_view_rounded,
+                size: 27,
+              ),
+              label: isAr ? 'الخدمات' : 'Services',
             ),
           ],
         ),
@@ -570,127 +1036,6 @@ class _UserHomeState extends State<UserHome> {
     );
   }
 
-  // ================= Bottom Navigation =================
-  Widget _buildBottomNav(BuildContext context) {
-    final isAr = _isArabic;
-
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      currentIndex: 0,
-      onTap: (index) {
-        switch (index) {
-          case 0:
-            break;
-          case 1: // AI
-            if (widget.isGuest) {
-              _showGuestDialog();
-            } else {
-              Navigator.pushNamed(context, '/ai_chat');
-            }
-            break;
-          case 2: // Favorites
-            if (widget.isGuest) {
-              _showGuestDialog();
-            } else {
-              Navigator.pushNamed(context, '/favorites');
-            }
-            break;
-          case 3: // Map
-
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => OmanGMapsScreen(
-                  enablePlanning: !widget.isGuest, // الضيف: خريطة بدون تخطيط
-
-                  guestMode: widget.isGuest, // نمرّر إنه ضيف أو لا
-
-                  isArabic: _isArabic, // على حسب اللغة في UserHome
-                ),
-              ),
-            );
-
-            break;
-
-          case 4: // Essentials (بدون Useful Info الآن)
-            showModalBottomSheet(
-              context: context,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-              builder: (_) {
-                return SafeArea(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.group),
-                        title: Text(
-                          isAr ? 'نبذة عنا' : 'About Us',
-                          style: const TextStyle(fontFamily: 'Tajawal'),
-                        ),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.pushNamed(context, '/about');
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.mail_outline),
-                        title: Text(
-                          isAr ? 'تواصل معنا' : 'Contact Us',
-                          style: const TextStyle(fontFamily: 'Tajawal'),
-                        ),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.pushNamed(context, '/contact');
-                        },
-                      ),
-                      const Divider(height: 0),
-                      ListTile(
-                        leading: const Icon(Icons.currency_exchange),
-                        title: Text(
-                          isAr ? 'محوّل العملات' : 'Currency Converter',
-                          style: const TextStyle(fontFamily: 'Tajawal'),
-                        ),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.pushNamed(context, '/currency');
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-            break;
-        }
-      },
-      items: [
-        BottomNavigationBarItem(
-          icon: const Icon(Icons.home_outlined),
-          label: isAr ? 'الرئيسية' : 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: const Icon(Icons.auto_awesome),
-          label: isAr ? 'المساعد الذكي' : 'AI',
-        ),
-        BottomNavigationBarItem(
-          icon: const Icon(Icons.favorite_border),
-          label: isAr ? 'المفضلة' : 'Favorites',
-        ),
-        BottomNavigationBarItem(
-          icon: const Icon(Icons.map_outlined),
-          label: isAr ? 'الخريطة' : 'Map',
-        ),
-        BottomNavigationBarItem(
-          icon: const Icon(Icons.grid_view),
-          label: isAr ? 'الخدمات' : 'Essentials',
-        ),
-      ],
-    );
-  }
-
-  // ================= Hero Slider =================
   Widget _buildHeroSlider() {
     return AspectRatio(
       aspectRatio: 16 / 9,
@@ -705,7 +1050,9 @@ class _UserHomeState extends State<UserHome> {
               onPageChanged: (index) {
                 setState(() => _currentPage = index);
                 _startAutoSlide();
+
                 final slide = _slides[index];
+
                 if (slide.isVideo && _videoController != null) {
                   _videoController!.play();
                 } else {
@@ -714,10 +1061,13 @@ class _UserHomeState extends State<UserHome> {
               },
               itemBuilder: (context, index) {
                 final slide = _slides[index];
+
                 return Stack(
                   fit: StackFit.expand,
                   children: [
-                    if (slide.isVideo && _videoController != null)
+                    if (slide.isVideo &&
+                        _videoController != null &&
+                        _videoController!.value.isInitialized)
                       FittedBox(
                         fit: BoxFit.cover,
                         child: SizedBox(
@@ -737,8 +1087,8 @@ class _UserHomeState extends State<UserHome> {
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
-                            Colors.black.withOpacity(0.55),
-                            Colors.black.withOpacity(0.05),
+                            Colors.black.withValues(alpha: 0.55),
+                            Colors.black.withValues(alpha: 0.05),
                           ],
                         ),
                       ),
@@ -782,14 +1132,16 @@ class _UserHomeState extends State<UserHome> {
               mainAxisSize: MainAxisSize.min,
               children: List.generate(_slides.length, (i) {
                 final active = i == _currentPage;
+
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   margin: const EdgeInsets.symmetric(horizontal: 3),
                   width: active ? 10 : 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    color:
-                        active ? Colors.white : Colors.white.withOpacity(0.5),
+                    color: active
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 );
@@ -801,26 +1153,19 @@ class _UserHomeState extends State<UserHome> {
     );
   }
 
-  // ✅ الكروت السريعة (Flights / Stays / Tours / ...)
-  // ✅ الكروت السريعة (Flights / Stays / Tours / ...)
-
   Widget _buildQuickCategories() {
     return GridView.count(
       crossAxisCount: 2,
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 3.2,
+      childAspectRatio: 2.7,
       children: _categories.map((cat) {
         final label = _isArabic ? cat.titleAr : cat.titleEn;
 
         return InkWell(
           onTap: () {
-            // ✈️ Flights
-
-            // ✈️ Flights
-
             if (cat.titleEn == 'Flights') {
               Navigator.push(
                 context,
@@ -831,11 +1176,8 @@ class _UserHomeState extends State<UserHome> {
                   ),
                 ),
               );
-
               return;
             }
-
-            // 🏨 Stays
 
             if (cat.titleEn == 'Stays') {
               Navigator.push(
@@ -847,13 +1189,8 @@ class _UserHomeState extends State<UserHome> {
                   ),
                 ),
               );
-
               return;
             }
-
-            // 🚌 Tours
-
-            // 🚌 Tours
 
             if (cat.titleEn == 'Tours') {
               Navigator.push(
@@ -861,18 +1198,12 @@ class _UserHomeState extends State<UserHome> {
                 MaterialPageRoute(
                   builder: (_) => TourServicesScreen(
                     isArabic: _isArabic,
-
-                    isGuest: widget.isGuest, // 👈 مهم
+                    isGuest: widget.isGuest,
                   ),
                 ),
               );
-
               return;
             }
-
-            // ⭐ Attractions
-
-            // 🏰 Attractions
 
             if (cat.titleEn == 'Attractions') {
               Navigator.push(
@@ -880,18 +1211,12 @@ class _UserHomeState extends State<UserHome> {
                 MaterialPageRoute(
                   builder: (_) => AttractionsScreen(
                     isArabic: _isArabic,
-
-                    isGuest: widget.isGuest, // 👈 مهم
+                    isGuest: widget.isGuest,
                   ),
                 ),
               );
-
               return;
             }
-
-            // 🚕 Transport  👈新增 هني
-
-            // 🚌 Transport
 
             if (cat.titleEn == 'Transport') {
               Navigator.push(
@@ -899,18 +1224,12 @@ class _UserHomeState extends State<UserHome> {
                 MaterialPageRoute(
                   builder: (_) => TransportServicesScreen(
                     isArabic: _isArabic,
-
-                    isGuest: widget.isGuest, // 👈 مهم عشان نعرف إنه ضيف
+                    isGuest: widget.isGuest,
                   ),
                 ),
               );
-
               return;
             }
-
-            // 🍽️ Food & Dining
-
-            // مثال داخل onTap في UserHome
 
             if (cat.titleEn == 'Food & Dining') {
               Navigator.push(
@@ -918,55 +1237,68 @@ class _UserHomeState extends State<UserHome> {
                 MaterialPageRoute(
                   builder: (_) => DiningServicesScreen(
                     isArabic: _isArabic,
-
-                    isGuest: widget.isGuest, // 👈 مهم
+                    isGuest: widget.isGuest,
                   ),
                 ),
               );
-
               return;
             }
-
-            // باقي الخدمات = قريباً
 
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
                   _isArabic ? 'قريباً: $label' : 'Coming soon: $label',
-                  style: const TextStyle(fontFamily: 'Tajawal'),
+                  style: const TextStyle(
+                    fontFamily: 'Tajawal',
+                  ),
                 ),
               ),
             );
           },
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              color: const Color(0xFFFFFCF7),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFFD9BA7A),
+                width: 1.2,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 6,
-                  offset: const Offset(0, 3),
+                  color: const Color(0xFF8B7044).withValues(alpha: 0.12),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
             child: Row(
+              textDirection: TextDirection.rtl,
               children: [
-                Icon(cat.icon, size: 26, color: Colors.black87),
-                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     label,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontFamily: 'Tajawal',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF123F35),
+                      height: 1.2,
                     ),
                   ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  cat.icon,
+                  color: const Color(0xFF123F35),
+                  size: 29,
                 ),
               ],
             ),

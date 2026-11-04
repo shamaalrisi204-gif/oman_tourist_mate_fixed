@@ -1,5 +1,3 @@
-// lib/screens/ai_concierge_screen.dart
-
 import 'package:flutter/material.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,9 +32,27 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
 
   List<AiPlaceSuggestion> _results = [];
 
-  static const _favoritesKey = 'favorites_list_v1';
+  // ===== Trip Planner =====
+
+  bool _isTripPlan = false;
+
+  List<AiPlaceSuggestion> _hotels = [];
+
+  List<AiPlaceSuggestion> _restaurants = [];
+
+  List<AiPlaceSuggestion> _cafes = [];
+
+  List<AiPlaceSuggestion> _attractions = [];
+
+  // ===== Favorites =====
+
+  static const String _favoritesKey = "favorites_list_v1";
 
   final Set<String> _favoriteNames = {};
+
+  String t(String ar, String en) {
+    return _isArabic ? ar : en;
+  }
 
   @override
   void initState() {
@@ -45,90 +61,169 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
     _loadFavorites();
   }
 
-  String t(String ar, String en) => _isArabic ? ar : en;
-
   Future<void> _loadFavorites() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final list = prefs.getStringList(_favoritesKey) ?? const [];
+    final data = prefs.getStringList(_favoritesKey) ?? [];
 
     setState(() {
       _favoriteNames
         ..clear()
-        ..addAll(list);
+        ..addAll(data);
     });
   }
 
   Future<void> _saveFavorites() async {
     final prefs = await SharedPreferences.getInstance();
 
-    await prefs.setStringList(_favoritesKey, _favoriteNames.toList());
+    await prefs.setStringList(
+      _favoritesKey,
+      _favoriteNames.toList(),
+    );
   }
 
-  bool _isFavorite(AiPlaceSuggestion p) =>
-      _favoriteNames.contains(p.displayName);
+  bool _isFavorite(AiPlaceSuggestion p) {
+    return _favoriteNames.contains(p.displayName);
+  }
 
   Future<void> _toggleFavorite(AiPlaceSuggestion p) async {
-    final name = p.displayName;
-
     setState(() {
-      if (_favoriteNames.contains(name)) {
-        _favoriteNames.remove(name);
+      if (_favoriteNames.contains(p.displayName)) {
+        _favoriteNames.remove(p.displayName);
       } else {
-        _favoriteNames.add(name);
+        _favoriteNames.add(p.displayName);
       }
     });
 
     await _saveFavorites();
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _isFavorite(p)
-              ? t("تمت الإضافة إلى المفضلة", "Added to favorites")
-              : t("تمت الإزالة", "Removed"),
-          style: const TextStyle(fontFamily: 'Tajawal'),
-        ),
-      ),
-    );
   }
 
-  // يحدد نوع المكان من النص
+  // ==========================
+
+  // كشف نوع الطلب
+
+  // ==========================
 
   String _detectPlaceType(String text) {
     final l = text.toLowerCase();
 
-    if (l.contains("فندق") || l.contains("hotel")) return "lodging";
+    if (l.contains("hotel") || l.contains("فندق")) {
+      return "lodging";
+    }
 
-    if (l.contains("مطعم") || l.contains("restaurant")) return "restaurant";
+    if (l.contains("restaurant") || l.contains("مطعم")) {
+      return "restaurant";
+    }
 
     return "tourist_attraction";
   }
 
-  // يحدد المدينة من النص
-
   String? _detectCity(String text) {
     final l = text.toLowerCase();
 
-    if (l.contains('muscat') || l.contains('مسقط')) return 'مسقط';
+    if (l.contains("muscat") || l.contains("مسقط")) {
+      return "مسقط";
+    }
 
-    if (l.contains('sohar') || l.contains('صحار')) return 'صحار';
+    if (l.contains("salalah") || l.contains("صلالة")) {
+      return "صلالة";
+    }
 
-    if (l.contains('salalah') || l.contains('صلالة') || l.contains('صلاله'))
-      return 'صلالة';
+    if (l.contains("sohar") || l.contains("صحار")) {
+      return "صحار";
+    }
 
-    if (l.contains('nizwa') || l.contains('نزوى')) return 'نزوى';
-
-    if (l.contains('sur') || l.contains('صور')) return 'صور';
-
-    if (l.contains('dhofar') || l.contains('ظفار')) return 'ظفار';
+    if (l.contains("nizwa") || l.contains("نزوى")) {
+      return "نزوى";
+    }
 
     return null;
   }
+  // ==========================
 
-  // --------- البحث (AI + CSV) ----------
+// Trip Planner Detection
+
+// ==========================
+
+  bool _isTripRequest(String text) {
+    final l = text.toLowerCase();
+
+    return l.contains("جدول") ||
+        l.contains("برنامج") ||
+        l.contains("رحلة") ||
+        l.contains("خطة") ||
+        l.contains("itinerary") ||
+        l.contains("trip");
+  }
+
+  int _detectDays(String text) {
+    final number = RegExp(r'\d+').firstMatch(text);
+
+    if (number != null) {
+      return int.tryParse(number.group(0)!) ?? 1;
+    }
+
+    if (text.contains("يومين")) return 2;
+
+    if (text.contains("ثلاث")) return 3;
+
+    if (text.contains("أسبوع")) return 7;
+
+    return 1;
+  }
+
+// ==========================
+
+// Create Trip Plan Text
+
+// ==========================
+
+  String _createTripPlanText(String? city, int days) {
+    String plan = "✨ جدول سياحي في ${city ?? ""}\n"
+        "🗓️ المدة: $days أيام\n\n";
+
+// الفندق
+
+    if (_hotels.isNotEmpty) {
+      plan += "🏨 الفندق المقترح:\n"
+          "• ${_hotels.first.displayName}\n\n";
+    }
+
+    int attractionIndex = 0;
+
+    for (int day = 1; day <= days; day++) {
+      plan += "━━━━━━━━━━━━\n"
+          "📅 اليوم $day\n\n";
+
+      plan += "🌅 الصباح:\n";
+
+      for (int i = 0; i < 2; i++) {
+        if (attractionIndex < _attractions.length) {
+          plan += "📍 ${_attractions[attractionIndex].displayName}\n";
+
+          attractionIndex++;
+        }
+      }
+
+// مطعم
+
+      if (_restaurants.isNotEmpty) {
+        plan += "\n🍽 الغداء:\n"
+            "• ${_restaurants[day % _restaurants.length].displayName}\n";
+      }
+
+// كوفي
+
+      if (_cafes.isNotEmpty) {
+        plan += "\n☕ القهوة:\n"
+            "• ${_cafes[day % _cafes.length].displayName}\n";
+      }
+
+      plan += "\n";
+    }
+
+    return plan;
+  }
 
   Future<void> _onSearch() async {
     final query = _searchController.text.trim();
@@ -141,46 +236,72 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
       _aiText = null;
 
       _results = [];
+
+      _isTripPlan = false;
     });
 
     try {
-      final type = _detectPlaceType(query); // lodging / restaurant / ...
+      final city = _detectCity(query);
 
-      final city = _detectCity(query); // Muscat / Salalah / ...
+      final isTrip = _isTripRequest(query);
 
-      // (1) رد الذكاء الاصطناعي كنص – بنعرضه في مربع فوق
+// =====================
 
-      final aiAnswer = await _ai.sendMessage(query);
+// Trip Planner
 
-      // (2) نجيب بيانات حقيقية من CSV عبر conciergeSearchPlaces
+// =====================
 
-      final places = await _repo.conciergeSearchPlaces(
-        placeType: type,
-        city: city,
-      );
+      if (isTrip) {
+        _hotels = await _repo.searchAccommodations(city: city);
+
+        _attractions = await _repo.searchAttractions(city: city);
+
+        _restaurants = await _repo.searchRestaurants(city: city);
+
+        _cafes = await _repo.searchCafes(city: city);
+
+        _isTripPlan = true;
+
+        _aiText = _createTripPlanText(city, _detectDays(query));
+
+// الكروت التي ستظهر تحت الجدول
+
+        _results = [
+          ..._hotels.take(1),
+          ..._attractions,
+          ..._restaurants.take(3),
+          ..._cafes.take(3),
+        ];
+      } else {
+// =====================
+
+// البحث العادي
+
+// =====================
+
+        final answer = await _ai.sendMessage(query);
+
+        _results = await _repo.conciergeSearchPlaces(
+          placeType: _detectPlaceType(query),
+          city: city,
+        );
+
+        _aiText = answer;
+      }
 
       setState(() {
-        _aiText = aiAnswer;
-
-        _results = places;
-
         _loading = false;
       });
     } catch (e, st) {
-      // ignore: avoid_print
+      print("ERROR : $e\n$st");
 
-      print('ERROR in _onSearch: $e\n$st');
-
-      if (!mounted) return;
-
-      setState(() => _loading = false);
+      setState(() {
+        _loading = false;
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'صار خطأ أثناء جلب البيانات: $e',
-            style: const TextStyle(fontFamily: 'Tajawal'),
-          ),
+          content: Text("حدث خطأ: $e"),
         ),
       );
     }
@@ -200,14 +321,18 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
           backgroundColor: bg,
           elevation: 0,
           title: const Text(
-            "Al Concierge",
+            "AI Concierge",
             style: TextStyle(fontFamily: 'Tajawal'),
           ),
           actions: [
             IconButton(
               icon: const Icon(Icons.language),
-              onPressed: () => setState(() => _isArabic = !_isArabic),
-            ),
+              onPressed: () {
+                setState(() {
+                  _isArabic = !_isArabic;
+                });
+              },
+            )
           ],
         ),
         body: Column(
@@ -215,9 +340,11 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
             _buildSearchBar(accent),
             Expanded(
               child: _loading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(
+                      child: CircularProgressIndicator(),
+                    )
                   : _buildContent(),
-            ),
+            )
           ],
         ),
       ),
@@ -226,24 +353,22 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
 
   Widget _buildSearchBar(Color accent) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.all(16),
       child: Row(
         children: [
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(32),
-              ),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: t("ابحث عن أماكن…", "Search a place…"),
-                  border: InputBorder.none,
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: t("ابحث عن رحلة...", "Search..."),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
                 ),
-                onSubmitted: (_) => _onSearch(),
               ),
+              onSubmitted: (_) => _onSearch(),
             ),
           ),
           const SizedBox(width: 8),
@@ -252,14 +377,8 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: accent,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
-              ),
             ),
-            child: Text(
-              t("بحث", "Search"),
-              style: const TextStyle(fontFamily: 'Tajawal'),
-            ),
+            child: Text(t("بحث", "Search")),
           ),
         ],
       ),
@@ -270,7 +389,7 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
     if (_aiText == null && _results.isEmpty) {
       return Center(
         child: Text(
-          t("اسألني عن الفنادق أو الأماكن ✨", "Ask me anything ✨"),
+          t("اسألني عن رحلتك ✨", "Ask me anything ✨"),
           style: const TextStyle(fontFamily: 'Tajawal'),
         ),
       );
@@ -278,45 +397,50 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
 
     return ListView(
       padding: const EdgeInsets.all(16),
-      controller: _scrollController,
       children: [
+// الجدول أو جواب AI
+
         if (_aiText != null)
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFBF4),
-              borderRadius: BorderRadius.circular(18),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               _aiText!,
-              style: const TextStyle(fontFamily: 'Tajawal', height: 1.5),
+              style: const TextStyle(
+                fontFamily: 'Tajawal',
+                height: 1.6,
+                fontSize: 15,
+              ),
             ),
           ),
-        const SizedBox(height: 12),
+
+        const SizedBox(height: 15),
+
         for (final p in _results)
           _PlaceCard(
             place: p,
             isFavorite: _isFavorite(p),
-            onFavoriteTap: () => _toggleFavorite(p),
+            onFavoriteTap: () {
+              _toggleFavorite(p);
+            },
             onTap: () {
-              final map = {
-                "nameAr": p.nameAr,
-                "nameEn": p.nameEn,
-                "governorate": p.governorate,
-                "city": p.city,
-                "descriptionArShort": p.descriptionAr,
-                "descriptionEnShort": p.descriptionEn,
-                "imageUrl": p.imageUrl,
-                "rating": p.rating,
-                "lat": p.lat,
-                "lng": p.lng,
-                "isArabic": _isArabic,
-              };
-
               Navigator.pushNamed(
                 context,
                 "/place_details",
-                arguments: map,
+                arguments: {
+                  "nameAr": p.nameAr,
+                  "nameEn": p.nameEn,
+                  "city": p.city,
+                  "descriptionArShort": p.descriptionAr,
+                  "descriptionEnShort": p.descriptionEn,
+                  "imageUrl": p.imageUrl,
+                  "rating": p.rating,
+                  "lat": p.lat,
+                  "lng": p.lng,
+                },
               );
             },
           ),
@@ -324,12 +448,6 @@ class _AiConciergeScreenState extends State<AiConciergeScreen> {
     );
   }
 }
-
-//
-
-// ---------- كرت المكان ----------
-
-//
 
 class _PlaceCard extends StatelessWidget {
   final AiPlaceSuggestion place;
@@ -347,98 +465,149 @@ class _PlaceCard extends StatelessWidget {
     required this.onTap,
   });
 
-  Widget _buildPlaceImage(String url) {
-    if (url.startsWith("assets/")) {
-      return Image.asset(
-        url,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) =>
-            const Center(child: Icon(Icons.broken_image)),
-      );
+  String _getType() {
+    final type = place.type.toLowerCase();
+
+    if (type.contains("hotel") || type.contains("resort")) {
+      return "🏨 فندق";
     }
 
-    return Image.network(
-      url,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) =>
-          const Center(child: Icon(Icons.broken_image)),
-    );
+    if (type.contains("restaurant")) {
+      return "🍽 مطعم";
+    }
+
+    if (type.contains("cafe")) {
+      return "☕ كوفي";
+    }
+
+    return "📍 مكان سياحي";
   }
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFF006766);
-
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 14),
+        margin: const EdgeInsets.only(bottom: 15),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            )
-          ],
-        ),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 8,
+              )
+            ]),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _imageHeader(),
+            // IMAGE
+
+            ClipRRect(
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
+              child: Image.asset(
+                place.imageUrl,
+                height: 200,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) {
+                  return Container(
+                    height: 200,
+                    color: Colors.grey.shade200,
+                    child: const Icon(
+                      Icons.image,
+                      size: 50,
+                    ),
+                  );
+                },
+              ),
+            ),
+
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              padding: const EdgeInsets.all(14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (place.city.isNotEmpty)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: accent.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        place.city,
-                        style: const TextStyle(
-                          fontFamily: 'Tajawal',
-                          color: accent,
-                          fontSize: 11,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          place.displayName,
+                          style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: "Tajawal"),
                         ),
                       ),
-                    ),
-                  const SizedBox(height: 6),
+                      IconButton(
+                        onPressed: onFavoriteTap,
+                        icon: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorite ? Colors.red : Colors.grey,
+                        ),
+                      )
+                    ],
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // TYPE
+
                   Text(
-                    place.displayName,
+                    _getType(),
                     style: const TextStyle(
-                      fontSize: 17,
-                      fontFamily: 'Tajawal',
-                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                      color: Colors.teal,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 6),
+
+                  const SizedBox(height: 8),
+
+                  // RATING
+
+                  if (place.rating != null)
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.star,
+                          color: Colors.orange,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          place.rating.toString(),
+                          style: const TextStyle(
+                            fontSize: 14,
+                          ),
+                        )
+                      ],
+                    ),
+
+                  const SizedBox(height: 10),
+
+                  // CITY
+
                   Text(
-                    place.displayDescription,
-                    maxLines: 2,
+                    "📍 ${place.city ?? ""}",
+                    style: const TextStyle(
+                      fontFamily: "Tajawal",
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // DESCRIPTION
+
+                  Text(
+                    place.descriptionAr ?? "",
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 13,
+                      height: 1.5,
+                      fontFamily: "Tajawal",
                       color: Colors.black87,
-                      height: 1.4,
-                      fontFamily: 'Tajawal',
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextButton(
-                    onPressed: onTap,
-                    child: const Text(
-                      "Read more",
-                      style: TextStyle(fontFamily: 'Tajawal'),
                     ),
                   ),
                 ],
@@ -447,40 +616,6 @@ class _PlaceCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _imageHeader() {
-    return Stack(
-      children: [
-        ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          child: AspectRatio(
-            aspectRatio: 4 / 3,
-            child: _buildPlaceImage(place.imageUrl),
-          ),
-        ),
-        Positioned(
-          right: 12,
-          top: 12,
-          child: GestureDetector(
-            onTap: onFavoriteTap,
-            child: Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.8),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: isFavorite ? Colors.red : Colors.black,
-                size: 20,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

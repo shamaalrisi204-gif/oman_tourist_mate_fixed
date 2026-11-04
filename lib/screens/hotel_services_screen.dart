@@ -10,17 +10,15 @@ import 'your_trip_screen.dart';
 
 import 'map_gmaps_screen.dart' show kTripPlans;
 
-/// شاشة الفنادق
-
 class HotelServicesScreen extends StatefulWidget {
   final bool isArabic;
 
-  final bool isGuest; // 👈 هل المستخدم ضيف؟
+  final bool isGuest;
 
   const HotelServicesScreen({
     super.key,
     required this.isArabic,
-    this.isGuest = false, // الافتراضي: مو ضيف
+    this.isGuest = false,
   });
 
   @override
@@ -42,8 +40,6 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
 
     return kHotelsList.where((h) => h.cityKey == selectedCity).toList();
   }
-
-  // 🔒 دايلوج يمنع الضيف
 
   void _showGuestDialog() {
     final isAr = widget.isArabic;
@@ -114,11 +110,7 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
                 ? "اختاري مكان الإقامة المثالي واحجزي عبر المواقع الرسمية."
                 : "Choose your perfect stay and book via official websites.",
           ),
-
           const SizedBox(height: 20),
-
-          // FILTER
-
           Text(
             isAr ? "الفلترة حسب المحافظة:" : "Filter by region:",
             style: const TextStyle(
@@ -126,9 +118,7 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 8),
-
           DropdownButtonFormField<String>(
             value: selectedCity,
             items: cities.entries.map((c) {
@@ -143,9 +133,7 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
                   OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             ),
           ),
-
           const SizedBox(height: 20),
-
           Text(
             isAr ? "أفضل الخيارات" : "Top stays",
             style: const TextStyle(
@@ -154,16 +142,12 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
               fontSize: 18,
             ),
           ),
-
           const SizedBox(height: 10),
-
           ...filteredHotels.map((h) => _hotelCard(context, h)).toList(),
         ],
       ),
     );
   }
-
-  // HERO
 
   Widget _buildHero(String title, String sub) {
     return SizedBox(
@@ -223,8 +207,6 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
     );
   }
 
-  // HOTEL CARD
-
   Widget _hotelCard(BuildContext context, TripHotelItem h) {
     final isAr = widget.isArabic;
 
@@ -235,8 +217,6 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // صورة الفندق
-
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
             child: Image.asset(
@@ -246,7 +226,6 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
               fit: BoxFit.cover,
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -277,8 +256,6 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    // ❤️ المفضلة
-
                     IconButton(
                       icon: Icon(
                         h.isFav ? Icons.favorite : Icons.favorite_border,
@@ -286,7 +263,7 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
                       ),
                       onPressed: () {
                         if (widget.isGuest) {
-                          _showGuestDialog(); // 🔒 منع الضيف
+                          _showGuestDialog();
 
                           return;
                         }
@@ -296,14 +273,11 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
                         Navigator.pushNamed(context, '/favorites');
                       },
                     ),
-
-                    // 📍 الموقع
-
                     IconButton(
                       icon: const Icon(Icons.location_pin, color: Colors.blue),
                       onPressed: () {
                         if (widget.isGuest) {
-                          _showGuestDialog(); // 🔒 منع الضيف
+                          _showGuestDialog();
 
                           return;
                         }
@@ -311,11 +285,7 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
                         _openInMaps(h.lat, h.lng);
                       },
                     ),
-
                     const Spacer(),
-
-                    // ➕ Add to trip
-
                     TextButton.icon(
                       icon: const Icon(Icons.add, size: 18),
                       label: Text(
@@ -324,7 +294,7 @@ class _HotelServicesScreenState extends State<HotelServicesScreen> {
                       ),
                       onPressed: () {
                         if (widget.isGuest) {
-                          _showGuestDialog(); // 🔒 منع الضيف
+                          _showGuestDialog();
 
                           return;
                         }

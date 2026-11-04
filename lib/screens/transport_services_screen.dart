@@ -1,5 +1,3 @@
-// lib/screens/transport_services_screen.dart
-
 import 'package:flutter/material.dart';
 
 import 'package:url_launcher/url_launcher.dart';
@@ -7,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 class TransportServicesScreen extends StatelessWidget {
   final bool isArabic;
 
-  final bool isGuest; // 👈 جديد
+  final bool isGuest;
 
   const TransportServicesScreen({
     super.key,
@@ -55,8 +53,6 @@ class TransportServicesScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          // ===== Hero =====
-
           AspectRatio(
             aspectRatio: 16 / 9,
             child: ClipRRect(
@@ -112,11 +108,7 @@ class TransportServicesScreen extends StatelessWidget {
               ),
             ),
           ),
-
           const SizedBox(height: 20),
-
-          // ===== عنوان التطبيقات =====
-
           Text(
             taxiSectionTitle,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -124,36 +116,23 @@ class TransportServicesScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
           ),
-
           const SizedBox(height: 8),
-
           Text(
             isArabic
                 ? 'استخدمي هذه التطبيقات لحجز سيارة تاكسي داخل المدن أو من وإلى المطار.'
                 : 'Use these apps to book licensed taxis inside cities or to/from the airport.',
             style: const TextStyle(fontFamily: 'Tajawal'),
           ),
-
           const SizedBox(height: 12),
-
-          // ===== كروت التطبيقات =====
-
           _TaxiCard(
             isArabic: isArabic,
-
-            isGuest: isGuest, // 👈
-
+            isGuest: isGuest,
             titleAr: 'OmanTaxi',
-
             titleEn: 'OmanTaxi',
-
             link: 'https://apps.apple.com/us/app/omantaxi/id1117668380',
-
             descriptionAr: 'تطبيق محلي لحجز تاكسي مرخّص داخل المدن أو للمطار.',
-
             descriptionEn: 'Local taxi booking app for city and airport rides.',
           ),
-
           _TaxiCard(
             isArabic: isArabic,
             isGuest: isGuest,
@@ -163,7 +142,6 @@ class TransportServicesScreen extends StatelessWidget {
             descriptionAr: 'تطبيق سريع وسهل لحجز التاكسي في مسقط.',
             descriptionEn: 'Fast and easy taxi booking in Muscat.',
           ),
-
           _TaxiCard(
             isArabic: isArabic,
             isGuest: isGuest,
@@ -173,7 +151,6 @@ class TransportServicesScreen extends StatelessWidget {
             descriptionAr: 'خدمة تاكسي ذكية وسريعة داخل عمان.',
             descriptionEn: 'Smart and fast taxi service in Oman.',
           ),
-
           _TaxiCard(
             isArabic: isArabic,
             isGuest: isGuest,
@@ -183,11 +160,7 @@ class TransportServicesScreen extends StatelessWidget {
             descriptionAr: 'تطبيق “super-app” للنقل داخل السلطنة.',
             descriptionEn: 'A transportation super-app in Oman.',
           ),
-
           const SizedBox(height: 20),
-
-          // ===== شركات ومواقع =====
-
           Text(
             taxiWebSectionTitle,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -195,9 +168,7 @@ class TransportServicesScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
           ),
-
           const SizedBox(height: 8),
-
           _TaxiCard(
             isArabic: isArabic,
             isGuest: isGuest,
@@ -207,7 +178,6 @@ class TransportServicesScreen extends StatelessWidget {
             descriptionAr: 'حجز تاكسي / VIP أو ميني باص للمطار أو أي وجهة.',
             descriptionEn: 'Taxi / VIP / Minibus booking for airport or city.',
           ),
-
           _TaxiCard(
             isArabic: isArabic,
             isGuest: isGuest,
@@ -217,9 +187,7 @@ class TransportServicesScreen extends StatelessWidget {
             descriptionAr: 'خدمة تاكسي محلية في مسقط — للاتصال: 9061 0066.',
             descriptionEn: 'Local taxi service in Muscat — Call: 90610066.',
           ),
-
           const SizedBox(height: 16),
-
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -243,12 +211,10 @@ class TransportServicesScreen extends StatelessWidget {
   }
 }
 
-/// ===== كرت تاكسي + زر فتح الرابط =====
-
 class _TaxiCard extends StatelessWidget {
   final bool isArabic;
 
-  final bool isGuest; // 👈 جديد
+  final bool isGuest;
 
   final String titleAr;
 
@@ -279,8 +245,6 @@ class _TaxiCard extends StatelessWidget {
 
     return Icons.language;
   }
-
-  // 🔒 دايلوج للضيف
 
   void _showGuestDialog(BuildContext context) {
     final isAr = isArabic;
@@ -380,7 +344,7 @@ class _TaxiCard extends StatelessWidget {
           icon: Icon(_detectIcon(), color: Colors.blue),
           onPressed: () {
             if (isGuest) {
-              _showGuestDialog(context); // 🔒 يمنع الضيف
+              _showGuestDialog(context);
             } else {
               _openLink();
             }

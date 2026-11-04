@@ -1,5 +1,3 @@
-// lib/screens/dining_services_screen.dart
-
 import 'package:flutter/material.dart';
 
 import 'package:url_launcher/url_launcher.dart';
@@ -7,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 class DiningServicesScreen extends StatelessWidget {
   final bool isArabic;
 
-  final bool isGuest; // 👈 جديد
+  final bool isGuest;
 
   const DiningServicesScreen({
     super.key,
@@ -62,8 +60,6 @@ to traditional Omani dishes.''';
       ),
     );
   }
-
-  // ------------------- هيرو كبير -------------------
 
   Widget _buildHeroSection(String title, String body) {
     return AspectRatio(
@@ -123,8 +119,6 @@ to traditional Omani dishes.''';
     );
   }
 
-  // ------------------- الأقسام الثلاثة -------------------
-
   Widget _buildCategorySection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,11 +130,7 @@ to traditional Omani dishes.''';
                 fontWeight: FontWeight.bold,
               ),
         ),
-
         const SizedBox(height: 14),
-
-        // Grid of 3 cards
-
         GridView.count(
           crossAxisCount: 1,
           shrinkWrap: true,
@@ -165,8 +155,6 @@ to traditional Omani dishes.''';
     );
   }
 
-  // ------------------- مطعم العقَر -------------------
-
   Widget _buildAlaqrRestaurant(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -182,21 +170,14 @@ to traditional Omani dishes.''';
         const SizedBox(height: 14),
         _RestaurantCard(
           isArabic: isArabic,
-
-          isGuest: isGuest, // 👈 نمرر إذا هو ضيف
-
+          isGuest: isGuest,
           titleAr: 'مطعم العقر',
-
           titleEn: 'Alaqur Restaurant',
-
           descAr:
               'واحد من أشهر المطاعم التي تقدم الأكلات الشعبية العمانية الأصيلة، مع فرعين في نزوى وصلالة.',
-
           descEn:
               'One of the most popular Omani traditional restaurants with branches in Nizwa and Salalah.',
-
           image: 'assets/dining/alaqr.jpg',
-
           branches: [
             RestaurantBranch(
               nameAr: 'فرع نزوى',
@@ -215,12 +196,6 @@ to traditional Omani dishes.''';
   }
 }
 
-// --------------------------------------------------------
-
-// Models + Cards
-
-// --------------------------------------------------------
-
 class RestaurantBranch {
   final String nameAr;
 
@@ -234,8 +209,6 @@ class RestaurantBranch {
     required this.mapsUrl,
   });
 }
-
-// 🔒 دالة عامة لدايلوج الضيف
 
 void _showGuestDialog(BuildContext context, bool isArabic) {
   showDialog(
@@ -283,8 +256,6 @@ void _showGuestDialog(BuildContext context, bool isArabic) {
   );
 }
 
-// ---------------- بطاقة القسم ----------------
-
 class _CategoryCard extends StatelessWidget {
   final String title;
 
@@ -326,12 +297,10 @@ class _CategoryCard extends StatelessWidget {
   }
 }
 
-// ---------------- بطاقة مطعم ----------------
-
 class _RestaurantCard extends StatelessWidget {
   final bool isArabic;
 
-  final bool isGuest; // 👈 جديد
+  final bool isGuest;
 
   final String titleAr;
 
@@ -399,9 +368,7 @@ class _RestaurantCard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 6),
-
                 Text(
                   desc,
                   style: const TextStyle(
@@ -410,11 +377,7 @@ class _RestaurantCard extends StatelessWidget {
                     color: Colors.black87,
                   ),
                 ),
-
                 const SizedBox(height: 12),
-
-                // ----- الفروع -----
-
                 ...branches.map((b) {
                   return Column(
                     children: [
@@ -431,7 +394,7 @@ class _RestaurantCard extends StatelessWidget {
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: () async {
                           if (isGuest) {
-                            _showGuestDialog(context, isArabic); // 🔒
+                            _showGuestDialog(context, isArabic);
 
                             return;
                           }

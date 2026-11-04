@@ -21,6 +21,8 @@ class TourismRepository {
 
   List<Map<String, dynamic>> _restaurants = []; // ✅ المطاعم
 
+  List<Map<String, dynamic>> _cafes = [];
+
   // تحميل CSV مرة وحدة
 
   Future<void> _ensureInitialized() async {
@@ -34,6 +36,8 @@ class TourismRepository {
     // ✅ لو عندك ملف المطاعم
 
     final restCsv = await rootBundle.loadString('assets/data/restaurants.csv');
+
+    final cafesCsv = await rootBundle.loadString('assets/data/cafes.csv');
 
     _accommodations = _parseCsv(accCsv);
 
@@ -143,6 +147,26 @@ class TourismRepository {
 
     return data
         .map((row) => AiPlaceSuggestion.fromMap(row, source: "restaurants"))
+        .toList();
+  }
+
+  Future<List<AiPlaceSuggestion>> searchCafes({
+    String? city,
+  }) async {
+    await _ensureInitialized();
+
+    final data = _cafes.where((row) {
+      if (city == null) return true;
+
+      return row['city']
+              ?.toString()
+              .toLowerCase()
+              .contains(city.toLowerCase()) ??
+          false;
+    }).toList();
+
+    return data
+        .map((row) => AiPlaceSuggestion.fromMap(row, source: "cafes"))
         .toList();
   }
 
