@@ -224,6 +224,8 @@ flutter:
    - assets/restaurants/sohar/pizza.jpg
    - assets/images/restaurants/pizza.jpg
    - assets/data/restaurants.csv
+   - assets/images/oman_fort.jpg
+   - assets/images/muscat_nights_fireworks.jpg
 
    #tours
    - assets/tours/nature.jpg
