@@ -71,4 +71,8 @@ node_modules/
 
 firebase-admin-tools/serviceAccountKey.json
 
-firebase-admin-tools/node_modules/
+firebase-admin-tools/node_modules/*.mp3
+*.wav
+*.m4a
+*.aac
+*.ogg
