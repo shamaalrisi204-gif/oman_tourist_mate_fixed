@@ -885,12 +885,7 @@ class _UserHomeState extends State<UserHome> {
                 break;
 
               case 2:
-                if (widget.isGuest) {
-                  _showGuestDialog();
-                } else {
-                  Navigator.pushNamed(context, '/favorites');
-                }
-
+                Navigator.pushNamed(context, '/events');
                 break;
 
               case 3:
@@ -1011,10 +1006,10 @@ class _UserHomeState extends State<UserHome> {
             ),
             BottomNavigationBarItem(
               icon: const Icon(
-                Icons.favorite_border,
+                Icons.event_available,
                 size: 27,
               ),
-              label: isAr ? 'المفضلة' : 'Favorites',
+              label: isAr ? 'الفعاليات' : 'Events',
             ),
             BottomNavigationBarItem(
               icon: const Icon(

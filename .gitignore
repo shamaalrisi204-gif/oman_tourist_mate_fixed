@@ -68,3 +68,7 @@ node_modules/
 **/.gradle/
 
 **/.dart_tool/
+
+firebase-admin-tools/serviceAccountKey.json
+
+firebase-admin-tools/node_modules/

@@ -38,6 +38,8 @@ import 'screens/user_home.dart';
 
 import 'screens/favorites_screen.dart';
 
+import 'screens/events_screen.dart';
+
 import 'screens/place_details_screen.dart';
 
 import 'screens/ai_chat_screen.dart';
@@ -166,6 +168,8 @@ class OmanTouristMateApp extends StatelessWidget {
                 ),
 
             '/favorites': (_) => const FavoritesScreen(),
+
+            '/events': (_) => const EventsScreen(),
 
             '/ai_chat': (_) => const AiConciergeScreen(),
 
